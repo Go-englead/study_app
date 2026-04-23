@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学習管理アプリ（サンプル）</title>
+  <style>
+    /* ===== デザイントークン（:root で一元管理） ===== */
+    :root {
+      /* === Primary（ネイビーブルー：CTA・見出し・選択状態） === */
+      --color-primary:        #1A5276;
+      --color-primary-light:  #2E86C1;
+      --color-primary-dark:   #0E3860;
+
+      /* === Accent（グリーン：進捗・達成） === */
+      --color-accent:         #27AE60;
+      --color-accent-line:    #06C755;   /* LINEボタン専用（今回は未使用） */
+
+      /* === Neutral === */
+      --color-bg:             #FFFFFF;
+      --color-bg-soft:        #F4F6F8;
+      --color-bg-dark:        #1C2833;
+      --color-border:         #D5D8DC;
+
+      /* === Text === */
+      --color-text-primary:   #1C2833;
+      --color-text-secondary: #566573;
+      --color-text-muted:     #ABB2B9;
+      --color-text-inverse:   #FFFFFF;
+
+      /* === Semantic === */
+      --color-success:        #27AE60;
+      --color-warning:        #F39C12;
+      --color-error:          #E74C3C;
+      --color-info:           #2E86C1;
+      --color-gold:           #D4AF37;
+
+      /* === Font === */
+      --font-primary: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+
+      /* === Font Sizes === */
+      --text-xs:   0.75rem;   /* 12px */
+      --text-sm:   0.875rem;  /* 14px */
+      --text-base: 1rem;      /* 16px */
+      --text-lg:   1.125rem;  /* 18px */
+      --text-xl:   1.25rem;   /* 20px */
+      --text-2xl:  1.5rem;    /* 24px */
+      --text-3xl:  1.875rem;  /* 30px */
+      --text-4xl:  2.25rem;   /* 36px */
+
+      /* === Font Weights === */
+      --font-normal:    400;
+      --font-medium:    500;
+      --font-semibold:  600;
+      --font-bold:      700;
+      --font-extrabold: 800;
+
+      /* === Line heights === */
+      --leading-tight:   1.25;
+      --leading-normal:  1.6;
+      --leading-relaxed: 1.8;
+
+      /* === Spacing (4px base) === */
+      --space-1:  0.25rem;
+      --space-2:  0.5rem;
+      --space-3:  0.75rem;
+      --space-4:  1rem;
+      --space-5:  1.25rem;
+      --space-6:  1.5rem;
+      --space-8:  2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+
+      /* === Transitions === */
+      --transition-fast: 0.15s ease;
+      --transition-base: 0.2s ease;
+    }
+
+    /* ===== 基本スタイル ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-primary);
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      font-size: var(--text-base);
+      line-height: var(--leading-normal);
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* フォーカスリング（アクセシビリティ） */
+    :focus-visible {
+      outline: 3px solid var(--color-primary-light);
+      outline-offset: 2px;
+    }
+
+    /* ===== ナビゲーションバー ===== */
+    .navbar {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .navbar-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-bold);
+      color: var(--color-primary-dark);
+    }
+    .navbar-sub {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--color-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: var(--font-bold);
+      color: var(--color-text-inverse);
+    }
+
+    /* ===== メインコンテンツ ===== */
+    .main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      padding-bottom: 96px;
+    }
+
+    /* ===== カード共通 ===== */
+    .card {
+      background: var(--color-bg);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      padding: var(--space-6);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: box-shadow var(--transition-base), transform var(--transition-base);
+    }
+    .card-label {
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      color: var(--color-text-secondary);
+      letter-spacing: 0.06em;
+      margin-bottom: var(--space-2);
+      text-transform: uppercase;
+    }
+    .card-title {
+      font-size: var(--text-base);
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-4);
+    }
+
+    /* ===== サンプル注釈 ===== */
+    .sample-note {
+      background: var(--color-bg-soft);
+      border-radius: 6px;
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      text-align: center;
+      border: 1px solid var(--color-border);
+    }
+
+    /* ===== ホームタブ ===== */
+    .countdown-num {
+      font-size: var(--text-4xl);
+      font-weight: var(--font-extrabold);
+      color: var(--color-primary-dark);
+      line-height: 1;
+    }
+    .countdown-unit {
+      font-size: var(--text-base);
+      font-weight: var(--font-normal);
+      color: var(--color-text-secondary);
+      margin-left: 4px;
+    }
+    .countdown-dest {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin-top: var(--space-2);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+    .stat-cell {
+      background: var(--color-bg-soft);
+      border-radius: 12px;
+      padding: var(--space-4);
+      border-left: 4px solid var(--color-primary);
+    }
+    .stat-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-1);
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: var(--font-extrabold);
+      color: var(--color-primary-dark);
+    }
+    .stat-unit {
+      font-size: var(--text-xs);
+      font-weight: var(--font-normal);
+      color: var(--color-text-secondary);
+    }
+
+    .goal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-2);
+    }
+    .goal-label { font-size: var(--text-sm); color: var(--color-text-secondary); }
+    .goal-val { font-size: var(--text-sm); font-weight: var(--font-bold); color: var(--color-text-primary); }
+    .progress-track {
+      background: var(--color-border);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--color-primary-light), var(--color-accent));
+      transition: width 0.6s ease;
+    }
+    .progress-caption {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      text-align: right;
+      margin-top: var(--space-2);
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-2);
+      height: 64px;
+      margin-top: var(--space-4);
+    }
+    .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      background: #D6EAF8;
+      min-height: 4px;
+    }
+    .bar.today { background: var(--color-accent); }
+    .bar.empty { background: var(--color-border); }
+    .bar-day {
+      font-size: 10px;
+      color: var(--color-text-muted);
+    }
+
+    .textbook-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+    .textbook-row:last-child { margin-bottom: 0; }
+    .textbook-bar-side { width: 4px; height: 38px; border-radius: 2px; flex-shrink: 0; }
+    .textbook-info { flex: 1; }
+    .textbook-name {
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+    .textbook-track {
+      background: var(--color-bg-soft);
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .textbook-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+    .textbook-pct {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .record-btn {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      border: 2px solid transparent;
+      border-radius: 4px;
+      padding: var(--space-3) var(--space-6);
+      font-size: var(--text-base);
+      font-weight: var(--font-semibold);
+      width: 100%;
+      min-height: 48px;
+      transition: all var(--transition-base);
+    }
+    .record-btn:hover {
+      background: var(--color-primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 82, 118, 0.3);
+    }
+    .record-btn:active { transform: translateY(0); }
+
+    /* ===== タブバー ===== */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--color-bg);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      padding: var(--space-2) 0 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+      min-height: 44px;
+      background: none;
+      border: none;
+    }
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--color-border);
+    }
+    .tab-item.active .tab-icon { background: var(--color-primary); }
+    .tab-text {
+      font-size: 10px;
+      color: var(--color-text-muted);
+    }
+    .tab-item.active .tab-text {
+      color: var(--color-primary);
+      font-weight: var(--font-bold);
+    }
+
+    /* ===== 画面切替 ===== */
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; gap: var(--space-4); }
+
+    /* ===== サブタブ（成果順位） ===== */
+    .subtabs {
+      display: flex;
+      background: var(--color-bg-soft);
+      border-radius: 6px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .subtab {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: var(--space-3);
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--color-text-secondary);
+      border-radius: 4px;
+    }
+    .subtab.active {
+      background: var(--color-bg);
+      color: var(--color-primary-dark);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ===== セグメント選択 ===== */
+    .segment {
+      display: flex;
+      background: var(--color-bg-soft);
+      border-radius: 6px;
+      padding: 4px;
+      gap: 2px;
+      overflow-x: auto;
+    }
+    .segment-item {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--text-xs);
+      font-weight: var(--font-medium);
+      color: var(--color-text-secondary);
+      border-radius: 4px;
+      white-space: nowrap;
+      min-height: 36px;
+    }
+    .segment-item.active {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      font-weight: var(--font-bold);
+    }
+
+    /* ===== 順位カード ===== */
+    .my-rank-card {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      color: var(--color-text-inverse);
+      border-radius: 12px;
+      padding: 20px var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(26, 82, 118, 0.25);
+    }
+    .my-rank-label { font-size: var(--text-xs); opacity: 0.9; margin-bottom: 4px; }
+    .my-rank-num {
+      font-size: 32px;
+      font-weight: var(--font-extrabold);
+      line-height: 1;
+    }
+    .my-rank-num .small {
+      font-size: var(--text-sm);
+      font-weight: var(--font-normal);
+      margin-left: 4px;
+      opacity: 0.9;
+    }
+    .my-rank-val { text-align: right; }
+    .my-rank-val-num {
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+    }
+    .my-rank-val-label {
+      font-size: 11px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: 6px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+    }
+    .rank-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-sm);
+      font-weight: var(--font-bold);
+      color: var(--color-text-inverse);
+      background: var(--color-text-muted);
+      flex-shrink: 0;
+    }
+    .rank-num.gold { background: var(--color-gold); }
+    .rank-num.silver { background: #A8A8A8; }
+    .rank-num.bronze { background: #B87333; }
+    .rank-num.self { background: var(--color-primary); }
+    .rank-user {
+      flex: 1;
+      font-size: var(--text-sm);
+      color: var(--color-text-primary);
+      font-weight: var(--font-medium);
+    }
+    .rank-user-sub {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+    .rank-value {
+      font-size: var(--text-sm);
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+    }
+
+    /* ===== 達成率色分け ===== */
+    .ach-red    { background: var(--color-error) !important; }
+    .ach-yellow { background: var(--color-warning) !important; }
+    .ach-green  { background: var(--color-accent) !important; }
+    .ach-blue   { background: var(--color-primary-light) !important; }
+    .ach-gold   { background: var(--color-gold) !important; }
+
+    .ach-text-red    { color: var(--color-error) !important; }
+    .ach-text-yellow { color: var(--color-warning) !important; }
+    .ach-text-green  { color: var(--color-accent) !important; }
+    .ach-text-blue   { color: var(--color-primary-light) !important; }
+    .ach-text-gold   { color: var(--color-gold) !important; }
+
+    /* ===== 分析タブ ===== */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+    .month-bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 120px;
+      margin-top: var(--space-4);
+    }
+    .month-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .month-bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      background: var(--color-primary);
+      min-height: 4px;
+      position: relative;
+    }
+    .month-bar-val {
+      font-size: 9px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+    .month-bar-label {
+      font-size: 10px;
+      color: var(--color-text-muted);
+    }
+
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-date {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+    }
+    .history-change {
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      color: var(--color-text-primary);
+    }
+
+    /* ===== PROGOSセクション ===== */
+    .progos-cefr-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-4);
+      height: 120px;
+      padding: var(--space-2) 4px 0;
+    }
+    .progos-cefr-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+    }
+    .progos-cefr-bar-wrap {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .progos-cefr-bar {
+      width: 60%;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      min-height: 4px;
+    }
+    .progos-cefr-bar .bar-value {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+      white-space: nowrap;
+    }
+    .progos-cefr-label {
+      font-size: 10px;
+      color: var(--color-text-muted);
+    }
+    .progos-skill-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+    .progos-skill-row:last-child { margin-bottom: 0; }
+    .progos-skill-name {
+      width: 52px;
+      font-size: 11px;
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .progos-skill-track {
+      flex: 1;
+      background: var(--color-bg-soft);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .progos-skill-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--color-primary-light), var(--color-accent));
+    }
+    .progos-skill-score {
+      width: 28px;
+      font-size: 11px;
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+      flex-shrink: 0;
+    }
+    .progos-record {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .progos-record:last-child { border-bottom: none; }
+    .progos-date {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+    }
+    .progos-level {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      background: #EBF5FB;
+      color: var(--color-primary);
+    }
+
+    /* ===== 記録タブ ===== */
+    .date-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--color-bg-soft);
+      border-radius: 6px;
+      padding: var(--space-3) var(--space-4);
+    }
+    .date-nav-btn {
+      background: none;
+      border: none;
+      font-size: var(--text-xl);
+      color: var(--color-primary);
+      font-weight: var(--font-bold);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      transition: background var(--transition-fast);
+    }
+    .date-nav-btn:hover { background: rgba(26, 82, 118, 0.1); }
+    .date-display {
+      font-size: var(--text-base);
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+      text-align: center;
+    }
+    .date-display-sub {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .radio-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--color-bg);
+      transition: all var(--transition-fast);
+    }
+    .radio-item:hover { border-color: var(--color-primary-light); }
+    .radio-item.selected {
+      border-color: var(--color-primary);
+      background: rgba(26, 82, 118, 0.05);
+    }
+    .radio-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--color-text-muted);
+      flex-shrink: 0;
+      position: relative;
+      transition: border-color var(--transition-fast);
+    }
+    .radio-item.selected .radio-circle {
+      border-color: var(--color-primary);
+    }
+    .radio-item.selected .radio-circle::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+    .radio-label {
+      font-size: var(--text-sm);
+      color: var(--color-text-primary);
+      flex: 1;
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: var(--color-bg-soft);
+      border-radius: 6px;
+      padding: 4px;
+      gap: 2px;
+      margin-bottom: var(--space-3);
+    }
+    .mode-toggle-item {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: var(--font-medium);
+      color: var(--color-text-secondary);
+      border-radius: 4px;
+      transition: all var(--transition-fast);
+    }
+    .mode-toggle-item.active {
+      background: var(--color-bg);
+      color: var(--color-primary-dark);
+      font-weight: var(--font-bold);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .time-input-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .time-input {
+      flex: 1;
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-base);
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      height: 48px;
+      text-align: center;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      transition: all var(--transition-fast);
+    }
+    .time-input:focus {
+      outline: none;
+      border-color: var(--color-primary-light);
+      box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
+    }
+    .time-unit {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .stopwatch-display {
+      text-align: center;
+      font-size: 48px;
+      font-weight: var(--font-extrabold);
+      color: var(--color-primary-dark);
+      font-variant-numeric: tabular-nums;
+      padding: var(--space-4) 0;
+    }
+    .stopwatch-btns {
+      display: flex;
+      gap: var(--space-2);
+    }
+    .sw-btn {
+      flex: 1;
+      padding: var(--space-3);
+      font-size: var(--text-sm);
+      font-weight: var(--font-bold);
+      border-radius: 4px;
+      border: 2px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      min-height: 44px;
+      transition: all var(--transition-fast);
+    }
+    .sw-btn.primary {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      border-color: var(--color-primary);
+    }
+    .sw-btn.primary:hover {
+      background: var(--color-primary-light);
+      border-color: var(--color-primary-light);
+    }
+    .sw-btn.danger {
+      color: var(--color-error);
+      border-color: var(--color-error);
+    }
+    .sw-btn.danger:hover {
+      background: var(--color-error);
+      color: var(--color-text-inverse);
+    }
+
+    .text-input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-base);
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      height: 48px;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      transition: all var(--transition-fast);
+    }
+    .text-input:focus {
+      outline: none;
+      border-color: var(--color-primary-light);
+      box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
+    }
+    .field-label {
+      font-size: 13px;
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-2);
+    }
+    .field-sub {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    /* ===== 教材タブ ===== */
+    .textbook-card {
+      background: var(--color-bg);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: box-shadow var(--transition-base), transform var(--transition-base);
+    }
+    .textbook-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+    .textbook-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-3);
+      gap: var(--space-3);
+    }
+    .textbook-card-name {
+      font-size: var(--text-base);
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+    }
+    .textbook-card-goal {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: var(--font-bold);
+      white-space: nowrap;
+    }
+    .badge-achieved {
+      background: #EAFAF1;
+      color: var(--color-success);
+    }
+    .badge-not {
+      background: var(--color-bg-soft);
+      color: var(--color-text-muted);
+    }
+
+    .textbook-time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-border);
+    }
+    .textbook-time-cell { text-align: center; }
+    .textbook-time-label {
+      font-size: 10px;
+      color: var(--color-text-muted);
+      margin-bottom: 2px;
+    }
+    .textbook-time-val {
+      font-size: var(--text-sm);
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+    }
+
+    /* ===== 設定タブ ===== */
+    .settings-list { display: flex; flex-direction: column; }
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label {
+      font-size: var(--text-sm);
+      color: var(--color-text-primary);
+    }
+    .settings-val {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+    .settings-arrow {
+      font-size: var(--text-lg);
+      color: var(--color-text-muted);
+      margin-left: var(--space-2);
+    }
+
+    /* ===== アバター・ログアウトメニュー ===== */
+    .avatar-wrap { position: relative; }
+    .avatar { cursor: pointer; transition: transform var(--transition-fast); }
+    .avatar:hover { transform: scale(1.05); }
+    .avatar-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      min-width: 180px;
+      overflow: hidden;
+      z-index: 100;
+    }
+    .avatar-menu.show { display: block; }
+    .avatar-menu-header {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-soft);
+    }
+    .avatar-menu-name {
+      font-size: 13px;
+      font-weight: var(--font-bold);
+      color: var(--color-text-primary);
+    }
+    .avatar-menu-sub {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+    .avatar-menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      width: 100%;
+      background: none;
+      border: none;
+      padding: var(--space-3) var(--space-4);
+      font-size: 13px;
+      color: var(--color-text-primary);
+      text-align: left;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .avatar-menu-item:hover { background: var(--color-bg-soft); }
+    .avatar-menu-item.logout {
+      color: var(--color-error);
+      font-weight: var(--font-bold);
+    }
+    .avatar-menu-item.logout:hover { background: #FDEDEC; }
+
+  </style>
+</head>
+<body>
+
+<!-- ===== ナビゲーションバー ===== -->
+<div class="navbar">
+  <div>
+    <div class="navbar-title" id="nav-title">マイダッシュボード</div>
+    <div class="navbar-sub">2026年4月14日（火）</div>
+  </div>
+  <!-- アバター（クリックでメニュー表示） -->
+  <div class="avatar-wrap">
+    <div class="avatar" onclick="toggleAvatarMenu(event)">田中</div>
+    <div class="avatar-menu" id="avatar-menu">
+      <div class="avatar-menu-header">
+        <div class="avatar-menu-name">田中 太郎</div>
+        <div class="avatar-menu-sub">会員 / 大学受験コース</div>
+      </div>
+      <button class="avatar-menu-item logout" onclick="handleLogout()">
+        ログアウト
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ホーム画面 ===== -->
+<div class="main screen active" id="screen-home">
+
+  <div class="sample-note">
+    ⚠️ これはサンプル画面です。実際のデータは表示されません。
+  </div>
+
+  <!-- 出国カウントダウン -->
+  <div class="card">
+    <div class="card-label">出国まで</div>
+    <div>
+      <span class="countdown-num">127</span>
+      <span class="countdown-unit">日</span>
+    </div>
+    <div class="countdown-dest">オーストラリア・シドニー　2026年8月19日出発</div>
+  </div>
+
+  <!-- 統計グリッド -->
+  <div class="stats-grid">
+    <div class="stat-cell">
+      <div class="stat-label">今日</div>
+      <div class="stat-val">1<span class="stat-unit">h 20m</span></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">今月合計</div>
+      <div class="stat-val">24<span class="stat-unit">h</span></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">累計</div>
+      <div class="stat-val">186<span class="stat-unit">h</span></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">連続学習</div>
+      <div class="stat-val">12<span class="stat-unit">日</span></div>
+    </div>
+  </div>
+
+  <!-- 週次目標 -->
+  <div class="card">
+    <div class="card-label">今週の目標達成率</div>
+    <div class="goal-row">
+      <span class="goal-label">目標：10時間</span>
+      <span class="goal-val">6h 50m / 10h</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 68%"></div>
+    </div>
+    <div class="progress-caption">68% 達成</div>
+
+    <div class="bar-chart">
+      <div class="bar-wrap"><div class="bar" style="height:30px"></div><span class="bar-day">月</span></div>
+      <div class="bar-wrap"><div class="bar" style="height:45px"></div><span class="bar-day">火</span></div>
+      <div class="bar-wrap"><div class="bar" style="height:20px"></div><span class="bar-day">水</span></div>
+      <div class="bar-wrap"><div class="bar today" style="height:38px"></div><span class="bar-day">今日</span></div>
+      <div class="bar-wrap"><div class="bar empty" style="height:4px"></div><span class="bar-day">金</span></div>
+      <div class="bar-wrap"><div class="bar empty" style="height:4px"></div><span class="bar-day">土</span></div>
+      <div class="bar-wrap"><div class="bar empty" style="height:4px"></div><span class="bar-day">日</span></div>
+    </div>
+  </div>
+
+  <!-- 教材進捗（CSVから動的生成） -->
+  <div class="card">
+    <div class="card-label">教材の進捗</div>
+    <div id="home-textbook-progress"></div>
+  </div>
+
+  <!-- 記録ボタン -->
+  <button class="record-btn" onclick="showTab('record')">
+    + 今日の学習を記録する
+  </button>
+
+</div>
+
+<!-- ===== 記録画面 ===== -->
+<div class="main screen" id="screen-record">
+
+  <div class="sample-note">⚠️ サンプル画面です。保存は実行されません。</div>
+
+  <!-- 日付選択 -->
+  <div class="card">
+    <div class="card-label">対象日</div>
+    <div class="date-selector">
+      <button class="date-nav-btn" onclick="changeDate(-1)">‹</button>
+      <div>
+        <div class="date-display" id="record-date">2026年4月14日</div>
+        <div class="date-display-sub" id="record-date-sub">火曜日</div>
+      </div>
+      <button class="date-nav-btn" onclick="changeDate(1)">›</button>
+    </div>
+  </div>
+
+  <!-- 教材選択（CSVから動的生成） -->
+  <div class="card">
+    <div class="card-label">教材を選択</div>
+    <div class="radio-list" id="record-textbook-list"></div>
+  </div>
+
+  <!-- 学習時間入力 -->
+  <div class="card">
+    <div class="card-label">学習時間</div>
+    <div class="mode-toggle">
+      <button class="mode-toggle-item active" onclick="switchMode('manual', this)">手入力</button>
+      <button class="mode-toggle-item" onclick="switchMode('stopwatch', this)">ストップウォッチ</button>
+    </div>
+
+    <div id="mode-manual">
+      <div class="time-input-row">
+        <input class="time-input" type="number" min="0" value="1" id="input-hour">
+        <span class="time-unit">時間</span>
+        <input class="time-input" type="number" min="0" max="59" value="20" id="input-min">
+        <span class="time-unit">分</span>
+      </div>
+    </div>
+
+    <div id="mode-stopwatch" style="display:none">
+      <div class="stopwatch-display" id="sw-display">00:00:00</div>
+      <div class="stopwatch-btns">
+        <button class="sw-btn primary" id="sw-toggle" onclick="toggleStopwatch()">開始</button>
+        <button class="sw-btn danger" onclick="resetStopwatch()">リセット</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 進捗入力 -->
+  <div class="card">
+    <div class="card-label">進捗（任意）</div>
+    <div class="field-label">今日進んだ量</div>
+    <input class="text-input" type="text" placeholder="例：50" id="input-progress">
+    <div class="field-sub" id="progress-unit-hint">単位：単語（英単語ターゲット1900）</div>
+  </div>
+
+  <!-- 保存ボタン -->
+  <button class="record-btn" onclick="saveRecord()">保存する</button>
+
+</div>
+
+<!-- ===== 教材画面 ===== -->
+<div class="main screen" id="screen-textbook">
+
+  <div class="sample-note">⚠️ サンプルデータを表示しています。</div>
+
+  <!-- 全体サマリー -->
+  <div class="card">
+    <div class="card-title">全体達成率サマリー</div>
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-label">今日</div>
+        <div class="stat-val ach-text-yellow">45<span class="stat-unit">%</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">今週</div>
+        <div class="stat-val ach-text-green">68<span class="stat-unit">%</span></div>
+      </div>
+      <div class="stat-cell" style="grid-column: span 2">
+        <div class="stat-label">今月</div>
+        <div class="stat-val ach-text-blue">82<span class="stat-unit">%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 教材ごとのカード（CSVから動的生成） -->
+  <div id="textbook-card-list"></div>
+
+</div>
+
+<!-- ===== 成果順位画面 ===== -->
+<div class="main screen" id="screen-rank">
+
+  <div class="sample-note">⚠️ サンプルのランキングデータです。</div>
+
+  <!-- サブタブ -->
+  <div class="subtabs">
+    <button class="subtab active" onclick="switchSubtab('ranking', this)">順位</button>
+    <button class="subtab" onclick="switchSubtab('analysis', this)">分析</button>
+  </div>
+
+  <!-- 順位サブタブ -->
+  <div id="subtab-ranking">
+
+    <!-- ランキング種別 -->
+    <div class="card">
+      <div class="card-label">ランキング種別</div>
+      <div class="segment" id="rank-type-seg">
+        <button class="segment-item active" onclick="switchSeg('rank-type-seg', this)">総学習時間</button>
+        <button class="segment-item" onclick="switchSeg('rank-type-seg', this)">週次達成率</button>
+        <button class="segment-item" onclick="switchSeg('rank-type-seg', this)">連続日数</button>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="card-label">期間</div>
+      <div class="segment" id="rank-period-seg">
+        <button class="segment-item" onclick="switchSeg('rank-period-seg', this)">本日</button>
+        <button class="segment-item active" onclick="switchSeg('rank-period-seg', this)">今週</button>
+        <button class="segment-item" onclick="switchSeg('rank-period-seg', this)">今月</button>
+        <button class="segment-item" onclick="switchSeg('rank-period-seg', this)">累計</button>
+      </div>
+    </div>
+
+    <!-- 自分の順位（上部固定） -->
+    <div class="my-rank-card">
+      <div>
+        <div class="my-rank-label">あなたの順位</div>
+        <div class="my-rank-num">5<span class="small">位 / 全20人</span></div>
+      </div>
+      <div class="my-rank-val">
+        <div class="my-rank-val-num">6h 50m</div>
+        <div class="my-rank-val-label">今週の学習時間</div>
+      </div>
+    </div>
+
+    <!-- ランキングリスト -->
+    <div class="card">
+      <div class="card-title">ランキング</div>
+      <div class="rank-list">
+        <div class="rank-row">
+          <div class="rank-num gold">1</div>
+          <div class="rank-user">
+            鈴木 健太
+            <div class="rank-user-sub">連続18日</div>
+          </div>
+          <div class="rank-value">14h 20m</div>
+        </div>
+        <div class="rank-row">
+          <div class="rank-num silver">2</div>
+          <div class="rank-user">
+            佐藤 美咲
+            <div class="rank-user-sub">連続12日</div>
+          </div>
+          <div class="rank-value">11h 45m</div>
+        </div>
+        <div class="rank-row">
+          <div class="rank-num bronze">3</div>
+          <div class="rank-user">
+            山田 翔太
+            <div class="rank-user-sub">連続9日</div>
+          </div>
+          <div class="rank-value">9h 10m</div>
+        </div>
+        <div class="rank-row">
+          <div class="rank-num">4</div>
+          <div class="rank-user">
+            高橋 ゆい
+            <div class="rank-user-sub">連続7日</div>
+          </div>
+          <div class="rank-value">7h 30m</div>
+        </div>
+        <div class="rank-row" style="background:rgba(26, 82, 118, 0.08); border-color:#1A5276">
+          <div class="rank-num self">5</div>
+          <div class="rank-user">
+            田中（あなた）
+            <div class="rank-user-sub">連続12日</div>
+          </div>
+          <div class="rank-value">6h 50m</div>
+        </div>
+        <div class="rank-row">
+          <div class="rank-num">6</div>
+          <div class="rank-user">
+            伊藤 大輝
+            <div class="rank-user-sub">連続5日</div>
+          </div>
+          <div class="rank-value">5h 20m</div>
+        </div>
+        <div class="rank-row">
+          <div class="rank-num">7</div>
+          <div class="rank-user">
+            渡辺 あかり
+            <div class="rank-user-sub">連続3日</div>
+          </div>
+          <div class="rank-value">4h 05m</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 分析サブタブ -->
+  <div id="subtab-analysis" style="display:none; flex-direction:column; gap:16px">
+
+    <!-- 期間選択 -->
+    <div class="card">
+      <div class="card-label">期間</div>
+      <div class="segment" id="analysis-period-seg">
+        <button class="segment-item" onclick="switchSeg('analysis-period-seg', this)">今日</button>
+        <button class="segment-item" onclick="switchSeg('analysis-period-seg', this)">今週</button>
+        <button class="segment-item active" onclick="switchSeg('analysis-period-seg', this)">今月</button>
+        <button class="segment-item" onclick="switchSeg('analysis-period-seg', this)">累計</button>
+      </div>
+    </div>
+
+    <!-- サマリー数値 -->
+    <div class="summary-grid">
+      <div class="stat-cell">
+        <div class="stat-label">総学習時間</div>
+        <div class="stat-val">186<span class="stat-unit">h</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">今月達成率</div>
+        <div class="stat-val ach-text-blue">82<span class="stat-unit">%</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">今月学習時間</div>
+        <div class="stat-val">24<span class="stat-unit">h 30m</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">連続学習日数</div>
+        <div class="stat-val">12<span class="stat-unit">日</span></div>
+      </div>
+    </div>
+
+    <!-- 月別達成率 棒グラフ -->
+    <div class="card">
+      <div class="card-title">月別達成率</div>
+      <div class="card-label" style="margin-bottom:4px">目標変更があっても100%基準で正規化</div>
+      <div class="month-bar-chart">
+        <div class="month-bar-wrap">
+          <span class="month-bar-val">65%</span>
+          <div class="month-bar ach-green" style="height:65%"></div>
+          <span class="month-bar-label">11月</span>
+        </div>
+        <div class="month-bar-wrap">
+          <span class="month-bar-val">78%</span>
+          <div class="month-bar ach-green" style="height:78%"></div>
+          <span class="month-bar-label">12月</span>
+        </div>
+        <div class="month-bar-wrap">
+          <span class="month-bar-val">45%</span>
+          <div class="month-bar ach-yellow" style="height:45%"></div>
+          <span class="month-bar-label">1月</span>
+        </div>
+        <div class="month-bar-wrap">
+          <span class="month-bar-val">92%</span>
+          <div class="month-bar ach-blue" style="height:92%"></div>
+          <span class="month-bar-label">2月</span>
+        </div>
+        <div class="month-bar-wrap">
+          <span class="month-bar-val">108%</span>
+          <div class="month-bar ach-gold" style="height:100%"></div>
+          <span class="month-bar-label">3月</span>
+        </div>
+        <div class="month-bar-wrap">
+          <span class="month-bar-val">82%</span>
+          <div class="month-bar ach-blue" style="height:82%"></div>
+          <span class="month-bar-label">4月</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 教材ごとの今月達成率（CSVから動的生成） -->
+    <div class="card">
+      <div class="card-title">教材ごとの今月達成率</div>
+      <div id="analysis-textbook-rates"></div>
+    </div>
+
+    <!-- 目標変更履歴 -->
+    <div class="card">
+      <div class="card-title">目標変更の履歴</div>
+      <div class="history-row">
+        <div>
+          <div class="history-change">週目標：8h → 10h</div>
+          <div class="history-date">2026年4月1日</div>
+        </div>
+      </div>
+      <div class="history-row">
+        <div>
+          <div class="history-change">英単語ターゲット：週4h → 週5h</div>
+          <div class="history-date">2026年3月15日</div>
+        </div>
+      </div>
+      <div class="history-row">
+        <div>
+          <div class="history-change">TOEIC 公式問題集 追加（週2h）</div>
+          <div class="history-date">2026年2月1日</div>
+        </div>
+      </div>
+      <div class="history-row">
+        <div>
+          <div class="history-change">週目標：6h → 8h</div>
+          <div class="history-date">2026年1月10日</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGOSスコア履歴 -->
+    <div class="card">
+      <div class="card-title">PROGOSスコア履歴</div>
+
+      <!-- 受験日とCEFRレベル一覧 -->
+      <div style="margin-bottom:16px;">
+        <div class="progos-record">
+          <span class="progos-date">2026年4月10日（第3回）</span>
+          <span class="progos-level">B1</span>
+        </div>
+        <div class="progos-record">
+          <span class="progos-date">2026年2月15日（第2回）</span>
+          <span class="progos-level">A2</span>
+        </div>
+        <div class="progos-record">
+          <span class="progos-date">2025年12月10日（第1回）</span>
+          <span class="progos-level">A1</span>
+        </div>
+      </div>
+
+      <!-- CEFRレベル推移グラフ -->
+      <div style="margin-bottom:20px;">
+        <div class="card-label" style="margin-bottom:8px;">CEFRレベルの推移</div>
+        <div class="progos-cefr-chart">
+          <div class="progos-cefr-item">
+            <div class="progos-cefr-bar-wrap">
+              <div class="progos-cefr-bar" style="height: 20%; background: #D6EAF8;">
+                <div class="bar-value">A1</div>
+              </div>
+            </div>
+            <div class="progos-cefr-label">12/10</div>
+          </div>
+          <div class="progos-cefr-item">
+            <div class="progos-cefr-bar-wrap">
+              <div class="progos-cefr-bar" style="height: 40%; background: #AED6F1;">
+                <div class="bar-value">A2</div>
+              </div>
+            </div>
+            <div class="progos-cefr-label">2/15</div>
+          </div>
+          <div class="progos-cefr-item">
+            <div class="progos-cefr-bar-wrap">
+              <div class="progos-cefr-bar" style="height: 60%; background: #27AE60;">
+                <div class="bar-value">B1</div>
+              </div>
+            </div>
+            <div class="progos-cefr-label">4/10</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最新スコア（6項目バー） -->
+      <div>
+        <div class="card-label" style="margin-bottom:8px;">最新スコア（6項目）</div>
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">流暢さ</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: 66.7%;"></div>
+          </div>
+          <div class="progos-skill-score">4/6</div>
+        </div>
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">一貫性</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: 66.7%;"></div>
+          </div>
+          <div class="progos-skill-score">4/6</div>
+        </div>
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">正確さ</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: 50%;"></div>
+          </div>
+          <div class="progos-skill-score">3/6</div>
+        </div>
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">やり取り</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: 66.7%;"></div>
+          </div>
+          <div class="progos-skill-score">4/6</div>
+        </div>
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">音韻</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: 50%;"></div>
+          </div>
+          <div class="progos-skill-score">3/6</div>
+        </div>
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">語彙</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: 66.7%;"></div>
+          </div>
+          <div class="progos-skill-score">4/6</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ===== 設定画面 ===== -->
+<div class="main screen" id="screen-settings">
+
+  <div class="sample-note">⚠️ サンプル画面です。</div>
+
+  <div class="card">
+    <div class="card-title">アカウント</div>
+    <div class="settings-list">
+      <div class="settings-row">
+        <span class="settings-label">ユーザー名</span>
+        <span class="settings-val">田中 <span class="settings-arrow">›</span></span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">メールアドレス</span>
+        <span class="settings-val">tanaka@example.com <span class="settings-arrow">›</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">学習目標</div>
+    <div class="settings-list">
+      <div class="settings-row">
+        <span class="settings-label">週間学習目標</span>
+        <span class="settings-val">10時間 <span class="settings-arrow">›</span></span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">出国予定日</span>
+        <span class="settings-val">2026/08/19 <span class="settings-arrow">›</span></span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">渡航先</span>
+        <span class="settings-val">シドニー <span class="settings-arrow">›</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">通知</div>
+    <div class="settings-list">
+      <div class="settings-row">
+        <span class="settings-label">学習リマインダー</span>
+        <span class="settings-val">毎日20:00 <span class="settings-arrow">›</span></span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">達成通知</span>
+        <span class="settings-val">ON <span class="settings-arrow">›</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">その他</div>
+    <div class="settings-list">
+      <div class="settings-row">
+        <span class="settings-label">利用規約</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">プライバシーポリシー</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">バージョン</span>
+        <span class="settings-val">1.0.0</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== タブバー ===== -->
+<div class="tab-bar">
+  <button class="tab-item active" onclick="showTab('home')">
+    <div class="tab-icon"></div>
+    <span class="tab-text">ホーム</span>
+  </button>
+  <button class="tab-item" onclick="showTab('record')">
+    <div class="tab-icon"></div>
+    <span class="tab-text">記録</span>
+  </button>
+  <button class="tab-item" onclick="showTab('textbook')">
+    <div class="tab-icon"></div>
+    <span class="tab-text">教材</span>
+  </button>
+  <button class="tab-item" onclick="showTab('rank')">
+    <div class="tab-icon"></div>
+    <span class="tab-text">成果順位</span>
+  </button>
+  <button class="tab-item" onclick="showTab('settings')">
+    <div class="tab-icon"></div>
+    <span class="tab-text">設定</span>
+  </button>
+</div>
+
+<script>
+  // ===== 教材マスター（CSVから読み込み） =====
+  // 注：file:// で開いた場合は fetch が失敗するため、フォールバック用のインラインデータを使用
+  // 本番はローカルサーバー（python3 -m http.server）またはデプロイ環境で動作
+  let textbooks = [];
+
+  // カテゴリから単位を推定
+  function unitFromCategory(category) {
+    const map = {
+      '単語/フレーズ': '語',
+      '文法': 'ページ',
+      '読解': '章',
+      'リスニング': '分',
+      'スピーキング': '分',
+      'ライティング': 'ページ',
+      'マンスリーコーチング': '回',
+      'グループコーチング': '回',
+      'オンライン英会話': '回',
+      'ネイティブ少人数': '回'
+    };
+    return map[category] || '回';
+  }
+
+  // カラーパレット（カテゴリ増加に対応してIDで順番に割り当て）
+  const textbookColorPalette = [
+    { color: '#1A5276', name: 'ネイビー' },
+    { color: '#27AE60', name: 'グリーン' },
+    { color: '#F39C12', name: 'オレンジ' },
+    { color: '#E74C3C', name: 'レッド' },
+    { color: '#2E86C1', name: 'ブルー' },
+    { color: '#9c27b0', name: 'パープル' },
+    { color: '#00acc1', name: 'ティール' },
+    { color: '#D4AF37', name: 'ゴールド' }
+  ];
+
+  // CSVテキストを配列にパース（不可視文字除去、カンマ区切り前提）
+  function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+      const values = line.split(',');
+      const obj = {};
+      headers.forEach((h, i) => {
+        // U+200B〜U+200F、U+FEFF等の不可視文字と前後空白を除去
+        obj[h] = (values[i] || '').replace(/[​-‏﻿]/g, '').trim();
+      });
+      return obj;
+    });
+  }
+
+  // CSV行配列を教材オブジェクトに拡張
+  function enrichTextbooks(rawArr) {
+    return rawArr.map((item, i) => {
+      const palette = textbookColorPalette[i % textbookColorPalette.length];
+      return {
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        iconUrl: item.iconUrl,
+        manualUrl: item.manualUrl,
+        note: item.note,
+        unit: unitFromCategory(item.category),
+        color: palette.color,
+        colorName: palette.name
+      };
+    });
+  }
+
+  // フォールバック用インラインCSV（file:// でfetch失敗時に使用）
+  const fallbackTextbookCSV = `id,name,category,iconUrl,manualUrl,note
+T01,改訂第2版キクタン【Entry】,単語/フレーズ,サンプルT01,https://englead.jp/manual/kikutan/,
+T02,新装版 起きてから寝るまで英語表現1000,単語/フレーズ,サンプルT02,https://englead.jp/manual/okitekaranerumade/,
+T03,中学英語をもう一度ひとつひとつわかりやすく,文法,サンプルT03,https://englead.jp/manual/grammar/,
+T04,マンスリーコーチング,マンスリーコーチング,サンプルT04,,
+T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
+
+  // CSVロード処理（非同期）
+  async function loadTextbooks() {
+    try {
+      const res = await fetch('./data/textbooks.csv');
+      if (!res.ok) throw new Error('CSV fetch failed: ' + res.status);
+      const text = await res.text();
+      textbooks = enrichTextbooks(parseCSV(text));
+      console.log('📚 教材マスター：CSVから読み込み完了', textbooks.length, '件');
+    } catch (e) {
+      textbooks = enrichTextbooks(parseCSV(fallbackTextbookCSV));
+      console.warn('⚠️ 教材マスター：CSV読み込み失敗、フォールバックを使用', e.message);
+    }
+  }
+
+  // 教材IDから教材を取得（未登録はフォールバック）
+  function getTextbook(tbId) {
+    return textbooks.find(t => t.id === tbId) || {
+      id: tbId, name: '(未登録)', category: '未分類',
+      iconUrl: '', manualUrl: '', note: '',
+      unit: '回', color: '#D5D8DC', colorName: 'グレー'
+    };
+  }
+
+  // 分を「2h 30m」形式にフォーマット
+  function formatMinutes(m) {
+    if (!m) return '0m';
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    if (h === 0) return `${min}m`;
+    if (min === 0) return `${h}h`;
+    return `${h}h ${min}m`;
+  }
+
+  // 達成率からach-系クラス名を決定
+  function rateAchClass(rate) {
+    if (rate < 11) return 'red';
+    if (rate < 51) return 'yellow';
+    if (rate < 80) return 'green';
+    if (rate < 100) return 'blue';
+    return 'gold';
+  }
+
+  // ===== 会員の教材別進捗データ（ダミー） =====
+  // 注：将来的にはAPIやスプレッドシートから会員別のデータを取得する想定
+  const memberTextbookData = [
+    { tbId: 'T01', overallProgress: 72, weeklyRate: 85, weeklyGoalHours: 5, dailyGoalMinutes: 45, todayMinutes: 50, weekMinutes: 255, monthMinutes: 1080, monthlyRate: 90, achievedToday: true },
+    { tbId: 'T02', overallProgress: 35, weeklyRate: 42, weeklyGoalHours: 3, dailyGoalMinutes: 30, todayMinutes: 0, weekMinutes: 76, monthMinutes: 330, monthlyRate: 72, achievedToday: false },
+    { tbId: 'T03', overallProgress: 58, weeklyRate: 65, weeklyGoalHours: 2.5, dailyGoalMinutes: 25, todayMinutes: 30, weekMinutes: 98, monthMinutes: 420, monthlyRate: 60, achievedToday: true },
+    { tbId: 'T04', overallProgress: 25, weeklyRate: 50, weeklyGoalHours: 1, dailyGoalMinutes: 60, todayMinutes: 0, weekMinutes: 30, monthMinutes: 120, monthlyRate: 45, achievedToday: false },
+    { tbId: 'T05', overallProgress: 18, weeklyRate: 8, weeklyGoalHours: 2, dailyGoalMinutes: 20, todayMinutes: 0, weekMinutes: 10, monthMinutes: 100, monthlyRate: 35, achievedToday: false }
+  ];
+
+  // ===== レンダリング：ホーム画面の教材進捗 =====
+  function renderHomeTextbookProgress() {
+    const container = document.getElementById('home-textbook-progress');
+    if (!container) return;
+    container.innerHTML = memberTextbookData.map(data => {
+      const tb = getTextbook(data.tbId);
+      return `
+        <div class="textbook-row">
+          <div class="textbook-bar-side" style="background:${tb.color}"></div>
+          <div class="textbook-info">
+            <div class="textbook-name">${tb.name}</div>
+            <div class="textbook-track">
+              <div class="textbook-fill" style="width:${data.overallProgress}%; background:${tb.color}"></div>
+            </div>
+          </div>
+          <span class="textbook-pct">${data.overallProgress}%</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== レンダリング：記録画面の教材選択ラジオ =====
+  function renderRecordTextbookList() {
+    const container = document.getElementById('record-textbook-list');
+    if (!container) return;
+    container.innerHTML = textbooks.map((tb, i) => `
+      <div class="radio-item ${i === 0 ? 'selected' : ''}" onclick="selectTextbook(this)" data-tb-id="${tb.id}">
+        <div class="radio-circle"></div>
+        <span class="radio-label">${tb.name}</span>
+      </div>
+    `).join('');
+    // 初期選択ヒント
+    const first = textbooks[0];
+    if (first) {
+      const hint = document.getElementById('progress-unit-hint');
+      if (hint) hint.textContent = `単位：${first.unit}（${first.name}）`;
+    }
+  }
+
+  // ===== レンダリング：教材タブのカード =====
+  function renderTextbookCards() {
+    const container = document.getElementById('textbook-card-list');
+    if (!container) return;
+    container.innerHTML = memberTextbookData.map(data => {
+      const tb = getTextbook(data.tbId);
+      const ach = rateAchClass(data.weeklyRate);
+      return `
+        <div class="textbook-card" style="margin-bottom: var(--space-4);">
+          <div class="textbook-card-head">
+            <div>
+              <div class="textbook-card-name">${tb.name}</div>
+              <div class="textbook-card-goal">週目標：${data.weeklyGoalHours}時間 / 日目標：${data.dailyGoalMinutes}分</div>
+            </div>
+            <span class="badge ${data.achievedToday ? 'badge-achieved' : 'badge-not'}">${data.achievedToday ? '今日達成' : '未達成'}</span>
+          </div>
+          <div class="goal-row">
+            <span class="goal-label">今週達成率</span>
+            <span class="goal-val ach-text-${ach}">${data.weeklyRate}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill ach-${ach}" style="width:${data.weeklyRate}%"></div>
+          </div>
+          <div class="textbook-time-grid">
+            <div class="textbook-time-cell">
+              <div class="textbook-time-label">今日</div>
+              <div class="textbook-time-val">${formatMinutes(data.todayMinutes)}</div>
+            </div>
+            <div class="textbook-time-cell">
+              <div class="textbook-time-label">今週</div>
+              <div class="textbook-time-val">${formatMinutes(data.weekMinutes)}</div>
+            </div>
+            <div class="textbook-time-cell">
+              <div class="textbook-time-label">今月</div>
+              <div class="textbook-time-val">${formatMinutes(data.monthMinutes)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== レンダリング：分析タブの教材ごと今月達成率 =====
+  function renderAnalysisTextbookRates() {
+    const container = document.getElementById('analysis-textbook-rates');
+    if (!container) return;
+    container.innerHTML = memberTextbookData.map(data => {
+      const tb = getTextbook(data.tbId);
+      const ach = rateAchClass(data.monthlyRate);
+      return `
+        <div class="textbook-row">
+          <div class="textbook-bar-side ach-${ach}"></div>
+          <div class="textbook-info">
+            <div class="textbook-name">${tb.name}</div>
+            <div class="textbook-track">
+              <div class="textbook-fill ach-${ach}" style="width:${data.monthlyRate}%"></div>
+            </div>
+          </div>
+          <span class="textbook-pct ach-text-${ach}">${data.monthlyRate}%</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== タブ切替 =====
+  const tabTitles = {
+    home: 'マイダッシュボード',
+    record: '学習を記録',
+    textbook: '教材',
+    rank: '成果順位',
+    settings: '設定',
+  };
+  function showTab(name) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+
+    const tabs = document.querySelectorAll('.tab-item');
+    const order = ['home', 'record', 'textbook', 'rank', 'settings'];
+    tabs.forEach((tab, i) => {
+      tab.classList.toggle('active', order[i] === name);
+    });
+
+    document.getElementById('nav-title').textContent = tabTitles[name] || '';
+    window.scrollTo(0, 0);
+  }
+
+  // ===== サブタブ切替（成果順位） =====
+  function switchSubtab(name, el) {
+    document.querySelectorAll('#screen-rank .subtab').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('subtab-ranking').style.display = (name === 'ranking') ? '' : 'none';
+    document.getElementById('subtab-analysis').style.display = (name === 'analysis') ? 'flex' : 'none';
+  }
+
+  // ===== セグメント選択 =====
+  function switchSeg(segId, el) {
+    document.querySelectorAll('#' + segId + ' .segment-item').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ===== 記録：日付変更 =====
+  let recordDate = new Date(2026, 3, 14);
+  const dayNames = ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+  function changeDate(delta) {
+    recordDate.setDate(recordDate.getDate() + delta);
+    updateRecordDateUI();
+  }
+  function updateRecordDateUI() {
+    const y = recordDate.getFullYear();
+    const m = recordDate.getMonth() + 1;
+    const d = recordDate.getDate();
+    document.getElementById('record-date').textContent = `${y}年${m}月${d}日`;
+    document.getElementById('record-date-sub').textContent = dayNames[recordDate.getDay()];
+  }
+
+  // ===== 記録：教材選択 =====
+  // 教材マスター（textbooks 配列）の unit を参照するようになり、
+  // 新しい教材が追加されても自動的に対応
+  function selectTextbook(el) {
+    document.querySelectorAll('#screen-record .radio-item').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    const tbId = el.dataset.tbId;
+    const tb = textbooks.find(t => t.id === tbId);
+    if (tb) {
+      document.getElementById('progress-unit-hint').textContent = `単位：${tb.unit}（${tb.name}）`;
+    }
+  }
+
+  // ===== 記録：モード切替（手入力・ストップウォッチ） =====
+  function switchMode(mode, el) {
+    document.querySelectorAll('.mode-toggle-item').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('mode-manual').style.display = (mode === 'manual') ? '' : 'none';
+    document.getElementById('mode-stopwatch').style.display = (mode === 'stopwatch') ? '' : 'none';
+  }
+
+  // ===== ストップウォッチ =====
+  let swElapsed = 0; // ミリ秒
+  let swStart = 0;
+  let swTimer = null;
+  function toggleStopwatch() {
+    const btn = document.getElementById('sw-toggle');
+    if (swTimer) {
+      clearInterval(swTimer);
+      swTimer = null;
+      swElapsed += Date.now() - swStart;
+      btn.textContent = '再開';
+    } else {
+      swStart = Date.now();
+      swTimer = setInterval(updateStopwatch, 100);
+      btn.textContent = '停止';
+    }
+  }
+  function resetStopwatch() {
+    if (swTimer) { clearInterval(swTimer); swTimer = null; }
+    swElapsed = 0;
+    document.getElementById('sw-toggle').textContent = '開始';
+    document.getElementById('sw-display').textContent = '00:00:00';
+  }
+  function updateStopwatch() {
+    const total = swElapsed + (swTimer ? (Date.now() - swStart) : 0);
+    const s = Math.floor(total / 1000);
+    const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    document.getElementById('sw-display').textContent = `${hh}:${mm}:${ss}`;
+  }
+
+  // ===== 記録：保存 =====
+  function saveRecord() {
+    alert('【サンプル】学習記録を保存しました。\n（実際のデータは保存されません）');
+  }
+
+  // ===== アバターメニュー：表示切替 =====
+  function toggleAvatarMenu(event) {
+    event.stopPropagation();
+    document.getElementById('avatar-menu').classList.toggle('show');
+  }
+
+  // メニュー外クリックで閉じる
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('avatar-menu');
+    if (menu && !e.target.closest('.avatar-wrap')) {
+      menu.classList.remove('show');
+    }
+  });
+
+  // ===== ログアウト処理 =====
+  function handleLogout() {
+    if (confirm('ログアウトしますか？')) {
+      window.location.href = 'login.html';
+    }
+  }
+
+  // ===== 初期化（CSVロード後にレンダリング） =====
+  loadTextbooks().then(() => {
+    renderHomeTextbookProgress();
+    renderRecordTextbookList();
+    renderTextbookCards();
+    renderAnalysisTextbookRates();
+  });
+</script>
+
+</body>
+</html>

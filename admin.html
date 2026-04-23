@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者ダッシュボード｜学習管理アプリ</title>
+  <style>
+    /* ===== デザイントークン（:root で一元管理） ===== */
+    :root {
+      /* === Primary === */
+      --color-primary:        #1A5276;
+      --color-primary-light:  #2E86C1;
+      --color-primary-dark:   #0E3860;
+
+      /* === Accent === */
+      --color-accent:         #27AE60;
+
+      /* === Neutral === */
+      --color-bg:             #FFFFFF;
+      --color-bg-soft:        #F4F6F8;
+      --color-border:         #D5D8DC;
+
+      /* === Text === */
+      --color-text-primary:   #1C2833;
+      --color-text-secondary: #566573;
+      --color-text-muted:     #ABB2B9;
+      --color-text-inverse:   #FFFFFF;
+
+      /* === Semantic === */
+      --color-success:        #27AE60;
+      --color-warning:        #F39C12;
+      --color-error:          #E74C3C;
+      --color-gold:           #D4AF37;
+
+      /* === Font === */
+      --font-primary: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+
+      /* === Transitions === */
+      --transition-fast: 0.15s ease;
+      --transition-base: 0.2s ease;
+    }
+
+    /* ===== 基本スタイル ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-primary);
+      background: var(--color-bg-soft);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* フォーカスリング（アクセシビリティ） */
+    :focus-visible {
+      outline: 3px solid var(--color-primary-light);
+      outline-offset: 2px;
+    }
+
+    /* ===== レイアウト（PC向け） ===== */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ===== サイドバー（ダークネイビー） ===== */
+    .sidebar {
+      width: 240px;
+      background: var(--color-primary-dark);
+      color: var(--color-text-inverse);
+      padding: 24px 0;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-brand {
+      padding: 0 24px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--color-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: var(--color-text-inverse);
+      box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+    }
+    .brand-text { font-size: 14px; font-weight: 700; color: var(--color-text-inverse); }
+    .brand-sub { font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; }
+
+    .nav-menu { list-style: none; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--color-text-inverse);
+    }
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--color-text-inverse);
+      font-weight: 700;
+      border-left-color: var(--color-accent);
+    }
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .nav-item.active .nav-icon { background: var(--color-accent); }
+
+    /* ===== メインエリア ===== */
+    .main-area {
+      margin-left: 240px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== 上部バー ===== */
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid #D5D8DC;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; color: #1C2833; }
+    .topbar-sub { font-size: 12px; color: #566573; margin-top: 2px; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .admin-info { display: flex; align-items: center; gap: 10px; }
+    .admin-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #1A5276;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #ffffff;
+    }
+    .admin-name { font-size: 13px; font-weight: 700; color: #1C2833; }
+    .admin-role { font-size: 11px; color: #566573; }
+    .logout-btn {
+      background: #ffffff; color: #1C2833;
+      border: 1.5px solid #D5D8DC; border-radius: 4px;
+      padding: 8px 16px; font-size: 13px; font-weight: 700;
+      min-height: 36px;
+      transition: all var(--transition-fast);
+    }
+    .logout-btn:hover { background: #F4F6F8; border-color: #E74C3C; color: #E74C3C; }
+
+    /* ===== コンテンツ ===== */
+    .content { padding: 24px 32px; flex: 1; }
+
+    /* ===== 画面切替 ===== */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ===== ページヘッダー ===== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1C2833;
+    }
+    .page-sub { font-size: 12px; color: #566573; margin-top: 4px; }
+    .primary-btn {
+      background: var(--color-primary); color: var(--color-text-inverse);
+      border: 2px solid transparent; border-radius: 4px;
+      padding: 10px 20px; font-size: 13px; font-weight: 700;
+      min-height: 40px;
+      transition: all var(--transition-base);
+    }
+    .primary-btn:hover {
+      background: var(--color-primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 82, 118, 0.3);
+    }
+    .danger-btn {
+      background: #ffffff; color: var(--color-error);
+      border: 1.5px solid var(--color-error); border-radius: 4px;
+      padding: 10px 20px; font-size: 13px; font-weight: 700;
+      min-height: 40px;
+      transition: all var(--transition-fast);
+    }
+    .danger-btn:hover { background: #FDEDEC; }
+    .secondary-btn {
+      background: #ffffff; color: var(--color-text-primary);
+      border: 1.5px solid var(--color-border); border-radius: 4px;
+      padding: 10px 20px; font-size: 13px; font-weight: 700;
+      min-height: 40px;
+      transition: all var(--transition-fast);
+    }
+    .secondary-btn:hover { background: var(--color-bg-soft); }
+
+    /* ===== 期間選択タブ ===== */
+    .period-tabs {
+      display: flex;
+      background: #F4F6F8;
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+      max-width: 480px;
+    }
+    .period-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #566573;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .period-tab.active {
+      background: #ffffff;
+      color: #1C2833;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* ===== 大数値カード（2列） ===== */
+    .big-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .big-stat-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #D5D8DC;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .big-stat-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #566573;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .big-stat-value {
+      font-size: 40px;
+      font-weight: 700;
+      color: #1C2833;
+      line-height: 1;
+    }
+    .big-stat-unit {
+      font-size: 16px;
+      font-weight: 400;
+      color: #566573;
+      margin-left: 4px;
+    }
+    .big-stat-sub {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .big-stat-compare {
+      font-size: 12px;
+      color: #1A5276;
+    }
+    .big-stat-compare.down { color: #E74C3C; }
+
+    /* ===== 月別推移グラフ ===== */
+    .monthly-chart-wrap {
+      margin-bottom: 20px;
+    }
+    .monthly-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 140px;
+      padding: 12px 0 0;
+    }
+    .monthly-chart-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+    }
+    .monthly-bar-wrap {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .monthly-bar {
+      width: 55%;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      min-height: 4px;
+      transition: height 0.6s ease;
+    }
+    .monthly-bar .bar-value {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      color: #1C2833;
+      white-space: nowrap;
+    }
+    .monthly-bar-label { font-size: 11px; color: #566573; }
+
+    /* ===== 要フォローカードグリッド ===== */
+    .follow-up-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .follow-up-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #D5D8DC;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .follow-up-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .follow-up-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px; height: 24px;
+      border-radius: 99px;
+      font-size: 12px; font-weight: 700;
+      padding: 0 6px;
+    }
+    .follow-up-count.red { background: #FDEDEC; color: #E74C3C; }
+    .follow-up-count.yellow { background: #FEF9E7; color: #B9770E; }
+    .follow-up-count.gray { background: #EAEDED; color: #566573; }
+    .follow-up-member {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .follow-up-member:hover { background: #F4F6F8; }
+    .follow-up-name { font-size: 12px; font-weight: 700; color: #1A5276; }
+    .follow-up-detail { font-size: 11px; color: #ABB2B9; }
+    .follow-up-empty { font-size: 11px; color: #ccc; padding: 4px 0; }
+
+    /* ===== サマリーカード（汎用） ===== */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #D5D8DC;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .summary-label {
+      font-size: 12px; font-weight: 700; color: #566573;
+      letter-spacing: 0.06em; margin-bottom: 8px;
+    }
+    .summary-value {
+      font-size: 28px; font-weight: 700; color: #1C2833; line-height: 1;
+    }
+    .summary-unit {
+      font-size: 13px; font-weight: 400; color: #566573; margin-left: 4px;
+    }
+    .summary-trend { font-size: 11px; color: #27AE60; margin-top: 8px; }
+    .summary-trend.down { color: #E74C3C; }
+
+    /* ===== カード ===== */
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #D5D8DC;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #D5D8DC;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title { font-size: 16px; font-weight: 700; color: #1C2833; }
+    .card-sub { font-size: 12px; color: #566573; margin-top: 2px; }
+    .card-body { padding: 20px 24px; }
+
+    /* ===== テーブル ===== */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #F4F6F8;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px; font-weight: 700; color: #566573;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #D5D8DC;
+    }
+    tbody td {
+      padding: 16px;
+      font-size: 13px; color: #1C2833;
+      border-bottom: 1px solid #EAEDED;
+      vertical-align: middle;
+    }
+    tbody tr { transition: background 0.15s; }
+    tbody tr.clickable { cursor: pointer; }
+    tbody tr.clickable:hover { background: #fafbfc; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .member-cell { display: flex; align-items: center; gap: 10px; }
+    .member-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #1A5276;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #ffffff;
+      flex-shrink: 0;
+    }
+    .member-name { font-size: 13px; font-weight: 700; color: #1C2833; }
+    .member-id { font-size: 11px; color: #ABB2B9; margin-top: 2px; }
+    .member-nickname { font-size: 11px; color: #566573; margin-top: 2px; }
+
+    /* ===== 達成率バッジ（色分けルール） ===== */
+    .rate-badge {
+      display: inline-flex; align-items: center;
+      padding: 4px 10px; border-radius: 99px;
+      font-size: 12px; font-weight: 700;
+      min-width: 60px; justify-content: center;
+    }
+    .rate-red { background: #FDEDEC; color: #E74C3C; }       /* 10%以下 */
+    .rate-yellow { background: #FEF9E7; color: #B9770E; }    /* 11-50% */
+    .rate-green { background: #EAFAF1; color: #27AE60; }     /* 51-79% */
+    .rate-blue { background: #EBF5FB; color: #2E86C1; }      /* 80-99% */
+    .rate-gold { background: #FCF3CF; color: #9A7D0A; border: 1px solid #D4AF37; }  /* 100%以上 */
+
+    /* ===== 最終ログイン ===== */
+    .login-recent { color: #1C2833; }
+    .login-stale { color: #E74C3C; font-weight: 700; }
+
+    /* ===== ステータスバッジ ===== */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 11px; font-weight: 700;
+    }
+    .status-active { background: #EAFAF1; color: #27AE60; }
+    .status-pause { background: #EAEDED; color: #566573; }
+
+    .action-btn {
+      background: #ffffff;
+      border: 1px solid #D5D8DC;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px; color: #1C2833;
+      margin-right: 4px;
+    }
+    .action-btn:hover { background: #F4F6F8; border-color: #1A5276; color: #1A5276; }
+    .action-btn.danger { color: #E74C3C; }
+    .action-btn.danger:hover { background: #FDEDEC; border-color: #E74C3C; color: #E74C3C; }
+
+    /* ===== スライドインパネル ===== */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 50;
+    }
+    .overlay.show { display: block; }
+    .slide-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: 480px;
+      max-width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 60;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .slide-panel.show { transform: translateX(0); }
+    .panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #D5D8DC;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      z-index: 1;
+    }
+    .panel-title { font-size: 16px; font-weight: 700; color: #1C2833; }
+    .panel-close {
+      background: none; border: none;
+      font-size: 20px; color: #ABB2B9;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+    }
+    .panel-close:hover { background: #F4F6F8; color: #1C2833; }
+    .panel-body { padding: 24px; flex: 1; }
+    .panel-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #D5D8DC;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      background: #ffffff;
+      position: sticky;
+      bottom: 0;
+    }
+
+    /* ===== フォーム ===== */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px; font-weight: 700;
+      color: #566573;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13px;
+      border: 1px solid #D5D8DC;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #1C2833;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: #1A5276; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .assigned-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #F4F6F8;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .assigned-emoji { font-size: 18px; }
+    .assigned-name { flex: 1; font-size: 13px; font-weight: 700; color: #1C2833; }
+    .assigned-target { font-size: 12px; color: #566573; }
+    .assigned-remove {
+      background: none; border: none;
+      color: #ABB2B9; font-size: 16px;
+      padding: 4px 8px;
+    }
+    .assigned-remove:hover { color: #E74C3C; }
+
+    /* ===== 会員カルテ：2カラムレイアウト ===== */
+    .karte-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+    }
+    .karte-list {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #D5D8DC;
+      overflow: hidden;
+      align-self: start;
+    }
+    .karte-list-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #D5D8DC;
+      font-size: 13px; font-weight: 700; color: #1C2833;
+      background: #F4F6F8;
+    }
+    .karte-list-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #EAEDED;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s;
+    }
+    .karte-list-item:hover { background: #fafbfc; }
+    .karte-list-item.active {
+      background: #EAF2F8;
+      border-left: 3px solid #1A5276;
+    }
+    .karte-list-item:last-child { border-bottom: none; }
+
+    /* ===== カルテ本体 ===== */
+    .karte-main { display: flex; flex-direction: column; gap: 16px; }
+    .karte-profile {
+      background: linear-gradient(135deg, #1A5276 0%, #0E3860 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(26, 82, 118, 0.25);
+    }
+    .profile-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .profile-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: #ffffff;
+    }
+    .profile-name { font-size: 20px; font-weight: 700; }
+    .profile-nickname { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+    .profile-item {
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .profile-item-label { font-size: 10px; opacity: 0.85; margin-bottom: 4px; }
+    .profile-item-value { font-size: 14px; font-weight: 700; }
+
+    /* ===== 今月の学習状況 ===== */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat-box {
+      background: #F4F6F8;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .stat-box-label { font-size: 11px; color: #566573; margin-bottom: 6px; }
+    .stat-box-value { font-size: 22px; font-weight: 700; color: #1C2833; }
+    .stat-box-unit { font-size: 11px; color: #566573; font-weight: 400; margin-left: 4px; }
+    .stat-box-compare { font-size: 11px; margin-top: 6px; color: #27AE60; }
+    .stat-box-compare.down { color: #E74C3C; }
+
+    /* ===== CSS棒グラフ ===== */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      height: 160px;
+      padding: 16px 8px 0;
+    }
+    .bar-chart-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+    }
+    .bar-wrap {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .bar {
+      width: 60%;
+      background: #1A5276;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      min-height: 4px;
+      transition: height 0.6s ease;
+    }
+    .bar-value {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      color: #1C2833;
+    }
+    .bar-label { font-size: 11px; color: #566573; }
+
+    /* ===== 教材ごと進捗バー ===== */
+    .textbook-progress-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .textbook-emoji { font-size: 20px; width: 28px; text-align: center; }
+    .textbook-info { flex: 1; }
+    .textbook-name-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .textbook-name { font-size: 13px; font-weight: 700; color: #1C2833; }
+    .textbook-pct { font-size: 12px; font-weight: 700; color: #1C2833; }
+    .textbook-track {
+      background: #EAEDED;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .textbook-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+    .fill-red { background: #E74C3C; }
+    .fill-yellow { background: #F39C12; }
+    .fill-green { background: #27AE60; }
+    .fill-blue { background: #2E86C1; }
+    .fill-gold { background: linear-gradient(90deg, #D4AF37, #9A7D0A); }
+
+    /* ===== PROGOSセクション ===== */
+    .progos-cefr-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+      height: 140px;
+      padding: 12px 8px 0;
+    }
+    .progos-cefr-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+    }
+    .progos-cefr-bar-wrap {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .progos-cefr-bar {
+      width: 50%;
+      min-width: 36px;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+      min-height: 8px;
+      transition: height 0.6s ease;
+    }
+    .progos-cefr-bar .bar-value {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      color: #1C2833;
+      white-space: nowrap;
+    }
+    .progos-cefr-label { font-size: 11px; color: #566573; }
+
+    .progos-skill-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .progos-skill-row:last-child { margin-bottom: 0; }
+    .progos-skill-name {
+      width: 60px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1C2833;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .progos-skill-track {
+      flex: 1;
+      background: #EAEDED;
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .progos-skill-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: #1A5276;
+      transition: width 0.6s ease;
+    }
+    .progos-skill-score {
+      width: 28px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1C2833;
+      flex-shrink: 0;
+    }
+
+    /* ===== カルテ未選択時プレースホルダー ===== */
+    .karte-placeholder {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px dashed #d0d0d0;
+      padding: 64px 24px;
+      text-align: center;
+      color: #ABB2B9;
+      font-size: 13px;
+    }
+
+    /* ===== 教材管理タブ ===== */
+    .tabs {
+      display: flex;
+      background: #F4F6F8;
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 20px;
+      max-width: 400px;
+    }
+    .tab {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 10px;
+      font-size: 13px; font-weight: 700;
+      color: #566573;
+      border-radius: 6px;
+    }
+    .tab.active {
+      background: #ffffff;
+      color: #1C2833;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ===== 教材マスター ===== */
+    .textbook-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tb-emoji-big { font-size: 22px; }
+    .tb-name { font-size: 13px; font-weight: 700; color: #1C2833; }
+    .tb-id { font-size: 11px; color: #ABB2B9; margin-top: 2px; }
+
+    .color-dot {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    .type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #EAEDED;
+      color: #1C2833;
+    }
+
+    /* ===== 教材割り当て画面 ===== */
+    .assign-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+    }
+
+    /* ===== 中央モーダル（教材選択・カルテ表示） ===== */
+    .center-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 70;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .center-modal-overlay.show { display: flex; }
+    .center-modal {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-height: 85vh;
+      overflow: hidden;
+    }
+    .center-modal-sm { max-width: 440px; }
+    .center-modal-lg { max-width: 900px; }
+    .center-modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #D5D8DC;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .center-modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .center-modal-body > * + * { margin-top: 16px; }
+    .center-modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid #D5D8DC;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ===== 検索パネル ===== */
+    .search-panel {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #D5D8DC;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .search-section { margin-bottom: 16px; }
+    .search-section:last-of-type { margin-bottom: 0; }
+    .search-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #566573;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .search-tabs {
+      display: inline-flex;
+      background: #F4F6F8;
+      border-radius: 6px;
+      padding: 3px;
+      gap: 3px;
+      margin-bottom: 8px;
+    }
+    .search-tab {
+      background: none;
+      border: none;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #566573;
+      border-radius: 5px;
+    }
+    .search-tab.active {
+      background: #ffffff;
+      color: #1C2833;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .search-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .search-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .search-rate-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .search-rate-input {
+      flex: 1;
+      min-width: 60px;
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid #D5D8DC;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fafbfc;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #1C2833;
+      cursor: pointer;
+    }
+    .checkbox-item input[type="checkbox"] {
+      cursor: pointer;
+      width: 14px;
+      height: 14px;
+      accent-color: #1A5276;
+    }
+
+    .search-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .search-submit-btn {
+      background: var(--color-primary); color: var(--color-text-inverse);
+      border: 2px solid transparent; border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 13px; font-weight: 700;
+      min-height: 40px;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    .search-submit-btn:hover { background: #2E86C1; }
+
+    /* ===== 検索結果表示 ===== */
+    .search-result-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      background: #EAF2F8;
+      border: 1px solid #D6EAF8;
+      border-radius: 8px;
+    }
+    .result-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0E3860;
+    }
+    .filter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ffffff;
+      border: 1px solid #D6EAF8;
+      border-radius: 99px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #0E3860;
+      font-weight: 700;
+    }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 960px) {
+      .big-stats-grid { grid-template-columns: 1fr; }
+      .follow-up-grid { grid-template-columns: repeat(2, 1fr); }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .search-grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .search-grid-3 { grid-template-columns: 1fr; }
+      .profile-grid { grid-template-columns: repeat(3, 1fr); }
+      .stats-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .profile-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- ===== 左サイドバー ===== -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">学</div>
+        <div>
+          <div class="brand-text">学習管理アプリ</div>
+          <div class="brand-sub">管理画面</div>
+        </div>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item active" data-screen="dashboard" onclick="switchScreen('dashboard')">
+          <span class="nav-icon"></span>
+          <span>ダッシュボード</span>
+        </li>
+        <li class="nav-item" data-screen="members" onclick="switchScreen('members')">
+          <span class="nav-icon"></span>
+          <span>会員管理</span>
+        </li>
+        <li class="nav-item" data-screen="karte" onclick="switchScreen('karte')">
+          <span class="nav-icon"></span>
+          <span>会員カルテ</span>
+        </li>
+        <li class="nav-item" data-screen="textbooks" onclick="switchScreen('textbooks')">
+          <span class="nav-icon"></span>
+          <span>教材管理</span>
+        </li>
+        <li class="nav-item" data-screen="staff" onclick="switchScreen('staff')">
+          <span class="nav-icon"></span>
+          <span>スタッフ管理</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- ===== メインエリア ===== -->
+    <div class="main-area">
+      <!-- 上部バー -->
+      <header class="topbar">
+        <div>
+          <div class="topbar-title" id="topbar-title">ダッシュボード</div>
+          <div class="topbar-sub">2026年4月16日（木）</div>
+        </div>
+        <div class="topbar-right">
+          <div class="admin-info">
+            <div class="admin-avatar" id="admin-avatar">--</div>
+            <div>
+              <div class="admin-name" id="admin-name">---</div>
+              <div class="admin-role" id="admin-role">---</div>
+            </div>
+          </div>
+          <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
+        </div>
+      </header>
+
+      <!-- コンテンツ -->
+      <div class="content">
+
+        <!-- ========== ダッシュボード画面 ========== -->
+        <div class="screen active" id="screen-dashboard">
+          <!-- ① 期間選択タブ -->
+          <div class="period-tabs" id="period-tabs">
+            <button class="period-tab" data-period="today" onclick="switchPeriod('today')">本日</button>
+            <button class="period-tab active" data-period="week" onclick="switchPeriod('week')">今週</button>
+            <button class="period-tab" data-period="month" onclick="switchPeriod('month')">今月</button>
+            <button class="period-tab" data-period="all" onclick="switchPeriod('all')">入会から本日</button>
+          </div>
+
+          <!-- ② 大数値カード（2列） -->
+          <div class="big-stats-grid">
+            <div class="big-stat-card">
+              <div class="big-stat-label">全会員の学習記録達成率</div>
+              <div>
+                <span class="big-stat-value" id="big-rate">--</span><span class="big-stat-unit">%</span>
+              </div>
+              <div class="big-stat-sub">
+                <span class="big-stat-compare" id="big-rate-compare"></span>
+                <span class="big-stat-compare" id="big-rate-goal"></span>
+              </div>
+            </div>
+            <div class="big-stat-card">
+              <div class="big-stat-label">全会員の学習時間合計</div>
+              <div>
+                <span class="big-stat-value" id="big-hours">--</span><span class="big-stat-unit">h</span>
+              </div>
+              <div class="big-stat-sub">
+                <span class="big-stat-compare" id="big-hours-compare"></span>
+                <span class="big-stat-compare" id="big-hours-goal"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ 要フォローカード5枚 -->
+          <div class="follow-up-grid" id="follow-up-grid"></div>
+
+          <!-- ④ 月別平均達成率推移グラフ -->
+          <div class="card monthly-chart-wrap">
+            <div class="card-header">
+              <div>
+                <div class="card-title">月別平均達成率の推移</div>
+                <div class="card-sub">全会員の平均（直近7ヶ月）</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="monthly-chart" id="monthly-chart"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ========== 会員管理画面 ========== -->
+        <div class="screen" id="screen-members">
+          <div class="page-header">
+            <div>
+              <div class="page-title">会員管理</div>
+              <div class="page-sub">会員情報の確認・編集</div>
+            </div>
+            <button class="primary-btn" onclick="alert('【サンプル】新規会員登録フォームを開きます')">＋ 新規会員を登録</button>
+          </div>
+
+          <!-- 検索パネル -->
+          <div class="search-panel">
+            <!-- ① キーワード検索（上段） -->
+            <div class="search-section">
+              <div class="search-section-label">キーワード検索</div>
+              <div class="search-tabs">
+                <button class="search-tab active" data-keyword-tab="name" onclick="switchKeywordTab('name')">氏名で検索</button>
+                <button class="search-tab" data-keyword-tab="id" onclick="switchKeywordTab('id')">会員IDで検索</button>
+              </div>
+              <input type="text" class="form-input" id="search-keyword" placeholder="氏名またはニックネームを入力">
+            </div>
+
+            <!-- 中段：4列 -->
+            <div class="search-grid-4">
+              <!-- ② 今月達成率 -->
+              <div>
+                <div class="search-section-label">今月達成率</div>
+                <div class="search-rate-row">
+                  <input type="number" class="form-input search-rate-input" id="search-rate-value" placeholder="例: 50" min="0" max="200">
+                  <span style="font-size:12px;">%</span>
+                  <select class="form-select" id="search-rate-cond" style="width:80px;">
+                    <option value="below">以下</option>
+                    <option value="above">以上</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- ③ 最終ログイン -->
+              <div>
+                <div class="search-section-label">最終ログイン</div>
+                <select class="form-select" id="search-login">
+                  <option value="">すべて</option>
+                  <option value="today">今日</option>
+                  <option value="within3">3日以内</option>
+                  <option value="over3">3日以上前</option>
+                  <option value="over7">1週間以上前</option>
+                </select>
+              </div>
+
+              <!-- ④ 前回の学習記録 -->
+              <div>
+                <div class="search-section-label">前回の学習記録から</div>
+                <select class="form-select" id="search-record">
+                  <option value="">すべて</option>
+                  <option value="today">今日記録あり</option>
+                  <option value="within3">3日以内</option>
+                  <option value="over3">3日以上前</option>
+                  <option value="over7">1週間以上前</option>
+                </select>
+              </div>
+
+              <!-- ⑤ 前回コーチング -->
+              <div>
+                <div class="search-section-label">前回コーチングから</div>
+                <select class="form-select" id="search-coaching">
+                  <option value="">すべて</option>
+                  <option value="within7">7日以内</option>
+                  <option value="within14">14日以内</option>
+                  <option value="over30">30日以上前</option>
+                  <option value="none">未実施</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 下段：3列 -->
+            <div class="search-grid-3">
+              <!-- ⑥ 使用教材（モーダル選択） -->
+              <div>
+                <div class="search-section-label">使用教材（複数選択可）</div>
+                <button type="button" class="secondary-btn" id="search-textbook-btn" onclick="openTextbookModal()" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center;">
+                  <span id="search-textbook-btn-label">教材を選択</span>
+                  <span style="font-size:11px; color:#999;">▾</span>
+                </button>
+              </div>
+
+              <!-- ⑦ PROGOSオーバーオール -->
+              <div>
+                <div class="search-section-label">PROGOSオーバーオール</div>
+                <select class="form-select" id="search-progos">
+                  <option value="">すべて</option>
+                  <option value="Pre-A1">Pre-A1</option>
+                  <option value="A1">A1</option>
+                  <option value="A1 High">A1 High</option>
+                  <option value="A2">A2</option>
+                  <option value="A2 High">A2 High</option>
+                  <option value="B1">B1</option>
+                  <option value="B1 High">B1 High</option>
+                  <option value="B2+">B2 / B2 High 以上</option>
+                </select>
+              </div>
+
+              <!-- ⑧ 受講開始月 -->
+              <div>
+                <div class="search-section-label">受講開始月</div>
+                <select class="form-select" id="search-startmonth">
+                  <option value="">すべて</option>
+                  <option value="2026-04">2026年4月</option>
+                  <option value="2026-03">2026年3月</option>
+                  <option value="2026-02">2026年2月</option>
+                  <option value="2026-01">2026年1月</option>
+                  <option value="2025-12">2025年12月</option>
+                  <option value="2025-11">2025年11月</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 操作ボタン -->
+            <div class="search-actions">
+              <button class="secondary-btn" onclick="clearMemberFilter()">クリア</button>
+              <button class="search-submit-btn" onclick="applyMemberFilter()">この条件で検索する</button>
+            </div>
+          </div>
+
+          <!-- 検索結果バー（初期は非表示） -->
+          <div class="search-result-bar" id="search-result-bar" style="display:none;">
+            <span class="result-count" id="result-count"></span>
+            <div id="filter-tags" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+          </div>
+
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>会員ID</th>
+                  <th>氏名 / ニックネーム</th>
+                  <th></th>
+                  <th>受講期間</th>
+                  <th>今月達成率</th>
+                  <th>最終ログイン</th>
+                </tr>
+              </thead>
+              <tbody id="members-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== 会員カルテ画面 ========== -->
+        <div class="screen" id="screen-karte">
+          <div class="page-header">
+            <div>
+              <div class="page-title">会員カルテ</div>
+              <div class="page-sub">会員ごとの学習詳細</div>
+            </div>
+          </div>
+
+          <div class="karte-layout">
+            <!-- 左：会員リスト -->
+            <div class="karte-list">
+              <div class="karte-list-header">会員を選択</div>
+              <div id="karte-list-body"></div>
+            </div>
+
+            <!-- 右：カルテ本体 -->
+            <div id="karte-main" class="karte-main"></div>
+          </div>
+        </div>
+
+        <!-- ========== 教材管理画面 ========== -->
+        <div class="screen" id="screen-textbooks">
+          <div class="page-header">
+            <div>
+              <div class="page-title">教材管理</div>
+              <div class="page-sub">教材マスターと割り当ての管理</div>
+            </div>
+            <button class="primary-btn" onclick="alert('【サンプル】教材追加フォームを開きます')">＋ 教材を追加する</button>
+          </div>
+
+          <!-- タブ -->
+          <div class="tabs">
+            <button class="tab active" onclick="switchTextbookTab('master')">教材マスター</button>
+            <button class="tab" onclick="switchTextbookTab('assign')">会員への割り当て</button>
+          </div>
+
+          <!-- 教材マスター -->
+          <div class="tab-pane active" id="tab-master">
+            <div class="card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>教材ID</th>
+                    <th>教材名</th>
+                    <th>タイプ</th>
+                    <th>単位</th>
+                    <th>カラー</th>
+                    <th>使用会員数</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="textbook-master-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 会員への割り当て -->
+          <div class="tab-pane" id="tab-assign">
+            <div class="assign-layout">
+              <!-- 左：会員リスト -->
+              <div class="karte-list">
+                <div class="karte-list-header">会員を選択</div>
+                <div id="assign-list-body"></div>
+              </div>
+
+              <!-- 右：割り当て表示 -->
+              <div id="assign-main"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== スタッフ管理画面 ========== -->
+        <div class="screen" id="screen-staff">
+          <div class="page-header">
+            <div>
+              <div class="page-title">スタッフ管理</div>
+              <div class="page-sub">コーチ・ネイティブ講師の情報を管理</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="secondary-btn" onclick="reloadStaffFromCSV()" title="ブラウザの変更を破棄してCSVから再読み込みします">🔄 CSVから再読み込み</button>
+              <button class="primary-btn" onclick="openStaffPanel(null)">＋ 新規スタッフを登録</button>
+            </div>
+          </div>
+
+          <!-- 検索ボックス -->
+          <div class="card" style="padding:16px; margin-bottom:16px;">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <label style="font-size:13px; font-weight:600; color:var(--color-text-secondary); white-space:nowrap;">検索：</label>
+              <input type="text" class="form-input" id="staff-search" placeholder="氏名または社員IDを入力" oninput="renderStaffTable()" style="flex:1;">
+              <button class="secondary-btn" onclick="document.getElementById('staff-search').value=''; renderStaffTable();">クリア</button>
+            </div>
+          </div>
+
+          <!-- 検索結果バー -->
+          <div id="staff-result-bar" style="font-size:13px; color:var(--color-text-secondary); margin-bottom:12px;"></div>
+
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>社員ID</th>
+                  <th>氏名</th>
+                  <th>役割</th>
+                  <th style="width:100px; text-align:center;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="staff-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== スライドインパネル（会員編集） ===== -->
+  <div class="overlay" id="overlay" onclick="closeMemberPanel()"></div>
+  <div class="slide-panel" id="member-panel">
+    <div class="panel-header">
+      <div class="panel-title">会員情報の編集</div>
+      <button class="panel-close" onclick="closeMemberPanel()">×</button>
+    </div>
+    <div class="panel-body" id="panel-body"></div>
+    <div class="panel-footer">
+      <button class="danger-btn" onclick="alert('【サンプル】会員を削除しました')">削除</button>
+      <div style="display:flex; gap:8px;">
+        <button class="secondary-btn" onclick="closeMemberPanel()">キャンセル</button>
+        <button class="primary-btn" onclick="alert('【サンプル】変更を保存しました'); closeMemberPanel();">変更を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== スライドインパネル（スタッフ編集） ===== -->
+  <div class="overlay" id="staff-overlay" onclick="closeStaffPanel()"></div>
+  <div class="slide-panel" id="staff-panel">
+    <div class="panel-header">
+      <div class="panel-title" id="staff-panel-title">スタッフ情報の編集</div>
+      <button class="panel-close" onclick="closeStaffPanel()">×</button>
+    </div>
+    <div class="panel-body" id="staff-panel-body"></div>
+    <div class="panel-footer">
+      <button class="danger-btn" id="staff-delete-btn" onclick="deleteStaff()">削除</button>
+      <div style="display:flex; gap:8px;">
+        <button class="secondary-btn" onclick="closeStaffPanel()">キャンセル</button>
+        <button class="primary-btn" onclick="saveStaff()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 教材選択モーダル ===== -->
+  <div class="center-modal-overlay" id="textbook-modal-overlay" onclick="closeTextbookModal()">
+    <div class="center-modal center-modal-sm" onclick="event.stopPropagation()">
+      <div class="center-modal-header">
+        <div class="panel-title">使用教材を選択</div>
+        <button class="panel-close" onclick="closeTextbookModal()">×</button>
+      </div>
+      <div class="center-modal-body">
+        <div class="checkbox-list" id="search-textbook-list" style="max-height:none; border:none; background:#fff; padding:0;"></div>
+      </div>
+      <div class="center-modal-footer">
+        <button class="primary-btn" onclick="confirmTextbookSelection()">選択を確定する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 会員カルテモーダル ===== -->
+  <div class="center-modal-overlay" id="karte-modal-overlay" onclick="closeKarteModal()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()">
+      <div class="center-modal-header">
+        <div class="panel-title" id="karte-modal-title">会員カルテ</div>
+        <button class="panel-close" onclick="closeKarteModal()">×</button>
+      </div>
+      <div class="center-modal-body" id="karte-modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== ダミー会員データ（5名・拡張版） =====
+    const members = [
+      {
+        id: 'M001', name: '田中 太郎', initial: '田中', nickname: 'たろう',
+        birthDate: '1990-05-12', email: 'tanaka@example.com',
+        startDate: '2026-01-15', graduateDate: '2026-12-15',
+        weeklyGoalHours: 12, course: '大学受験コース',
+        rate: 105, lastLoginDaysAgo: 0, lastCoachingDaysAgo: 5,
+        goalEnglish: 'IELTS 6.5', departureDate: '2026-08-19',
+        monthlyHours: 52.4, monthlyHoursCompare: 3.2,
+        streak: 15, streakCompare: 3,
+        weeklyRates: [78, 85, 92, 105],
+        textbookProgress: [
+          { tbId: 'T01', rate: 110, targetHours: 10, actualHours: 11.0 },
+          { tbId: 'T02', rate: 95, targetHours: 8, actualHours: 7.6 },
+          { tbId: 'T03', rate: 88, targetHours: 6, actualHours: 5.3 }
+        ],
+        recentLogs: [
+          { date: '2026-04-16', tb: 'T01', duration: 45, rate: 150 },
+          { date: '2026-04-15', tb: 'T02', duration: 30, rate: 100 },
+          { date: '2026-04-14', tb: 'T03', duration: 25, rate: 95 },
+          { date: '2026-04-13', tb: 'T01', duration: 40, rate: 130 },
+          { date: '2026-04-12', tb: 'T02', duration: 20, rate: 67 }
+        ],
+        progos: [
+          { date: '2025-12-10', cefr: 'A1', fluency: 2, coherence: 2, accuracy: 2, interaction: 2, phonology: 2, vocabulary: 2 },
+          { date: '2026-02-15', cefr: 'A2', fluency: 3, coherence: 3, accuracy: 3, interaction: 3, phonology: 3, vocabulary: 3 },
+          { date: '2026-04-10', cefr: 'B1', fluency: 4, coherence: 4, accuracy: 3, interaction: 4, phonology: 3, vocabulary: 4 }
+        ]
+      },
+      {
+        id: 'M002', name: '佐藤 花子', initial: '佐藤', nickname: 'はなこ',
+        birthDate: '1995-08-20', email: 'sato@example.com',
+        startDate: '2026-02-01', graduateDate: '2026-11-30',
+        weeklyGoalHours: 10, course: '高校受験コース',
+        rate: 85, lastLoginDaysAgo: 1, lastCoachingDaysAgo: 10,
+        goalEnglish: 'TOEIC 800', departureDate: '2026-09-05',
+        monthlyHours: 38.5, monthlyHoursCompare: 1.5,
+        streak: 10, streakCompare: 2,
+        weeklyRates: [65, 72, 80, 85],
+        textbookProgress: [
+          { tbId: 'T01', rate: 90, targetHours: 10, actualHours: 9.0 },
+          { tbId: 'T04', rate: 78, targetHours: 8, actualHours: 6.2 },
+          { tbId: 'T06', rate: 85, targetHours: 6, actualHours: 5.1 }
+        ],
+        recentLogs: [
+          { date: '2026-04-15', tb: 'T01', duration: 35, rate: 117 },
+          { date: '2026-04-14', tb: 'T06', duration: 25, rate: 100 },
+          { date: '2026-04-13', tb: 'T04', duration: 20, rate: 80 },
+          { date: '2026-04-12', tb: 'T01', duration: 30, rate: 100 },
+          { date: '2026-04-11', tb: 'T06', duration: 25, rate: 100 }
+        ],
+        progos: [
+          { date: '2025-11-20', cefr: 'A1', fluency: 2, coherence: 2, accuracy: 1, interaction: 2, phonology: 1, vocabulary: 2 },
+          { date: '2026-01-25', cefr: 'A1 High', fluency: 3, coherence: 2, accuracy: 2, interaction: 2, phonology: 2, vocabulary: 3 },
+          { date: '2026-04-05', cefr: 'A2', fluency: 3, coherence: 3, accuracy: 3, interaction: 3, phonology: 2, vocabulary: 3 }
+        ],
+      },
+      {
+        id: 'M003', name: '鈴木 一郎', initial: '鈴木', nickname: 'いち',
+        birthDate: '1988-03-10', email: 'suzuki@example.com',
+        startDate: '2025-12-01', graduateDate: '2026-09-30',
+        weeklyGoalHours: 8, course: '英検対策コース',
+        rate: 62, lastLoginDaysAgo: 2, lastCoachingDaysAgo: 14,
+        goalEnglish: '英検準1級', departureDate: '2026-10-20',
+        monthlyHours: 28.0, monthlyHoursCompare: 2.0,
+        streak: 5, streakCompare: -1,
+        weeklyRates: [55, 58, 60, 62],
+        textbookProgress: [
+          { tbId: 'T02', rate: 70, targetHours: 8, actualHours: 5.6 },
+          { tbId: 'T05', rate: 55, targetHours: 6, actualHours: 3.3 },
+          { tbId: 'T06', rate: 60, targetHours: 4, actualHours: 2.4 }
+        ],
+        recentLogs: [
+          { date: '2026-04-14', tb: 'T02', duration: 20, rate: 100 },
+          { date: '2026-04-13', tb: 'T05', duration: 40, rate: 80 },
+          { date: '2026-04-12', tb: 'T06', duration: 25, rate: 100 },
+          { date: '2026-04-10', tb: 'T02', duration: 15, rate: 75 },
+          { date: '2026-04-09', tb: 'T05', duration: 20, rate: 40 }
+        ],
+        progos: [
+          { date: '2025-12-01', cefr: 'Pre-A1', fluency: 1, coherence: 1, accuracy: 1, interaction: 1, phonology: 1, vocabulary: 1 },
+          { date: '2026-02-10', cefr: 'A1', fluency: 2, coherence: 2, accuracy: 1, interaction: 2, phonology: 1, vocabulary: 2 },
+          { date: '2026-04-08', cefr: 'A1 High', fluency: 3, coherence: 2, accuracy: 2, interaction: 3, phonology: 2, vocabulary: 3 }
+        ],
+      },
+      {
+        id: 'M004', name: '山田 美咲', initial: '山田', nickname: 'みさき',
+        birthDate: '1992-11-03', email: 'yamada@example.com',
+        startDate: '2026-03-10', graduateDate: '2027-02-10',
+        weeklyGoalHours: 10, course: '大学受験コース',
+        rate: 35, lastLoginDaysAgo: 4, lastCoachingDaysAgo: 35,
+        goalEnglish: '国公立大学 合格', departureDate: '2026-11-15',
+        monthlyHours: 18.5, monthlyHoursCompare: -1.0,
+        streak: 2, streakCompare: -3,
+        weeklyRates: [48, 42, 38, 35],
+        textbookProgress: [
+          { tbId: 'T01', rate: 40, targetHours: 10, actualHours: 4.0 },
+          { tbId: 'T04', rate: 30, targetHours: 8, actualHours: 2.4 },
+          { tbId: 'T05', rate: 25, targetHours: 6, actualHours: 1.5 }
+        ],
+        recentLogs: [
+          { date: '2026-04-11', tb: 'T04', duration: 25, rate: 45 },
+          { date: '2026-04-09', tb: 'T01', duration: 20, rate: 40 },
+          { date: '2026-04-07', tb: 'T05', duration: 30, rate: 50 },
+          { date: '2026-04-05', tb: 'T04', duration: 15, rate: 30 },
+          { date: '2026-04-03', tb: 'T01', duration: 25, rate: 50 }
+        ],
+        progos: [
+          { date: '2026-01-10', cefr: 'Pre-A1', fluency: 1, coherence: 1, accuracy: 1, interaction: 1, phonology: 1, vocabulary: 1 },
+          { date: '2026-03-05', cefr: 'Pre-A1', fluency: 1, coherence: 1, accuracy: 1, interaction: 2, phonology: 1, vocabulary: 1 },
+          { date: '2026-04-02', cefr: 'A1', fluency: 2, coherence: 1, accuracy: 2, interaction: 2, phonology: 1, vocabulary: 2 }
+        ],
+      },
+      {
+        id: 'M005', name: '渡辺 健太', initial: '渡辺', nickname: 'けん',
+        birthDate: '2000-06-25', email: 'watanabe@example.com',
+        startDate: '2026-04-01', graduateDate: '2026-09-30',
+        weeklyGoalHours: 6, course: '定期テスト対策',
+        rate: 8, lastLoginDaysAgo: 7, lastCoachingDaysAgo: 999,
+        goalEnglish: '定期テスト80点以上', departureDate: '2026-09-10',
+        monthlyHours: 4.2, monthlyHoursCompare: -3.5,
+        streak: 0, streakCompare: -5,
+        weeklyRates: [20, 15, 10, 8],
+        textbookProgress: [
+          { tbId: 'T01', rate: 10, targetHours: 6, actualHours: 0.6 },
+          { tbId: 'T02', rate: 8, targetHours: 4, actualHours: 0.3 }
+        ],
+        recentLogs: [
+          { date: '2026-04-08', tb: 'T01', duration: 15, rate: 15 },
+          { date: '2026-04-05', tb: 'T02', duration: 10, rate: 10 },
+          { date: '2026-04-02', tb: 'T01', duration: 15, rate: 15 },
+          { date: '2026-03-30', tb: 'T02', duration: 10, rate: 10 },
+          { date: '2026-03-27', tb: 'T01', duration: 5, rate: 5 }
+        ],
+        progos: [
+          { date: '2026-03-01', cefr: 'Pre-A1', fluency: 1, coherence: 1, accuracy: 1, interaction: 1, phonology: 1, vocabulary: 1 },
+          { date: '2026-03-20', cefr: 'Pre-A1', fluency: 1, coherence: 1, accuracy: 1, interaction: 1, phonology: 1, vocabulary: 1 },
+          { date: '2026-04-05', cefr: 'Pre-A1', fluency: 1, coherence: 1, accuracy: 1, interaction: 1, phonology: 1, vocabulary: 1 }
+        ],
+      }
+    ];
+
+    // ===== 教材マスター（CSVから読み込み） =====
+    // 注：file:// で開いた場合は fetch が失敗するため、フォールバック用のインラインデータを使用
+    // 本番はローカルサーバー（python3 -m http.server）またはデプロイ環境で動作
+    let textbooks = [];
+
+    // カテゴリから単位を推定
+    function unitFromCategory(category) {
+      const map = {
+        '単語/フレーズ': '語',
+        '文法': 'ページ',
+        '読解': '章',
+        'リスニング': '分',
+        'スピーキング': '分',
+        'ライティング': 'ページ',
+        'マンスリーコーチング': '回',
+        'グループコーチング': '回',
+        'オンライン英会話': '回',
+        'ネイティブ少人数': '回'
+      };
+      return map[category] || '回';
+    }
+
+    // カラーパレット（カテゴリ増加に対応してIDで順番に割り当て）
+    const textbookColorPalette = [
+      { color: '#1A5276', name: 'ネイビー' },
+      { color: '#27AE60', name: 'グリーン' },
+      { color: '#F39C12', name: 'オレンジ' },
+      { color: '#E74C3C', name: 'レッド' },
+      { color: '#2E86C1', name: 'ブルー' },
+      { color: '#9c27b0', name: 'パープル' },
+      { color: '#00acc1', name: 'ティール' },
+      { color: '#D4AF37', name: 'ゴールド' }
+    ];
+
+    // CSVテキストを配列にパース（不可視文字除去、カンマ区切り前提）
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => {
+          // U+200E等の不可視文字と前後の空白を除去
+          obj[h] = (values[i] || '').replace(/[​-‏﻿]/g, '').trim();
+        });
+        return obj;
+      });
+    }
+
+    // CSV行配列を既存コード互換の textbook オブジェクトに拡張
+    function enrichTextbooks(rawArr) {
+      return rawArr.map((item, i) => {
+        const palette = textbookColorPalette[i % textbookColorPalette.length];
+        return {
+          id: item.id,
+          name: item.name,
+          type: item.category,       // 旧プロパティ名との互換
+          category: item.category,
+          emoji: item.iconUrl || item.id,  // 絵文字の代わりに iconUrl 文字列を表示
+          iconUrl: item.iconUrl,
+          manualUrl: item.manualUrl,
+          note: item.note,
+          unit: unitFromCategory(item.category),
+          color: palette.color,
+          colorName: palette.name
+        };
+      });
+    }
+
+    // フォールバック用インラインCSV（file:// でfetch失敗時に使用）
+    const fallbackTextbookCSV = `id,name,category,iconUrl,manualUrl,note
+T01,改訂第2版キクタン【Entry】,単語/フレーズ,サンプルT01,https://englead.jp/manual/kikutan/,
+T02,新装版 起きてから寝るまで英語表現1000,単語/フレーズ,サンプルT02,https://englead.jp/manual/okitekaranerumade/,
+T03,中学英語をもう一度ひとつひとつわかりやすく,文法,サンプルT03,https://englead.jp/manual/grammar/,
+T04,マンスリーコーチング,マンスリーコーチング,サンプルT04,,
+T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
+
+    // CSVロード処理（非同期）
+    async function loadTextbooks() {
+      try {
+        const res = await fetch('./data/textbooks.csv');
+        if (!res.ok) throw new Error('CSV fetch failed: ' + res.status);
+        const text = await res.text();
+        textbooks = enrichTextbooks(parseCSV(text));
+        console.log('📚 教材マスター：CSVから読み込み完了', textbooks.length, '件');
+      } catch (e) {
+        textbooks = enrichTextbooks(parseCSV(fallbackTextbookCSV));
+        console.warn('⚠️ 教材マスター：CSV読み込み失敗、フォールバックを使用', e.message);
+      }
+    }
+
+    // ===== 教材割り当て（dailyGoalで1日の目標時間を指定） =====
+    const assignments = {
+      'M001': [
+        { tbId: 'T01', dailyGoal: 30 },
+        { tbId: 'T02', dailyGoal: 20 },
+        { tbId: 'T03', dailyGoal: 20 }
+      ],
+      'M002': [
+        { tbId: 'T01', dailyGoal: 25 },
+        { tbId: 'T04', dailyGoal: 20 },
+        { tbId: 'T06', dailyGoal: 25 }
+      ],
+      'M003': [
+        { tbId: 'T02', dailyGoal: 15 },
+        { tbId: 'T05', dailyGoal: 30 },
+        { tbId: 'T06', dailyGoal: 25 }
+      ],
+      'M004': [
+        { tbId: 'T01', dailyGoal: 30 },
+        { tbId: 'T04', dailyGoal: 25 },
+        { tbId: 'T05', dailyGoal: 20 }
+      ],
+      'M005': [
+        { tbId: 'T01', dailyGoal: 20 },
+        { tbId: 'T02', dailyGoal: 10 }
+      ]
+    };
+
+    // ===== ヘルパー関数 =====
+    // 達成率のクラス
+    function getRateClass(rate) {
+      if (rate >= 100) return 'rate-gold';
+      if (rate >= 80)  return 'rate-blue';
+      if (rate >= 51)  return 'rate-green';
+      if (rate >= 11)  return 'rate-yellow';
+      return 'rate-red';
+    }
+    // 進捗バーのクラス
+    function getFillClass(rate) {
+      if (rate >= 100) return 'fill-gold';
+      if (rate >= 80)  return 'fill-blue';
+      if (rate >= 51)  return 'fill-green';
+      if (rate >= 11)  return 'fill-yellow';
+      return 'fill-red';
+    }
+    // 最終ログイン
+    function formatLastLogin(days) {
+      let text = '';
+      if (days === 0) text = '本日';
+      else if (days === 1) text = '1日前';
+      else text = days + '日前';
+      const cls = days >= 3 ? 'login-stale' : 'login-recent';
+      return '<span class="' + cls + '">' + text + '</span>';
+    }
+    // 教材IDから教材を取得（存在しない場合はフォールバックを返す）
+    function getTextbook(tbId) {
+      return textbooks.find(t => t.id === tbId) || {
+        id: tbId,
+        name: '(未登録)',
+        type: '未分類',
+        category: '未分類',
+        emoji: '?',
+        iconUrl: '',
+        manualUrl: '',
+        note: '',
+        unit: '回',
+        color: '#D5D8DC',
+        colorName: 'グレー'
+      };
+    }
+    // 出国までの残日数
+    function daysUntil(dateStr) {
+      const today = new Date('2026-04-16');
+      const target = new Date(dateStr);
+      return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    }
+
+    // 最終記録日からの経過日数を計算
+    function getLastRecordDaysAgo(m) {
+      if (!m.recentLogs || m.recentLogs.length === 0) return 999;
+      const today = new Date('2026-04-16');
+      const lastDate = new Date(m.recentLogs[0].date);
+      return Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+    }
+
+    // CEFRレベルの数値マッピング（棒グラフ用）
+    const cefrLevels = {
+      'Pre-A1': 1, 'A1': 2, 'A1 High': 3, 'A2': 4, 'A2 High': 5,
+      'B1': 6, 'B1 High': 7, 'B2': 8, 'C1': 9, 'C2': 10
+    };
+    function cefrToNum(cefr) { return cefrLevels[cefr] || 0; }
+    const cefrMax = 10;
+
+    // ===== 画面切替 =====
+    function switchScreen(screenName) {
+      // サイドバー active切替
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.screen === screenName);
+      });
+      // 画面表示切替
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById('screen-' + screenName).classList.add('active');
+      // タイトル更新
+      const titles = {
+        'dashboard': 'ダッシュボード',
+        'members': '会員管理',
+        'karte': '会員カルテ',
+        'textbooks': '教材管理',
+        'staff': 'スタッフ管理'
+      };
+      document.getElementById('topbar-title').textContent = titles[screenName];
+    }
+
+    // ===== 期間別ダミーデータ =====
+    const periodData = {
+      today: {
+        rate: 72, rateCompare: '前日比 +8%', rateCompareDown: false,
+        rateGoal: '目標80%まで あと8%', rateGoalDown: true,
+        hours: 8.5, hoursCompare: '前日比 +1.2h', hoursCompareDown: false,
+        hoursGoal: '目標10h まで あと1.5h', hoursGoalDown: true
+      },
+      week: {
+        rate: 59, rateCompare: '先週比 +5%', rateCompareDown: false,
+        rateGoal: '週目標80%まで あと21%', rateGoalDown: true,
+        hours: 42.3, hoursCompare: '先週比 +3.8h', hoursCompareDown: false,
+        hoursGoal: '週目標46h まで あと3.7h', hoursGoalDown: true
+      },
+      month: {
+        rate: 55, rateCompare: '先月比 +3%', rateCompareDown: false,
+        rateGoal: '月目標80%まで あと25%', rateGoalDown: true,
+        hours: 141.6, hoursCompare: '先月比 +12.4h', hoursCompareDown: false,
+        hoursGoal: '月目標200h まで あと58.4h', hoursGoalDown: true
+      },
+      all: {
+        rate: 62, rateCompare: '入会時比 +42%', rateCompareDown: false,
+        rateGoal: '最終目標80% まで あと18%', rateGoalDown: true,
+        hours: 680.5, hoursCompare: '累計', hoursCompareDown: false,
+        hoursGoal: '年間目標1000h まで あと319.5h', hoursGoalDown: true
+      }
+    };
+
+    // ===== 月別平均達成率（直近7ヶ月分ダミー） =====
+    const monthlyRates = [
+      { month: '10月', rate: 38 },
+      { month: '11月', rate: 42 },
+      { month: '12月', rate: 45 },
+      { month: '1月', rate: 50 },
+      { month: '2月', rate: 53 },
+      { month: '3月', rate: 56 },
+      { month: '4月', rate: 59 }
+    ];
+
+    // ===== 期間切替 =====
+    function switchPeriod(period) {
+      document.querySelectorAll('.period-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.period === period);
+      });
+      const d = periodData[period];
+      document.getElementById('big-rate').textContent = d.rate;
+      document.getElementById('big-hours').textContent = d.hours;
+
+      const rc = document.getElementById('big-rate-compare');
+      rc.textContent = d.rateCompare;
+      rc.className = 'big-stat-compare' + (d.rateCompareDown ? ' down' : '');
+
+      const rg = document.getElementById('big-rate-goal');
+      rg.textContent = d.rateGoal;
+      rg.className = 'big-stat-compare' + (d.rateGoalDown ? ' down' : '');
+
+      const hc = document.getElementById('big-hours-compare');
+      hc.textContent = d.hoursCompare;
+      hc.className = 'big-stat-compare' + (d.hoursCompareDown ? ' down' : '');
+
+      const hg = document.getElementById('big-hours-goal');
+      hg.textContent = d.hoursGoal;
+      hg.className = 'big-stat-compare' + (d.hoursGoalDown ? ' down' : '');
+    }
+
+    // ===== 月別推移グラフ描画 =====
+    function renderMonthlyChart() {
+      const chart = document.getElementById('monthly-chart');
+      const maxRate = 100;
+      chart.innerHTML = monthlyRates.map((item, i) => {
+        const h = (item.rate / maxRate) * 100;
+        let color = '#1A5276';
+        if (item.rate <= 50) color = '#F39C12';
+        else if (item.rate >= 80) color = '#2E86C1';
+        const isLatest = i === monthlyRates.length - 1;
+        return `
+          <div class="monthly-chart-item">
+            <div class="monthly-bar-wrap">
+              <div class="monthly-bar" style="height: ${h}%; background: ${color}; ${isLatest ? 'opacity:1;' : 'opacity:0.7;'}">
+                <div class="bar-value">${item.rate}%</div>
+              </div>
+            </div>
+            <div class="monthly-bar-label">${item.month}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== カルテ画面へ遷移して該当会員を選択（ダッシュボード用） =====
+    function goToKarte(memberId) {
+      switchScreen('karte');
+      selectKarte(memberId);
+    }
+
+    // ===== カルテモーダル：開く（会員管理画面用） =====
+    function openKarteModal(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const html = buildKarteHtml(memberId);
+      document.getElementById('karte-modal-title').textContent = `${m.name} さんのカルテ`;
+      document.getElementById('karte-modal-body').innerHTML = html;
+      document.getElementById('karte-modal-overlay').classList.add('show');
+    }
+    // ===== カルテモーダル：閉じる =====
+    function closeKarteModal() {
+      document.getElementById('karte-modal-overlay').classList.remove('show');
+    }
+
+    // ===== 要フォローカード描画（5枚） =====
+    function renderFollowUpCards() {
+      const grid = document.getElementById('follow-up-grid');
+
+      // 各カテゴリのフィルタ
+      const noLogin3 = members.filter(m => m.lastLoginDaysAgo >= 3);
+      const noRecord3 = members.filter(m => getLastRecordDaysAgo(m) >= 3);
+      const rateUnder50 = members.filter(m => m.rate <= 50);
+      const rateUnder30 = members.filter(m => m.rate <= 30);
+      const rateZero = members.filter(m => m.rate === 0 || (!m.recentLogs || m.recentLogs.length === 0));
+
+      function buildCard(title, list, renderDetail, colorClass) {
+        const count = list.length;
+        const countCls = count === 0 ? 'gray' : colorClass;
+        const memberHtml = count === 0
+          ? '<div class="follow-up-empty">該当なし</div>'
+          : list.map(m => `
+            <div class="follow-up-member" onclick="goToKarte('${m.id}')">
+              <span class="follow-up-name">${m.name}</span>
+              <span class="follow-up-detail">${renderDetail(m)}</span>
+            </div>
+          `).join('');
+
+        return `
+          <div class="follow-up-card">
+            <div class="follow-up-header">
+              <div class="summary-label" style="margin:0;">${title}</div>
+              <span class="follow-up-count ${countCls}">${count}</span>
+            </div>
+            ${memberHtml}
+          </div>
+        `;
+      }
+
+      grid.innerHTML =
+        buildCard('3日以上未ログイン', noLogin3,
+          m => `最終: ${m.lastLoginDaysAgo}日前`, 'red') +
+        buildCard('3日以上記録なし', noRecord3,
+          m => `最終: ${getLastRecordDaysAgo(m)}日前`, 'red') +
+        buildCard('達成率50%以下', rateUnder50,
+          m => `達成率: ${m.rate}%`, 'yellow') +
+        buildCard('達成率30%以下', rateUnder30,
+          m => `達成率: ${m.rate}%`, 'red') +
+        buildCard('達成率0%・未記録', rateZero,
+          m => '', 'red');
+    }
+
+    // ===== 会員管理テーブル =====
+    // 現在の検索キーワードタブ（name or id）
+    let keywordTab = 'name';
+
+    // キーワードタブ切替
+    function switchKeywordTab(tab) {
+      keywordTab = tab;
+      document.querySelectorAll('.search-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.keywordTab === tab);
+      });
+      const ph = tab === 'name' ? '氏名またはニックネームを入力' : '会員IDを入力（例: M001）';
+      document.getElementById('search-keyword').placeholder = ph;
+    }
+
+    // 教材チェックボックス描画
+    function renderTextbookCheckboxes() {
+      const wrap = document.getElementById('search-textbook-list');
+      wrap.innerHTML = textbooks.map(tb => `
+        <label class="checkbox-item">
+          <input type="checkbox" value="${tb.id}" class="search-textbook-cb">
+          <span>${tb.emoji} ${tb.name}</span>
+        </label>
+      `).join('');
+    }
+
+    // 教材選択モーダル：開く
+    function openTextbookModal() {
+      document.getElementById('textbook-modal-overlay').classList.add('show');
+    }
+    // 教材選択モーダル：閉じる
+    function closeTextbookModal() {
+      document.getElementById('textbook-modal-overlay').classList.remove('show');
+    }
+    // 教材選択モーダル：確定（選択数をボタンに反映）
+    function confirmTextbookSelection() {
+      updateTextbookBtnLabel();
+      closeTextbookModal();
+    }
+    // ボタンラベルを更新
+    function updateTextbookBtnLabel() {
+      const count = document.querySelectorAll('.search-textbook-cb:checked').length;
+      const label = count > 0 ? `教材を選択（${count}件）` : '教材を選択';
+      document.getElementById('search-textbook-btn-label').textContent = label;
+    }
+
+    // PROGOSの最新レベルを取得
+    function getLatestProgosLevel(m) {
+      if (!m.progos || m.progos.length === 0) return '';
+      return m.progos[m.progos.length - 1].cefr;
+    }
+
+    // PROGOSレベルが選択条件に合うかチェック
+    function matchProgosLevel(memberLevel, filterLevel) {
+      if (filterLevel === 'B2+') {
+        const lv = cefrToNum(memberLevel);
+        return lv >= cefrToNum('B2');
+      }
+      return memberLevel === filterLevel;
+    }
+
+    // 検索フィルタ適用
+    function applyMemberFilter() {
+      const keyword = document.getElementById('search-keyword').value.trim().toLowerCase();
+      const rateValue = document.getElementById('search-rate-value').value;
+      const rateCond = document.getElementById('search-rate-cond').value;
+      const loginCond = document.getElementById('search-login').value;
+      const recordCond = document.getElementById('search-record').value;
+      const coachingCond = document.getElementById('search-coaching').value;
+      const progosLevel = document.getElementById('search-progos').value;
+      const startMonth = document.getElementById('search-startmonth').value;
+      const checkedTextbooks = Array.from(document.querySelectorAll('.search-textbook-cb:checked')).map(cb => cb.value);
+
+      const filtered = members.filter(m => {
+        // キーワード検索
+        if (keyword) {
+          if (keywordTab === 'name') {
+            if (!m.name.toLowerCase().includes(keyword) && !m.nickname.toLowerCase().includes(keyword)) return false;
+          } else {
+            if (!m.id.toLowerCase().includes(keyword)) return false;
+          }
+        }
+        // 達成率
+        if (rateValue !== '') {
+          const v = Number(rateValue);
+          if (rateCond === 'below' && m.rate > v) return false;
+          if (rateCond === 'above' && m.rate < v) return false;
+        }
+        // 最終ログイン
+        if (loginCond) {
+          const d = m.lastLoginDaysAgo;
+          if (loginCond === 'today' && d !== 0) return false;
+          if (loginCond === 'within3' && d > 3) return false;
+          if (loginCond === 'over3' && d < 3) return false;
+          if (loginCond === 'over7' && d < 7) return false;
+        }
+        // 前回の学習記録
+        if (recordCond) {
+          const d = getLastRecordDaysAgo(m);
+          if (recordCond === 'today' && d !== 0) return false;
+          if (recordCond === 'within3' && d > 3) return false;
+          if (recordCond === 'over3' && d < 3) return false;
+          if (recordCond === 'over7' && d < 7) return false;
+        }
+        // 前回コーチング
+        if (coachingCond) {
+          const d = m.lastCoachingDaysAgo;
+          if (coachingCond === 'within7' && (d > 7 || d === 999)) return false;
+          if (coachingCond === 'within14' && (d > 14 || d === 999)) return false;
+          if (coachingCond === 'over30' && d < 30) return false;
+          if (coachingCond === 'none' && d !== 999) return false;
+        }
+        // 使用教材
+        if (checkedTextbooks.length > 0) {
+          const memberTbs = (assignments[m.id] || []).map(a => a.tbId);
+          const hasAny = checkedTextbooks.some(tb => memberTbs.includes(tb));
+          if (!hasAny) return false;
+        }
+        // PROGOSレベル
+        if (progosLevel) {
+          const mLevel = getLatestProgosLevel(m);
+          if (!matchProgosLevel(mLevel, progosLevel)) return false;
+        }
+        // 受講開始月（YYYY-MM）
+        if (startMonth) {
+          if (!m.startDate.startsWith(startMonth)) return false;
+        }
+        return true;
+      });
+
+      // 適用中フィルタをタグ化
+      const tags = [];
+      if (keyword) tags.push(`${keywordTab === 'name' ? '氏名' : '会員ID'}: ${keyword}`);
+      if (rateValue !== '') tags.push(`達成率 ${rateValue}%${rateCond === 'below' ? '以下' : '以上'}`);
+      if (loginCond) {
+        const labels = { today: '今日', within3: '3日以内', over3: '3日以上前', over7: '1週間以上前' };
+        tags.push(`最終ログイン: ${labels[loginCond]}`);
+      }
+      if (recordCond) {
+        const labels = { today: '今日記録あり', within3: '3日以内', over3: '3日以上前', over7: '1週間以上前' };
+        tags.push(`学習記録: ${labels[recordCond]}`);
+      }
+      if (coachingCond) {
+        const labels = { within7: '7日以内', within14: '14日以内', over30: '30日以上前', none: '未実施' };
+        tags.push(`コーチング: ${labels[coachingCond]}`);
+      }
+      if (checkedTextbooks.length > 0) {
+        const names = checkedTextbooks.map(id => getTextbook(id).name).join(' / ');
+        tags.push(`教材: ${names}`);
+      }
+      if (progosLevel) {
+        const label = progosLevel === 'B2+' ? 'B2 / B2 High 以上' : progosLevel;
+        tags.push(`PROGOS: ${label}`);
+      }
+      if (startMonth) {
+        tags.push(`受講開始: ${startMonth.replace('-', '年')}月`);
+      }
+
+      // 結果バー表示
+      const bar = document.getElementById('search-result-bar');
+      if (tags.length > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('result-count').textContent = `${filtered.length}件ヒット`;
+        document.getElementById('filter-tags').innerHTML = tags.map(t => `<span class="filter-tag">${t}</span>`).join('');
+      } else {
+        bar.style.display = 'none';
+      }
+
+      // テーブル再描画
+      renderMembersTable(filtered);
+    }
+
+    // フィルタクリア
+    function clearMemberFilter() {
+      document.getElementById('search-keyword').value = '';
+      document.getElementById('search-rate-value').value = '';
+      document.getElementById('search-rate-cond').value = 'below';
+      document.getElementById('search-login').value = '';
+      document.getElementById('search-record').value = '';
+      document.getElementById('search-coaching').value = '';
+      document.getElementById('search-progos').value = '';
+      document.getElementById('search-startmonth').value = '';
+      document.querySelectorAll('.search-textbook-cb').forEach(cb => cb.checked = false);
+      updateTextbookBtnLabel();
+      switchKeywordTab('name');
+      document.getElementById('search-result-bar').style.display = 'none';
+      renderMembersTable(members);
+    }
+
+    function renderMembersTable(list) {
+      const data = list || members;
+      const tbody = document.getElementById('members-tbody');
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:32px; color:#999;">該当する会員が見つかりません</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map(m => `
+        <tr class="clickable" onclick="openMemberPanel('${m.id}')">
+          <td><span class="member-id" style="font-size:12px; color:#333;">${m.id}</span></td>
+          <td>
+            <div class="member-cell">
+              <div class="member-avatar">${m.initial}</div>
+              <div>
+                <div class="member-name">${m.name}</div>
+                <div class="member-nickname">@${m.nickname}</div>
+              </div>
+            </div>
+          </td>
+          <td onclick="event.stopPropagation()">
+            <button class="action-btn" onclick="openKarteModal('${m.id}')">カルテ →</button>
+          </td>
+          <td>${m.startDate}<br><span style="color:#999; font-size:11px;">〜 ${m.graduateDate}</span></td>
+          <td><span class="rate-badge ${getRateClass(m.rate)}">${m.rate}%</span></td>
+          <td>${formatLastLogin(m.lastLoginDaysAgo)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ===== スライドパネル：開く =====
+    function openMemberPanel(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const assignedList = (assignments[memberId] || []).map(a => {
+        const tb = getTextbook(a.tbId);
+        return `
+          <div class="assigned-item">
+            <span class="assigned-emoji">${tb.emoji}</span>
+            <span class="assigned-name">${tb.name}</span>
+            <span class="assigned-target">1日 ${a.dailyGoal}分</span>
+            <button class="assigned-remove" onclick="alert('【サンプル】教材を解除しました')">×</button>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('panel-body').innerHTML = `
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">氏名</label>
+            <input type="text" class="form-input" value="${m.name}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ニックネーム</label>
+            <input type="text" class="form-input" value="${m.nickname}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">生年月日</label>
+          <input type="date" class="form-input" value="${m.birthDate}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">メールアドレス</label>
+          <input type="email" class="form-input" value="${m.email}">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">受講開始日</label>
+            <input type="date" class="form-input" value="${m.startDate}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">卒業予定日</label>
+            <input type="date" class="form-input" value="${m.graduateDate}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">週次目標学習時間</label>
+          <input type="number" class="form-input" value="${m.weeklyGoalHours}"> <span style="font-size:12px; color:#666;">時間/週</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">割り当て教材（1日の目標時間）</label>
+          ${assignedList || '<div style="font-size:12px; color:#999; padding:8px;">割り当て教材はありません</div>'}
+          <button class="secondary-btn" style="margin-top:8px; width:100%;" onclick="alert('【サンプル】教材選択モーダルを表示')">＋ 教材を追加</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">パスワード管理</label>
+          <button class="secondary-btn" style="width:100%;" onclick="alert('【サンプル】新しいパスワードをメールで送信しました')">🔑 パスワード再発行</button>
+        </div>
+      `;
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('member-panel').classList.add('show');
+    }
+
+    function closeMemberPanel() {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('member-panel').classList.remove('show');
+    }
+
+    // ===== 会員カルテ：リスト描画 =====
+    function renderKarteList() {
+      const body = document.getElementById('karte-list-body');
+      body.innerHTML = members.map(m => `
+        <div class="karte-list-item" data-id="${m.id}" onclick="selectKarte('${m.id}')">
+          <div class="member-avatar">${m.initial}</div>
+          <div>
+            <div class="member-name">${m.name}</div>
+            <div class="member-nickname">@${m.nickname}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== 会員カルテ：選択 =====
+    function selectKarte(memberId) {
+      document.querySelectorAll('#karte-list-body .karte-list-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === memberId);
+      });
+      renderKarteMain(memberId);
+    }
+
+    // ===== 会員カルテ：本体描画 =====
+    function renderKarteMain(memberId) {
+      const html = buildKarteHtml(memberId);
+      if (html !== null) document.getElementById('karte-main').innerHTML = html;
+    }
+
+    // カルテのHTML文字列を生成（カルテ画面・モーダル共用）
+    function buildKarteHtml(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return null;
+      const remainDays = daysUntil(m.departureDate);
+      const maxWeekly = Math.max(...m.weeklyRates, 100);
+
+      // 週次棒グラフ（100%以上はオレンジ、それ以外は緑）
+      const weeklyChart = m.weeklyRates.map((rate, i) => {
+        const barColor = rate >= 100 ? '#F39C12' : '#27AE60';
+        return `
+        <div class="bar-chart-item">
+          <div class="bar-wrap">
+            <div class="bar" style="height: ${(rate / maxWeekly) * 100}%; background: ${barColor};">
+              <div class="bar-value">${rate}%</div>
+            </div>
+          </div>
+          <div class="bar-label">${i === 3 ? '今週' : (4 - i) + '週前'}</div>
+        </div>
+        `;
+      }).join('');
+
+      // 教材ごとの達成率バー（目標時間/実績時間も表示）
+      const textbookBars = m.textbookProgress.map(p => {
+        const tb = getTextbook(p.tbId);
+        const target = (p.targetHours != null) ? p.targetHours : '-';
+        const actual = (p.actualHours != null) ? p.actualHours : '-';
+        return `
+          <div class="textbook-progress-item">
+            <span class="textbook-emoji">${tb.emoji}</span>
+            <div class="textbook-info">
+              <div class="textbook-name-row">
+                <span class="textbook-name">${tb.name}</span>
+                <span class="textbook-pct">${p.rate}%</span>
+              </div>
+              <div class="textbook-track">
+                <div class="textbook-fill ${getFillClass(p.rate)}" style="width: ${Math.min(p.rate, 100)}%;"></div>
+              </div>
+              <div style="font-size:11px; color:#666; margin-top:4px;">
+                目標 ${target}h / 今月 ${actual}h
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 直近の学習記録（日付・教材・学習時間・達成率）
+      const logsRows = m.recentLogs.map(log => {
+        const tb = getTextbook(log.tb);
+        const logRate = (log.rate != null) ? log.rate : 0;
+        return `
+          <tr>
+            <td>${log.date}</td>
+            <td>${tb.emoji} ${tb.name}</td>
+            <td>${log.duration}分</td>
+            <td><span class="rate-badge ${getRateClass(logRate)}">${logRate}%</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      // PROGOSセクション
+      const progosRows = (m.progos || []).map(p => `
+        <tr>
+          <td>${p.date}</td>
+          <td><span class="rate-badge rate-blue" style="font-size:11px;">${p.cefr}</span></td>
+          <td>${p.fluency}</td>
+          <td>${p.coherence}</td>
+          <td>${p.accuracy}</td>
+          <td>${p.interaction}</td>
+          <td>${p.phonology}</td>
+          <td>${p.vocabulary}</td>
+        </tr>
+      `).join('');
+
+      const progosChart = (m.progos || []).map((p, i) => {
+        const h = (cefrToNum(p.cefr) / cefrMax) * 100;
+        return `
+          <div class="progos-cefr-item">
+            <div class="progos-cefr-bar-wrap">
+              <div class="progos-cefr-bar" style="height: ${h}%; background: ${i === m.progos.length - 1 ? '#27AE60' : '#D6EAF8'};">
+                <div class="bar-value">${p.cefr}</div>
+              </div>
+            </div>
+            <div class="progos-cefr-label">${p.date}</div>
+          </div>
+        `;
+      }).join('');
+
+      const latestProgos = (m.progos && m.progos.length > 0) ? m.progos[m.progos.length - 1] : null;
+      const skillBars = latestProgos ? [
+        { name: '流暢さ', score: latestProgos.fluency },
+        { name: '一貫性', score: latestProgos.coherence },
+        { name: '正確さ', score: latestProgos.accuracy },
+        { name: 'やり取り', score: latestProgos.interaction },
+        { name: '音韻', score: latestProgos.phonology },
+        { name: '語彙', score: latestProgos.vocabulary }
+      ].map(s => `
+        <div class="progos-skill-row">
+          <div class="progos-skill-name">${s.name}</div>
+          <div class="progos-skill-track">
+            <div class="progos-skill-fill" style="width: ${(s.score / 6) * 100}%;"></div>
+          </div>
+          <div class="progos-skill-score">${s.score}/6</div>
+        </div>
+      `).join('') : '';
+
+      return `
+        <!-- プロフィールバー -->
+        <div class="karte-profile">
+          <div class="profile-top">
+            <div class="profile-avatar">${m.initial}</div>
+            <div>
+              <div class="profile-name">${m.name}</div>
+              <div class="profile-nickname">@${m.nickname} / ${m.course}</div>
+            </div>
+          </div>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <div class="profile-item-label">会員ID</div>
+              <div class="profile-item-value">${m.id}</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">生年月日</div>
+              <div class="profile-item-value" style="font-size:12px;">${m.birthDate}</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">受講開始日</div>
+              <div class="profile-item-value" style="font-size:12px;">${m.startDate}</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">卒業予定日</div>
+              <div class="profile-item-value" style="font-size:12px;">${m.graduateDate}</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">英語の目標</div>
+              <div class="profile-item-value" style="font-size:12px;">${m.goalEnglish}</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">出国予定日</div>
+              <div class="profile-item-value" style="font-size:12px;">${m.departureDate}</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">出国まで</div>
+              <div class="profile-item-value">${remainDays}日</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 今月の学習状況 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">今月の学習状況</div>
+              <div class="card-sub">2026年4月</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="stats-row">
+              <div class="stat-box">
+                <div class="stat-box-label">学習時間</div>
+                <div class="stat-box-value">${m.monthlyHours}<span class="stat-box-unit">時間</span></div>
+                <div class="stat-box-compare ${m.monthlyHoursCompare < 0 ? 'down' : ''}">
+                  先月比 ${m.monthlyHoursCompare >= 0 ? '+' : ''}${m.monthlyHoursCompare}時間
+                </div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-box-label">達成率</div>
+                <div class="stat-box-value">${m.rate}<span class="stat-box-unit">%</span></div>
+                <div class="stat-box-compare ${m.weeklyRates[3] - m.weeklyRates[0] < 0 ? 'down' : ''}">
+                  先月比 ${m.weeklyRates[3] - m.weeklyRates[0] >= 0 ? '+' : ''}${m.weeklyRates[3] - m.weeklyRates[0]}%
+                </div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-box-label">連続学習日数</div>
+                <div class="stat-box-value">${m.streak}<span class="stat-box-unit">日</span></div>
+                <div class="stat-box-compare ${m.streakCompare < 0 ? 'down' : ''}">
+                  先月比 ${m.streakCompare >= 0 ? '+' : ''}${m.streakCompare}日
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 週次達成率グラフ -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">週次達成率の推移</div>
+              <div class="card-sub">直近4週</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="bar-chart">${weeklyChart}</div>
+          </div>
+        </div>
+
+        <!-- 教材ごとの達成率 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">教材ごとの今月達成率</div>
+              <div class="card-sub">10%以下🔴 / 50%以下🟡 / 80%以上🔵 / 100%以上🟡金</div>
+            </div>
+          </div>
+          <div class="card-body">${textbookBars}</div>
+        </div>
+
+        <!-- 直近の学習記録 -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">直近の学習記録</div>
+              <div class="card-sub">最新${m.recentLogs.length}件</div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>教材</th>
+                <th>学習時間</th>
+                <th>達成率</th>
+              </tr>
+            </thead>
+            <tbody>${logsRows}</tbody>
+          </table>
+        </div>
+
+        <!-- PROGOSスコア -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">PROGOSスコア</div>
+              <div class="card-sub">スピーキング力の推移</div>
+            </div>
+            <button class="primary-btn" onclick="alert('【サンプル】PROGOSスコア登録フォームを表示します')">スコアを登録する</button>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:20px;">
+              <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:8px;">CEFRレベルの推移</div>
+              <div class="progos-cefr-chart">${progosChart}</div>
+            </div>
+            <div style="margin-bottom:20px;">
+              <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:12px;">最新スコア（6項目）</div>
+              ${skillBars}
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>受験日</th>
+                <th>CEFR</th>
+                <th>流暢さ</th>
+                <th>一貫性</th>
+                <th>正確さ</th>
+                <th>やり取り</th>
+                <th>音韻</th>
+                <th>語彙</th>
+              </tr>
+            </thead>
+            <tbody>${progosRows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ===== 教材管理：タブ切替 =====
+    function switchTextbookTab(tab) {
+      document.querySelectorAll('#screen-textbooks .tab').forEach(el => {
+        el.classList.toggle('active', el.textContent.includes(tab === 'master' ? '教材マスター' : '会員への割り当て'));
+      });
+      document.getElementById('tab-master').classList.toggle('active', tab === 'master');
+      document.getElementById('tab-assign').classList.toggle('active', tab === 'assign');
+    }
+
+    // ===== 教材マスターテーブル =====
+    function renderTextbookMaster() {
+      const tbody = document.getElementById('textbook-master-tbody');
+      tbody.innerHTML = textbooks.map(tb => {
+        const usedCount = Object.values(assignments).filter(arr => arr.some(a => a.tbId === tb.id)).length;
+        return `
+          <tr>
+            <td>${tb.id}</td>
+            <td>
+              <div class="textbook-cell">
+                <span class="tb-emoji-big">${tb.emoji}</span>
+                <div>
+                  <div class="tb-name">${tb.name}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="type-badge">${tb.type}</span></td>
+            <td>${tb.unit}</td>
+            <td><span class="color-dot" style="background:${tb.color};"></span>${tb.colorName}</td>
+            <td>${usedCount}名</td>
+            <td>
+              <button class="action-btn" onclick="alert('【サンプル】教材「${tb.name}」を編集します')">編集</button>
+              <button class="action-btn danger" onclick="alert('【サンプル】教材「${tb.name}」を削除しました')">削除</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ===== 教材割り当て：会員リスト描画 =====
+    function renderAssignList() {
+      const body = document.getElementById('assign-list-body');
+      body.innerHTML = members.map(m => `
+        <div class="karte-list-item" data-id="${m.id}" onclick="selectAssign('${m.id}')">
+          <div class="member-avatar">${m.initial}</div>
+          <div>
+            <div class="member-name">${m.name}</div>
+            <div class="member-nickname">@${m.nickname}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== 教材割り当て：選択 =====
+    function selectAssign(memberId) {
+      document.querySelectorAll('#assign-list-body .karte-list-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === memberId);
+      });
+      renderAssignMain(memberId);
+    }
+
+    // ===== 教材割り当て：本体描画 =====
+    function renderAssignMain(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const main = document.getElementById('assign-main');
+      const assigned = (assignments[memberId] || []).map(a => {
+        const tb = getTextbook(a.tbId);
+        return `
+          <div class="assigned-item">
+            <span class="assigned-emoji">${tb.emoji}</span>
+            <div style="flex:1;">
+              <div class="assigned-name">${tb.name}</div>
+              <div style="font-size:11px; color:#999; margin-top:2px;">${tb.type} / ${tb.unit}</div>
+            </div>
+            <span class="assigned-target">1日の目標: <strong>${a.dailyGoal}分</strong></span>
+            <button class="assigned-remove" onclick="alert('【サンプル】教材「${tb.name}」を解除しました')">×</button>
+          </div>
+        `;
+      }).join('');
+
+      main.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${m.name} さんの割り当て教材</div>
+              <div class="card-sub">${(assignments[memberId] || []).length}件の教材</div>
+            </div>
+            <button class="primary-btn" onclick="alert('【サンプル】教材選択モーダルを表示')">＋ 教材を追加</button>
+          </div>
+          <div class="card-body">
+            ${assigned || '<div style="font-size:13px; color:#999; padding:16px; text-align:center;">割り当て教材はまだありません</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== ログアウト =====
+    function handleLogout() {
+      if (confirm('ログアウトしますか？')) {
+        sessionStorage.removeItem('currentStaff');
+        window.location.href = 'login.html';
+      }
+    }
+
+    // ========================================
+    // ===== スタッフ管理機能 =====
+    // ========================================
+
+    // localStorage のキー
+    const STAFF_STORAGE_KEY = 'staffList_v1';
+
+    // スタッフデータ（画面表示に使用）
+    let staffData = [];
+
+    // 現在編集中のスタッフID（null なら新規追加モード）
+    let editingStaffId = null;
+
+    // staff.csv のフォールバック（file:// で fetch 失敗時）
+    const fallbackStaffCSVAdmin = `id,name,role,iconUrl,meetUrl,groupContent,email,password
+MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
+
+    // 初期化：localStorage にデータがあればそれを使用、なければ CSV から取得
+    async function initStaffData() {
+      const stored = localStorage.getItem(STAFF_STORAGE_KEY);
+      if (stored) {
+        try {
+          staffData = JSON.parse(stored);
+          console.log('👥 スタッフデータ：localStorageから読み込み完了', staffData.length, '件');
+          return;
+        } catch (e) {
+          console.warn('localStorage 破損、CSVから再取得します');
+        }
+      }
+      await loadStaffFromCSV();
+    }
+
+    // CSV から読み込んで localStorage に保存
+    async function loadStaffFromCSV() {
+      try {
+        const res = await fetch('./data/staff.csv');
+        if (!res.ok) throw new Error('CSV fetch failed: ' + res.status);
+        const text = await res.text();
+        staffData = parseCSV(text);
+      } catch (e) {
+        staffData = parseCSV(fallbackStaffCSVAdmin);
+        console.warn('⚠️ スタッフCSV読み込み失敗、フォールバック使用', e.message);
+      }
+      saveStaffToStorage();
+      console.log('👥 スタッフデータ：CSVから読み込み完了', staffData.length, '件');
+    }
+
+    // localStorage に保存
+    function saveStaffToStorage() {
+      localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(staffData));
+    }
+
+    // CSVから再読み込み（ユーザーが明示的に実行）
+    async function reloadStaffFromCSV() {
+      if (!confirm('ブラウザ内の変更を破棄して、CSVから再読み込みしますか？\n\n注意：この画面で追加・編集した内容は失われます。')) {
+        return;
+      }
+      await loadStaffFromCSV();
+      renderStaffTable();
+      alert('CSVから再読み込みしました。');
+    }
+
+    // スタッフ一覧を描画（検索フィルタ適用）
+    function renderStaffTable() {
+      const tbody = document.getElementById('staff-tbody');
+      const searchBox = document.getElementById('staff-search');
+      const query = (searchBox.value || '').trim().toLowerCase();
+
+      // 検索フィルタ：氏名 または 社員ID に部分一致
+      const filtered = query
+        ? staffData.filter(s =>
+            (s.name || '').toLowerCase().includes(query) ||
+            (s.id || '').toLowerCase().includes(query)
+          )
+        : staffData;
+
+      // 結果バー
+      const resultBar = document.getElementById('staff-result-bar');
+      if (query) {
+        resultBar.textContent = `検索結果：${filtered.length}件 / 全${staffData.length}件中`;
+      } else {
+        resultBar.textContent = `全${staffData.length}件`;
+      }
+
+      tbody.innerHTML = filtered.map(s => `
+        <tr class="clickable" onclick="openStaffPanel('${s.id}')">
+          <td style="font-family:monospace; font-size:12px;">${s.id || ''}</td>
+          <td>${s.name || ''}</td>
+          <td>${s.role || ''}</td>
+          <td style="text-align:center;">
+            <button class="action-btn" onclick="event.stopPropagation(); openStaffPanel('${s.id}')">編集</button>
+          </td>
+        </tr>
+      `).join('');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:24px;">${query ? '該当するスタッフが見つかりません' : 'スタッフが登録されていません'}</td></tr>`;
+      }
+    }
+
+    // スライドインパネルを開く（staffId が null なら新規追加）
+    function openStaffPanel(staffId) {
+      editingStaffId = staffId;
+      const isNew = !staffId;
+      const s = isNew
+        ? { id: '', name: '', role: 'Coach', iconUrl: '', meetUrl: '', groupContent: '', email: '', password: '' }
+        : (staffData.find(x => x.id === staffId) || {});
+
+      // 現在ログイン中のスタッフか判定（自分自身の場合はパスワード表示可・削除不可）
+      const isSelf = currentStaff && currentStaff.id === s.id;
+
+      document.getElementById('staff-panel-title').textContent = isNew ? '新規スタッフを登録' : 'スタッフ情報の編集';
+
+      // 削除ボタンの表示制御
+      const deleteBtn = document.getElementById('staff-delete-btn');
+      if (isNew) {
+        deleteBtn.style.display = 'none';
+      } else if (isSelf) {
+        deleteBtn.style.display = 'none';  // 自分自身は削除不可
+      } else {
+        deleteBtn.style.display = '';
+      }
+
+      document.getElementById('staff-panel-body').innerHTML = `
+        <div class="form-group">
+          <label class="form-label">社員ID ${isNew ? '<span style="color:#E74C3C;">*必須</span>' : ''}</label>
+          <input type="text" class="form-input" id="staff-input-id" value="${s.id || ''}" ${isNew ? '' : 'readonly style="background:#f4f6f8;"'} placeholder="例：MW045、S010 など">
+          ${isNew ? '<div style="font-size:11px; color:#999; margin-top:4px;">※ IDは後から変更できません</div>' : '<div style="font-size:11px; color:#999; margin-top:4px;">※ IDは変更できません</div>'}
+        </div>
+        <div class="form-group">
+          <label class="form-label">氏名 <span style="color:#E74C3C;">*必須</span></label>
+          <input type="text" class="form-input" id="staff-input-name" value="${s.name || ''}" placeholder="例：山田太郎">
+        </div>
+        <div class="form-group">
+          <label class="form-label">役割 <span style="color:#E74C3C;">*必須</span></label>
+          <select class="form-input" id="staff-input-role">
+            <option value="Coach" ${s.role === 'Coach' ? 'selected' : ''}>Coach（コーチ）</option>
+            <option value="Teacher" ${s.role === 'Teacher' ? 'selected' : ''}>Teacher（ネイティブ講師）</option>
+            <option value="Staff" ${s.role === 'Staff' ? 'selected' : ''}>Staff（運営）</option>
+          </select>
+          <div style="font-size:11px; color:#999; margin-top:4px;">※ Coach / Teacher の場合のみadmin画面にログインできます</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">顔写真URL</label>
+          <input type="text" class="form-input" id="staff-input-iconUrl" value="${s.iconUrl || ''}" placeholder="https://...（任意）">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Google Meet リンク</label>
+          <input type="text" class="form-input" id="staff-input-meetUrl" value="${s.meetUrl || ''}" placeholder="https://meet.google.com/...（任意）">
+        </div>
+        <div class="form-group">
+          <label class="form-label">担当グループコーチング内容</label>
+          <input type="text" class="form-input" id="staff-input-groupContent" value="${s.groupContent || ''}" placeholder="例：英検対策クラス（任意）">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ログイン用メールアドレス <span style="color:#E74C3C;">*必須</span></label>
+          <input type="email" class="form-input" id="staff-input-email" value="${s.email || ''}" placeholder="example@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">パスワード ${isNew ? '<span style="color:#E74C3C;">*必須</span>' : ''}</label>
+          ${renderPasswordField(s, isNew, isSelf)}
+        </div>
+      `;
+
+      document.getElementById('staff-overlay').classList.add('show');
+      document.getElementById('staff-panel').classList.add('show');
+    }
+
+    // パスワード欄の描画（新規／自分自身／他人 で表示が異なる）
+    function renderPasswordField(s, isNew, isSelf) {
+      if (isNew) {
+        return `
+          <input type="password" class="form-input" id="staff-input-password" value="" placeholder="パスワードを入力">
+          <div style="font-size:11px; color:#999; margin-top:4px;">※ 現在は暗号化されず、そのままの文字で保存されます（サンプル版の仕様）</div>
+        `;
+      }
+      if (isSelf) {
+        // 自分自身：👁ボタンで表示切替可能
+        return `
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="password" class="form-input" id="staff-input-password" value="${s.password || ''}" style="flex:1;">
+            <button type="button" class="secondary-btn" onclick="toggleOwnPassword()" id="toggle-pw-btn" style="padding:0 12px; min-width:60px;">👁 表示</button>
+          </div>
+          <div style="font-size:11px; color:#999; margin-top:4px;">※ ご自身のアカウントなのでパスワードを確認できます。変更したい場合は直接書き換えてください。</div>
+        `;
+      }
+      // 他人：マスク、変更ボタン
+      return `
+        <div id="pw-readonly-wrapper">
+          <input type="password" class="form-input" value="●●●●●●●●" readonly style="background:#f4f6f8;">
+          <button type="button" class="secondary-btn" style="margin-top:8px; width:100%;" onclick="showPasswordChange()">🔑 パスワードを変更する</button>
+        </div>
+        <div id="pw-edit-wrapper" style="display:none;">
+          <input type="password" class="form-input" id="staff-input-password" value="" placeholder="新しいパスワードを入力">
+          <button type="button" class="secondary-btn" style="margin-top:8px; width:100%;" onclick="cancelPasswordChange()">変更をキャンセル</button>
+          <div style="font-size:11px; color:#999; margin-top:4px;">※ 空のまま保存した場合、パスワードは変更されません</div>
+        </div>
+      `;
+    }
+
+    // 自分のパスワード表示切替
+    function toggleOwnPassword() {
+      const input = document.getElementById('staff-input-password');
+      const btn = document.getElementById('toggle-pw-btn');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈 隠す';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁 表示';
+      }
+    }
+
+    // 他人のパスワード変更欄を表示
+    function showPasswordChange() {
+      document.getElementById('pw-readonly-wrapper').style.display = 'none';
+      document.getElementById('pw-edit-wrapper').style.display = '';
+    }
+
+    // パスワード変更をキャンセル
+    function cancelPasswordChange() {
+      document.getElementById('pw-readonly-wrapper').style.display = '';
+      document.getElementById('pw-edit-wrapper').style.display = 'none';
+      const input = document.getElementById('staff-input-password');
+      if (input) input.value = '';
+    }
+
+    // スタッフパネルを閉じる
+    function closeStaffPanel() {
+      document.getElementById('staff-overlay').classList.remove('show');
+      document.getElementById('staff-panel').classList.remove('show');
+      editingStaffId = null;
+    }
+
+    // 保存処理（新規追加 or 編集）
+    function saveStaff() {
+      const id = document.getElementById('staff-input-id').value.trim();
+      const name = document.getElementById('staff-input-name').value.trim();
+      const role = document.getElementById('staff-input-role').value;
+      const iconUrl = document.getElementById('staff-input-iconUrl').value.trim();
+      const meetUrl = document.getElementById('staff-input-meetUrl').value.trim();
+      const groupContent = document.getElementById('staff-input-groupContent').value.trim();
+      const email = document.getElementById('staff-input-email').value.trim();
+      const pwInput = document.getElementById('staff-input-password');
+      const password = pwInput ? pwInput.value : '';
+
+      const isNew = !editingStaffId;
+
+      // 必須項目チェック
+      if (!id || !name || !role || !email) {
+        alert('必須項目（社員ID・氏名・役割・メールアドレス）をすべて入力してください。');
+        return;
+      }
+      if (isNew && !password) {
+        alert('新規登録時はパスワードを入力してください。');
+        return;
+      }
+
+      // 新規登録時のID重複チェック
+      if (isNew && staffData.some(s => s.id === id)) {
+        alert(`社員ID「${id}」は既に登録されています。別のIDを入力してください。`);
+        return;
+      }
+
+      // メールアドレス重複チェック
+      const duplicateEmail = staffData.find(s => s.email.toLowerCase() === email.toLowerCase() && s.id !== editingStaffId);
+      if (duplicateEmail) {
+        alert(`メールアドレス「${email}」は既に「${duplicateEmail.name}」さんが使用しています。`);
+        return;
+      }
+
+      if (isNew) {
+        // 新規追加
+        staffData.push({ id, name, role, iconUrl, meetUrl, groupContent, email, password });
+      } else {
+        // 編集
+        const idx = staffData.findIndex(s => s.id === editingStaffId);
+        if (idx < 0) {
+          alert('編集対象のスタッフが見つかりません。');
+          return;
+        }
+        const existing = staffData[idx];
+        staffData[idx] = {
+          ...existing,
+          name,
+          role,
+          iconUrl,
+          meetUrl,
+          groupContent,
+          email,
+          // パスワードは入力がある場合のみ更新（他人の編集時に空なら変更なし）
+          password: password ? password : existing.password
+        };
+
+        // 自分自身の情報を編集した場合、sessionStorage も更新
+        if (currentStaff && currentStaff.id === editingStaffId) {
+          const updated = staffData[idx];
+          const newCurrentStaff = { id: updated.id, name: updated.name, role: updated.role, email: updated.email };
+          sessionStorage.setItem('currentStaff', JSON.stringify(newCurrentStaff));
+          currentStaff = newCurrentStaff;
+          // 上部バー表示も更新
+          document.getElementById('admin-name').textContent = updated.name;
+          document.getElementById('admin-role').textContent = updated.role;
+          document.getElementById('admin-avatar').textContent = (updated.name || '--').slice(0, 2);
+        }
+      }
+
+      saveStaffToStorage();
+      renderStaffTable();
+      closeStaffPanel();
+      alert(isNew ? `スタッフ「${name}」を登録しました。\n\n※ 実際のスプレッドシート（staff.csv）にも反映するには、手動での更新が必要です。` : '変更を保存しました。\n\n※ 実際のスプレッドシート（staff.csv）にも反映するには、手動での更新が必要です。');
+    }
+
+    // 削除処理
+    function deleteStaff() {
+      if (!editingStaffId) return;
+
+      // 自分自身は削除できない（念のため二重チェック）
+      if (currentStaff && currentStaff.id === editingStaffId) {
+        alert('ログイン中のご自身のアカウントは削除できません。');
+        return;
+      }
+
+      const s = staffData.find(x => x.id === editingStaffId);
+      if (!s) return;
+
+      if (!confirm(`スタッフ「${s.name}」を削除します。\n本当によろしいですか？\n\n※ ブラウザ内のみの削除です。スプレッドシートは別途更新してください。`)) {
+        return;
+      }
+
+      staffData = staffData.filter(x => x.id !== editingStaffId);
+      saveStaffToStorage();
+      renderStaffTable();
+      closeStaffPanel();
+      alert(`スタッフ「${s.name}」を削除しました。`);
+    }
+
+    // ===== ログイン認証：sessionStorage から現在のスタッフ情報を取得 =====
+    // 未ログイン時は login.html にリダイレクト
+    const currentStaffJson = sessionStorage.getItem('currentStaff');
+    let currentStaff = null;
+    if (!currentStaffJson) {
+      // 未ログイン → ログイン画面に戻す
+      window.location.href = 'login.html';
+    } else {
+      currentStaff = JSON.parse(currentStaffJson);
+      // 上部バーの表示を更新（ログイン中のスタッフ情報を反映）
+      const avatarEl = document.getElementById('admin-avatar');
+      const nameEl = document.getElementById('admin-name');
+      const roleEl = document.getElementById('admin-role');
+      if (avatarEl) avatarEl.textContent = (currentStaff.name || '--').slice(0, 2);
+      if (nameEl) nameEl.textContent = currentStaff.name || '---';
+      if (roleEl) roleEl.textContent = currentStaff.role || '---';
+    }
+
+    // ===== 初期化（CSVロード後にレンダリング） =====
+    Promise.all([loadTextbooks(), initStaffData()]).then(() => {
+      switchPeriod('week');
+      renderFollowUpCards();
+      renderMonthlyChart();
+      renderTextbookCheckboxes();
+      renderMembersTable();
+      renderKarteList();
+      selectKarte('M001');  // 初期表示：田中太郎
+      renderTextbookMaster();
+      renderAssignList();
+      selectAssign('M001');
+      renderStaffTable();
+    });
+  </script>
+</body>
+</html>
