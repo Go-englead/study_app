@@ -1088,9 +1088,66 @@
     @media (max-width: 640px) {
       .profile-grid { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ========== 共有モード専用スタイル ========== */
+    /* URLパラメータ ?share=true が付いた時のみ、body に share-mode クラスが付く */
+    /* サイドバー・上部バー・他画面・会員リスト等を非表示にして、該当会員のカルテ本体のみ表示 */
+    body.share-mode .sidebar,
+    body.share-mode .topbar,
+    body.share-mode .karte-list {
+      display: none !important;
+    }
+    body.share-mode .main-area {
+      margin-left: 0 !important;
+    }
+    body.share-mode .content {
+      padding: 24px !important;
+    }
+    /* カルテ画面以外の画面は全て非表示 */
+    body.share-mode .screen:not(#screen-karte) {
+      display: none !important;
+    }
+    body.share-mode #screen-karte {
+      display: block !important;
+    }
+    /* 左の会員リストを非表示にして、右のカルテ本体を画面いっぱいに */
+    body.share-mode .karte-layout {
+      grid-template-columns: 1fr !important;
+    }
+    /* 共有モードではページヘッダー（タイトル等）も非表示 */
+    body.share-mode .page-header {
+      display: none !important;
+    }
+    /* モーダル・オーバーレイも念のため非表示（共有モードには不要） */
+    body.share-mode .overlay,
+    body.share-mode .slide-panel,
+    body.share-mode .center-modal-overlay {
+      display: none !important;
+    }
+    /* 共有モードであることを示すバッジ（任意で表示用） */
+    .share-mode-badge {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: #E74C3C;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    body.share-mode .share-mode-badge {
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
+  <!-- 共有モード中であることを示すバッジ（共有モード時のみ表示） -->
+  <div class="share-mode-badge">🔗 共有モード</div>
+
   <div class="layout">
     <!-- ===== 左サイドバー ===== -->
     <aside class="sidebar">
@@ -2234,7 +2291,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             </div>
           </td>
           <td onclick="event.stopPropagation()">
-            <button class="action-btn" onclick="openKarteModal('${m.id}')">カルテ →</button>
+            <button class="action-btn" onclick="openShareMode('${m.id}')" title="別タブで開き、他会員の情報を隠した状態でカルテを表示します">🔗 共有モード</button>
           </td>
           <td>${m.startDate}<br><span style="color:#999; font-size:11px;">〜 ${m.graduateDate}</span></td>
           <td><span class="rate-badge ${getRateClass(m.rate)}">${m.rate}%</span></td>
@@ -3066,8 +3123,39 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       if (roleEl) roleEl.textContent = currentStaff.role || '---';
     }
 
+    // ========================================
+    // ===== 共有モード処理 =====
+    // ========================================
+
+    // URLパラメータを取得（例：admin.html?share=true&memberId=M001）
+    const urlParams = new URLSearchParams(window.location.search);
+    const isShareMode = urlParams.get('share') === 'true';
+    const shareMemberId = urlParams.get('memberId');
+
+    // 共有モードの場合、body に share-mode クラスを付与（CSSで他の要素を非表示に）
+    if (isShareMode) {
+      document.body.classList.add('share-mode');
+    }
+
+    // 会員カルテを共有モード（別タブ）で開く
+    // 画面共有時に他会員の情報が映らないよう、該当会員のカルテ本体のみを表示する
+    function openShareMode(memberId) {
+      const url = `admin.html?share=true&memberId=${encodeURIComponent(memberId)}`;
+      window.open(url, '_blank');
+    }
+
     // ===== 初期化（CSVロード後にレンダリング） =====
     Promise.all([loadTextbooks(), initStaffData()]).then(() => {
+      if (isShareMode && shareMemberId) {
+        // 共有モード：該当会員のカルテのみ表示（他の描画は最低限）
+        // タイトルバーも非表示なのでswitchScreenは呼ばない
+        renderTextbookCheckboxes();  // カルテ内で使う可能性があるため
+        selectKarte(shareMemberId);
+        // 他画面（ダッシュボード・会員管理等）のレンダリングは不要なのでスキップ
+        return;
+      }
+
+      // 通常モード：全画面をレンダリング
       switchPeriod('week');
       renderFollowUpCards();
       renderMonthlyChart();
