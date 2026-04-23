@@ -4,7 +4,9 @@
       "Bash(curl -s http://localhost:8000/admin.html)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP: %{http_code}\\\\n\" http://localhost:8000/admin.html)",
+      "Bash(open http://localhost:8000/login.html)"
     ]
   }
 }

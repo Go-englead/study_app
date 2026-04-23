@@ -643,9 +643,43 @@
     }
     .profile-name { font-size: 20px; font-weight: 700; }
     .profile-nickname { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+    /* 氏名エリア（flex中でminWidth制御） */
+    .profile-identity { min-width: 0; }
+    /* コーチ入力の学習目標・目的を氏名の右に大きく表示するエリア */
+    .profile-learning-goal {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-left: auto;
+      min-width: 0;
+    }
+    .profile-learning-goal-label {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .profile-learning-goal-text {
+      font-size: 13px;
+      color: #ffffff;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    /* 共有モード時はさらに大きめに表示 */
+    body.share-mode .profile-learning-goal-text {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    /* スマホ幅では氏名下に折り返して表示 */
+    @media (max-width: 900px) {
+      .profile-top { flex-wrap: wrap; }
+      .profile-learning-goal { width: 100%; margin-left: 0; }
+    }
     .profile-grid {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 10px;
     }
     .profile-item {
@@ -1188,7 +1222,7 @@
       <header class="topbar">
         <div>
           <div class="topbar-title" id="topbar-title">ダッシュボード</div>
-          <div class="topbar-sub">2026年4月16日（木）</div>
+          <div class="topbar-sub" id="topbar-date"></div>
         </div>
         <div class="topbar-right">
           <div class="admin-info">
@@ -1239,10 +1273,7 @@
             </div>
           </div>
 
-          <!-- ③ 要フォローカード5枚 -->
-          <div class="follow-up-grid" id="follow-up-grid"></div>
-
-          <!-- ④ 月別平均達成率推移グラフ -->
+          <!-- ③ 月別平均達成率推移グラフ -->
           <div class="card monthly-chart-wrap">
             <div class="card-header">
               <div>
@@ -1254,6 +1285,9 @@
               <div class="monthly-chart" id="monthly-chart"></div>
             </div>
           </div>
+
+          <!-- ④ 要フォローカード5枚（最下部に配置） -->
+          <div class="follow-up-grid" id="follow-up-grid"></div>
 
         </div>
 
@@ -1590,6 +1624,7 @@
         weeklyGoalHours: 12, course: '大学受験コース',
         rate: 105, lastLoginDaysAgo: 0, lastCoachingDaysAgo: 5,
         goalEnglish: 'IELTS 6.5', departureDate: '2026-08-19',
+        coachLearningGoal: 'オーストラリア渡航までにIELTS 6.5を取得。ライティング強化を最優先とし、日々の学習習慣を着実に定着させる。',
         monthlyHours: 52.4, monthlyHoursCompare: 3.2,
         streak: 15, streakCompare: 3,
         weeklyRates: [78, 85, 92, 105],
@@ -1618,6 +1653,7 @@
         weeklyGoalHours: 10, course: '高校受験コース',
         rate: 85, lastLoginDaysAgo: 1, lastCoachingDaysAgo: 10,
         goalEnglish: 'TOEIC 800', departureDate: '2026-09-05',
+        coachLearningGoal: 'TOEIC 800点突破を目標に、Part5文法とリスニング対策を重点的に実施。仕事との両立で学習時間を確保する仕組みを整える。',
         monthlyHours: 38.5, monthlyHoursCompare: 1.5,
         streak: 10, streakCompare: 2,
         weeklyRates: [65, 72, 80, 85],
@@ -1646,6 +1682,7 @@
         weeklyGoalHours: 8, course: '英検対策コース',
         rate: 62, lastLoginDaysAgo: 2, lastCoachingDaysAgo: 14,
         goalEnglish: '英検準1級', departureDate: '2026-10-20',
+        coachLearningGoal: '英検準1級合格を目標に、語彙定着とリーディング対策を中心に進める。週次の学習時間を10時間以上キープできる状態を作る。',
         monthlyHours: 28.0, monthlyHoursCompare: 2.0,
         streak: 5, streakCompare: -1,
         weeklyRates: [55, 58, 60, 62],
@@ -1674,6 +1711,7 @@
         weeklyGoalHours: 10, course: '大学受験コース',
         rate: 35, lastLoginDaysAgo: 4, lastCoachingDaysAgo: 35,
         goalEnglish: '国公立大学 合格', departureDate: '2026-11-15',
+        coachLearningGoal: '国公立大学合格を目標とし、基礎英語力の底上げを行う。モチベーション維持のため、週次で振り返り面談を実施。',
         monthlyHours: 18.5, monthlyHoursCompare: -1.0,
         streak: 2, streakCompare: -3,
         weeklyRates: [48, 42, 38, 35],
@@ -1702,6 +1740,7 @@
         weeklyGoalHours: 6, course: '定期テスト対策',
         rate: 8, lastLoginDaysAgo: 7, lastCoachingDaysAgo: 999,
         goalEnglish: '定期テスト80点以上', departureDate: '2026-09-10',
+        coachLearningGoal: '定期テスト80点以上を目標に、学習習慣の再構築を最優先とする。まずは毎日15分の継続から、徐々に学習量を増やしていく。',
         monthlyHours: 4.2, monthlyHoursCompare: -3.5,
         streak: 0, streakCompare: -5,
         weeklyRates: [20, 15, 10, 8],
@@ -1885,14 +1924,31 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         colorName: 'グレー'
       };
     }
-    // 出国までの残日数
+    // 今日の日付を「時刻0時0分0秒」に正規化して返す（日付比較用の基準）
+    function todayBase() {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    // 上部バーに当日の日付を表示（例：「2026年4月22日（水）」）
+    function renderTopbarDate() {
+      const el = document.getElementById('topbar-date');
+      if (!el) return;
+      const d = new Date();
+      const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+      el.textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${dayNames[d.getDay()]}）`;
+    }
+
+    // 出国までの残日数（今日基準で計算）
     function daysUntil(dateStr) {
-      const today = new Date('2026-04-16');
+      const today = todayBase();
       const target = new Date(dateStr);
       return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     }
 
-    // 最終記録日からの経過日数を計算
+    // 最終記録日からの経過日数を計算（ダミーデータの日付が固定なので、内部基準は従来通り 2026-04-16）
+    // ※ 学習記録のダミー日付（recentLogs）は固定値のため、ここを動的化すると不整合が出る
     function getLastRecordDaysAgo(m) {
       if (!m.recentLogs || m.recentLogs.length === 0) return 999;
       const today = new Date('2026-04-16');
@@ -2509,9 +2565,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         <div class="karte-profile">
           <div class="profile-top">
             <div class="profile-avatar">${m.initial}</div>
-            <div>
+            <div class="profile-identity">
               <div class="profile-name">${m.name}</div>
               <div class="profile-nickname">@${m.nickname} / ${m.course}</div>
+            </div>
+            <!-- コーチ入力の学習目標・目的（共有モードでも通常モードでも表示） -->
+            <div class="profile-learning-goal">
+              <div class="profile-learning-goal-label">学習目標・目的</div>
+              <div class="profile-learning-goal-text">${m.coachLearningGoal || '（未設定）'}</div>
             </div>
           </div>
           <div class="profile-grid">
@@ -2530,10 +2591,6 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             <div class="profile-item">
               <div class="profile-item-label">卒業予定日</div>
               <div class="profile-item-value" style="font-size:12px;">${m.graduateDate}</div>
-            </div>
-            <div class="profile-item">
-              <div class="profile-item-label">英語の目標</div>
-              <div class="profile-item-value" style="font-size:12px;">${m.goalEnglish}</div>
             </div>
             <div class="profile-item">
               <div class="profile-item-label">出国予定日</div>
@@ -3146,6 +3203,8 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
 
     // ===== 初期化（CSVロード後にレンダリング） =====
     Promise.all([loadTextbooks(), initStaffData()]).then(() => {
+      renderTopbarDate();  // 上部バーに当日の日付を表示
+
       if (isShareMode && shareMemberId) {
         // 共有モード：該当会員のカルテのみ表示（他の描画は最低限）
         // タイトルバーも非表示なのでswitchScreenは呼ばない
