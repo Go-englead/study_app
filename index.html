@@ -1666,9 +1666,33 @@
   }
 
   // CSV行配列を教材オブジェクトに拡張
+  // - color：CSVに指定があればそれを優先、なければカテゴリごとに自動割当（同じカテゴリは同じ色）
+  // - unit：CSVに指定があればそれを優先、なければカテゴリから自動推定
   function enrichTextbooks(rawArr) {
-    return rawArr.map((item, i) => {
-      const palette = textbookColorPalette[i % textbookColorPalette.length];
+    // カテゴリ → 色のマッピング（同じカテゴリは同じ色になる）
+    const categoryColorMap = {};
+    let colorIndex = 0;
+
+    return rawArr.map((item) => {
+      // ① 色の決定：CSV優先、なければカテゴリ自動割当
+      let color, colorName;
+      const csvColor = (item.color || '').trim();
+      if (csvColor) {
+        color = csvColor;
+        colorName = csvColor;
+      } else {
+        if (!categoryColorMap[item.category]) {
+          categoryColorMap[item.category] = textbookColorPalette[colorIndex % textbookColorPalette.length];
+          colorIndex++;
+        }
+        const palette = categoryColorMap[item.category];
+        color = palette.color;
+        colorName = palette.name;
+      }
+
+      // ② 単位の決定：CSV優先、なければカテゴリから推定
+      const unit = (item.unit || '').trim() || unitFromCategory(item.category);
+
       return {
         id: item.id,
         name: item.name,
@@ -1676,11 +1700,28 @@
         iconUrl: item.iconUrl,
         manualUrl: item.manualUrl,
         note: item.note,
-        unit: unitFromCategory(item.category),
-        color: palette.color,
-        colorName: palette.name
+        unit: unit,
+        color: color,
+        colorName: colorName
       };
     });
+  }
+
+  // 教材アイコンを描画（iconUrlがURL形式なら画像、そうでなければテキスト表示）
+  function renderTextbookIcon(iconUrl, size = 'medium') {
+    const src = (iconUrl || '').trim();
+    if (!src) return '';
+    const isUrl = /^https?:\/\//i.test(src);
+    const sizes = {
+      small: { img: 18, text: 13 },
+      medium: { img: 24, text: 16 },
+      large: { img: 40, text: 28 }
+    };
+    const s = sizes[size] || sizes.medium;
+    if (isUrl) {
+      return `<img src="${src}" alt="" style="width:${s.img}px; height:${s.img}px; object-fit:cover; border-radius:4px; vertical-align:middle; display:inline-block;" onerror="this.style.display='none'">`;
+    }
+    return `<span style="font-size:${s.text}px; display:inline-block; vertical-align:middle;">${src}</span>`;
   }
 
   // フォールバック用インラインCSV（file:// でfetch失敗時に使用）
@@ -1753,7 +1794,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         <div class="textbook-row">
           <div class="textbook-bar-side" style="background:${tb.color}"></div>
           <div class="textbook-info">
-            <div class="textbook-name">${tb.name}</div>
+            <div class="textbook-name">${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</div>
             <div class="textbook-track">
               <div class="textbook-fill" style="width:${data.overallProgress}%; background:${tb.color}"></div>
             </div>
@@ -1771,7 +1812,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     container.innerHTML = textbooks.map((tb, i) => `
       <div class="radio-item ${i === 0 ? 'selected' : ''}" onclick="selectTextbook(this)" data-tb-id="${tb.id}">
         <div class="radio-circle"></div>
-        <span class="radio-label">${tb.name}</span>
+        <span class="radio-label">${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</span>
       </div>
     `).join('');
     // 初期選択ヒント
@@ -1793,7 +1834,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         <div class="textbook-card" style="margin-bottom: var(--space-4);">
           <div class="textbook-card-head">
             <div>
-              <div class="textbook-card-name">${tb.name}</div>
+              <div class="textbook-card-name">${renderTextbookIcon(tb.iconUrl, 'medium')} ${tb.name}</div>
               <div class="textbook-card-goal">週目標：${data.weeklyGoalHours}時間 / 日目標：${data.dailyGoalMinutes}分</div>
             </div>
             <span class="badge ${data.achievedToday ? 'badge-achieved' : 'badge-not'}">${data.achievedToday ? '今日達成' : '未達成'}</span>
@@ -1835,7 +1876,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         <div class="textbook-row">
           <div class="textbook-bar-side ach-${ach}"></div>
           <div class="textbook-info">
-            <div class="textbook-name">${tb.name}</div>
+            <div class="textbook-name">${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</div>
             <div class="textbook-track">
               <div class="textbook-fill ach-${ach}" style="width:${data.monthlyRate}%"></div>
             </div>

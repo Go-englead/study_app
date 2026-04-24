@@ -1813,23 +1813,67 @@
     }
 
     // CSV行配列を既存コード互換の textbook オブジェクトに拡張
+    // - color：CSVに指定があればそれを使う、なければカテゴリごとに自動割当（同じカテゴリは同じ色）
+    // - unit：CSVに指定があればそれを使う、なければカテゴリから自動推定
     function enrichTextbooks(rawArr) {
-      return rawArr.map((item, i) => {
-        const palette = textbookColorPalette[i % textbookColorPalette.length];
+      // カテゴリ → 色のマッピング（同じカテゴリは同じ色になる）
+      const categoryColorMap = {};
+      let colorIndex = 0;
+
+      return rawArr.map((item) => {
+        // ① 色の決定：CSV優先、なければカテゴリ自動割当
+        let color, colorName;
+        const csvColor = (item.color || '').trim();
+        if (csvColor) {
+          color = csvColor;
+          colorName = csvColor;
+        } else {
+          if (!categoryColorMap[item.category]) {
+            categoryColorMap[item.category] = textbookColorPalette[colorIndex % textbookColorPalette.length];
+            colorIndex++;
+          }
+          const palette = categoryColorMap[item.category];
+          color = palette.color;
+          colorName = palette.name;
+        }
+
+        // ② 単位の決定：CSV優先、なければカテゴリから推定
+        const unit = (item.unit || '').trim() || unitFromCategory(item.category);
+
         return {
           id: item.id,
           name: item.name,
           type: item.category,       // 旧プロパティ名との互換
           category: item.category,
-          emoji: item.iconUrl || item.id,  // 絵文字の代わりに iconUrl 文字列を表示
+          emoji: item.iconUrl || item.id,  // 旧コード互換用（iconUrl文字列のフォールバック）
           iconUrl: item.iconUrl,
           manualUrl: item.manualUrl,
           note: item.note,
-          unit: unitFromCategory(item.category),
-          color: palette.color,
-          colorName: palette.name
+          unit: unit,
+          color: color,
+          colorName: colorName
         };
       });
+    }
+
+    // 教材アイコンを描画（iconUrlがURL形式なら画像、そうでなければテキスト表示）
+    // size: 'small' | 'medium' | 'large' で用途に応じてサイズ切り替え
+    function renderTextbookIcon(iconUrl, size = 'medium') {
+      const src = (iconUrl || '').trim();
+      if (!src) return '';
+      const isUrl = /^https?:\/\//i.test(src);
+      const sizes = {
+        small: { img: 18, text: 13 },
+        medium: { img: 24, text: 16 },
+        large: { img: 40, text: 28 }
+      };
+      const s = sizes[size] || sizes.medium;
+      if (isUrl) {
+        // 画像URLの場合：<img>で表示（読み込み失敗時は自動で非表示に）
+        return `<img src="${src}" alt="" style="width:${s.img}px; height:${s.img}px; object-fit:cover; border-radius:4px; vertical-align:middle; display:inline-block;" onerror="this.style.display='none'">`;
+      }
+      // テキスト（絵文字やサンプル文字列など）の場合
+      return `<span style="font-size:${s.text}px; display:inline-block; vertical-align:middle;">${src}</span>`;
     }
 
     // フォールバック用インラインCSV（file:// でfetch失敗時に使用）
@@ -2159,7 +2203,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       wrap.innerHTML = textbooks.map(tb => `
         <label class="checkbox-item">
           <input type="checkbox" value="${tb.id}" class="search-textbook-cb">
-          <span>${tb.emoji} ${tb.name}</span>
+          <span>${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</span>
         </label>
       `).join('');
     }
@@ -2364,7 +2408,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         const tb = getTextbook(a.tbId);
         return `
           <div class="assigned-item">
-            <span class="assigned-emoji">${tb.emoji}</span>
+            <span class="assigned-emoji">${renderTextbookIcon(tb.iconUrl, 'small')}</span>
             <span class="assigned-name">${tb.name}</span>
             <span class="assigned-target">1日 ${a.dailyGoal}分</span>
             <button class="assigned-remove" onclick="alert('【サンプル】教材を解除しました')">×</button>
@@ -2483,7 +2527,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         const actual = (p.actualHours != null) ? p.actualHours : '-';
         return `
           <div class="textbook-progress-item">
-            <span class="textbook-emoji">${tb.emoji}</span>
+            <span class="textbook-emoji">${renderTextbookIcon(tb.iconUrl, 'medium')}</span>
             <div class="textbook-info">
               <div class="textbook-name-row">
                 <span class="textbook-name">${tb.name}</span>
@@ -2507,7 +2551,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         return `
           <tr>
             <td>${log.date}</td>
-            <td>${tb.emoji} ${tb.name}</td>
+            <td>${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</td>
             <td>${log.duration}分</td>
             <td><span class="rate-badge ${getRateClass(logRate)}">${logRate}%</span></td>
           </tr>
@@ -2740,7 +2784,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             <td>${tb.id}</td>
             <td>
               <div class="textbook-cell">
-                <span class="tb-emoji-big">${tb.emoji}</span>
+                <span class="tb-emoji-big">${renderTextbookIcon(tb.iconUrl, 'large')}</span>
                 <div>
                   <div class="tb-name">${tb.name}</div>
                 </div>
@@ -2790,7 +2834,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         const tb = getTextbook(a.tbId);
         return `
           <div class="assigned-item">
-            <span class="assigned-emoji">${tb.emoji}</span>
+            <span class="assigned-emoji">${renderTextbookIcon(tb.iconUrl, 'small')}</span>
             <div style="flex:1;">
               <div class="assigned-name">${tb.name}</div>
               <div style="font-size:11px; color:#999; margin-top:2px;">${tb.type} / ${tb.unit}</div>
