@@ -1465,7 +1465,45 @@
               <div class="page-title">教材管理</div>
               <div class="page-sub">教材マスターと割り当ての管理</div>
             </div>
-            <button class="primary-btn" onclick="alert('【サンプル】教材追加フォームを開きます')">＋ 教材を追加する</button>
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+              <button class="primary-btn" onclick="alert('【サンプル】教材追加フォームを開きます')">＋ 教材を追加する</button>
+              <button class="primary-btn" onclick="toggleTextbookSearchPanel()" id="tb-search-toggle-btn">🔍 教材を検索</button>
+            </div>
+          </div>
+
+          <!-- 教材検索パネル（インライン展開、初期は非表示） -->
+          <div class="card" id="tb-search-panel" style="display:none; padding:20px; margin-bottom:16px;">
+            <div style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
+              <!-- 教材名で検索（予測変換つき） -->
+              <div style="flex:1; min-width:240px; position:relative;">
+                <label style="font-size:12px; font-weight:600; color:var(--color-text-secondary); display:block; margin-bottom:4px;">教材名で検索</label>
+                <input type="text" id="tb-search-input" class="form-input" placeholder="例：キクタン" autocomplete="off"
+                  oninput="onTbSearchInput()" onfocus="onTbSearchInput()" onblur="setTimeout(closeTbSuggest, 150)">
+                <!-- 予測候補（入力下に表示） -->
+                <div id="tb-search-suggest" style="display:none; position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid var(--color-border); border-top:none; border-radius:0 0 6px 6px; box-shadow:0 4px 12px rgba(0,0,0,0.08); z-index:10; max-height:240px; overflow-y:auto;"></div>
+              </div>
+              <!-- カテゴリ絞り込み -->
+              <div style="min-width:200px;">
+                <label style="font-size:12px; font-weight:600; color:var(--color-text-secondary); display:block; margin-bottom:4px;">カテゴリ</label>
+                <select id="tb-search-category" class="form-input" onchange="renderTbSearchResults()">
+                  <option value="">すべて</option>
+                </select>
+              </div>
+              <!-- クリア -->
+              <button class="secondary-btn" onclick="clearTbSearch()">クリア</button>
+            </div>
+
+            <!-- 検索結果（教材カード一覧） -->
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--color-text-secondary); margin-bottom:8px;" id="tb-search-result-count">教材を選択してください</div>
+              <div id="tb-search-results" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px;"></div>
+            </div>
+
+            <!-- 選択した教材の導入会員一覧（教材クリック時に表示） -->
+            <div id="tb-search-members" style="display:none; margin-top:20px; padding-top:16px; border-top:1px solid var(--color-border);">
+              <div style="font-size:13px; font-weight:700; margin-bottom:8px;" id="tb-search-members-title"></div>
+              <div id="tb-search-members-body"></div>
+            </div>
           </div>
 
           <!-- タブ -->
@@ -2763,6 +2801,182 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           </table>
         </div>
       `;
+    }
+
+    // ========================================
+    // ===== 教材検索機能（T-1） =====
+    // ========================================
+
+    // 検索パネルの開閉
+    // 開いている間は「教材マスター/会員への割り当て」タブを非表示にする
+    function toggleTextbookSearchPanel() {
+      const panel = document.getElementById('tb-search-panel');
+      const btn = document.getElementById('tb-search-toggle-btn');
+      const tabs = document.querySelector('#screen-textbooks .tabs');
+      const tabMaster = document.getElementById('tab-master');
+      const tabAssign = document.getElementById('tab-assign');
+      const isOpen = panel.style.display !== 'none';
+      if (isOpen) {
+        // 閉じる：パネルを隠してタブを再表示
+        panel.style.display = 'none';
+        btn.textContent = '🔍 教材を検索';
+        if (tabs) tabs.style.display = '';
+        if (tabMaster) tabMaster.style.display = '';
+        if (tabAssign) tabAssign.style.display = '';
+      } else {
+        // 開く：パネルを表示してタブを隠す
+        panel.style.display = '';
+        btn.textContent = '✕ 検索を閉じる';
+        if (tabs) tabs.style.display = 'none';
+        if (tabMaster) tabMaster.style.display = 'none';
+        if (tabAssign) tabAssign.style.display = 'none';
+        populateTbCategoryOptions();
+        renderTbSearchResults();
+      }
+    }
+
+    // カテゴリプルダウンの選択肢を教材データから動的生成
+    function populateTbCategoryOptions() {
+      const sel = document.getElementById('tb-search-category');
+      const currentValue = sel.value;
+      const categories = Array.from(new Set(textbooks.map(t => t.category).filter(Boolean)));
+      sel.innerHTML = '<option value="">すべて</option>' +
+        categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      sel.value = currentValue;
+    }
+
+    // 検索ボックスの予測候補表示（教材名の部分一致）
+    function onTbSearchInput() {
+      const q = document.getElementById('tb-search-input').value.trim().toLowerCase();
+      const suggest = document.getElementById('tb-search-suggest');
+      if (!q) {
+        suggest.style.display = 'none';
+        renderTbSearchResults();
+        return;
+      }
+      const matches = textbooks.filter(t => (t.name || '').toLowerCase().includes(q)).slice(0, 8);
+      if (matches.length === 0) {
+        suggest.innerHTML = `<div style="padding:10px 12px; font-size:13px; color:#999;">該当する教材がありません</div>`;
+        suggest.style.display = 'block';
+      } else {
+        suggest.innerHTML = matches.map(t => `
+          <div style="padding:8px 12px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; border-bottom:1px solid #f4f6f8;"
+            onmousedown="selectTbSuggest('${t.id.replace(/'/g, "\\'")}')"
+            onmouseover="this.style.background='#f4f6f8'" onmouseout="this.style.background='#fff'">
+            ${renderTextbookIcon(t.iconUrl, 'small')}
+            <span>${t.name}</span>
+            <span style="margin-left:auto; font-size:11px; color:#999;">${t.category}</span>
+          </div>
+        `).join('');
+        suggest.style.display = 'block';
+      }
+      // 同時に検索結果一覧も絞り込み
+      renderTbSearchResults();
+    }
+
+    // 予測候補をクリックした時：その教材を検索ボックスに反映 + 教材を選択表示
+    function selectTbSuggest(tbId) {
+      const tb = textbooks.find(t => t.id === tbId);
+      if (!tb) return;
+      document.getElementById('tb-search-input').value = tb.name;
+      closeTbSuggest();
+      renderTbSearchResults();
+      showTbSearchMembers(tbId);
+    }
+
+    function closeTbSuggest() {
+      const suggest = document.getElementById('tb-search-suggest');
+      if (suggest) suggest.style.display = 'none';
+    }
+
+    // 検索結果（カード一覧）の描画
+    function renderTbSearchResults() {
+      const q = document.getElementById('tb-search-input').value.trim().toLowerCase();
+      const cat = document.getElementById('tb-search-category').value;
+      const filtered = textbooks.filter(t => {
+        const matchName = !q || (t.name || '').toLowerCase().includes(q);
+        const matchCat = !cat || t.category === cat;
+        return matchName && matchCat;
+      });
+
+      const countEl = document.getElementById('tb-search-result-count');
+      countEl.textContent = `検索結果：${filtered.length}件 ／ 教材カードをクリックすると導入会員一覧が表示されます`;
+
+      const container = document.getElementById('tb-search-results');
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1; padding:24px; text-align:center; color:#999; font-size:13px;">該当する教材がありません</div>`;
+        return;
+      }
+      container.innerHTML = filtered.map(t => `
+        <div onclick="showTbSearchMembers('${t.id.replace(/'/g, "\\'")}')"
+          style="display:flex; align-items:center; gap:10px; padding:12px; border:1.5px solid var(--color-border); border-radius:6px; cursor:pointer; background:#fff; transition:all 0.15s ease;"
+          onmouseover="this.style.borderColor='${t.color}'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)';"
+          onmouseout="this.style.borderColor='var(--color-border)'; this.style.boxShadow='none';">
+          <div style="width:6px; align-self:stretch; background:${t.color}; border-radius:3px;"></div>
+          ${renderTextbookIcon(t.iconUrl, 'medium')}
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13px; font-weight:600; color:var(--color-text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.name}</div>
+            <div style="font-size:11px; color:var(--color-text-secondary); margin-top:2px;">${t.category}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 選択した教材の導入会員一覧を表示
+    function showTbSearchMembers(tbId) {
+      const tb = textbooks.find(t => t.id === tbId);
+      if (!tb) return;
+
+      // この教材を割り当てられている会員を抽出
+      const memberIds = Object.keys(assignments).filter(mid =>
+        (assignments[mid] || []).some(a => a.tbId === tbId)
+      );
+      const targetMembers = memberIds.map(mid => members.find(m => m.id === mid)).filter(Boolean);
+
+      const wrap = document.getElementById('tb-search-members');
+      const titleEl = document.getElementById('tb-search-members-title');
+      const bodyEl = document.getElementById('tb-search-members-body');
+
+      titleEl.innerHTML = `${renderTextbookIcon(tb.iconUrl, 'medium')} <span>${tb.name}</span> を導入中の会員：${targetMembers.length}名`;
+
+      if (targetMembers.length === 0) {
+        bodyEl.innerHTML = `<div style="padding:16px; text-align:center; color:#999; font-size:13px;">この教材を導入している会員はいません</div>`;
+      } else {
+        bodyEl.innerHTML = `
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:var(--color-bg-soft);">
+                <th style="text-align:left; padding:10px 12px; font-size:12px; color:var(--color-text-secondary);">会員ID</th>
+                <th style="text-align:left; padding:10px 12px; font-size:12px; color:var(--color-text-secondary);">氏名</th>
+                <th style="text-align:left; padding:10px 12px; font-size:12px; color:var(--color-text-secondary);">クラス</th>
+                <th style="text-align:right; padding:10px 12px; font-size:12px; color:var(--color-text-secondary);">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${targetMembers.map(m => `
+                <tr style="border-bottom:1px solid var(--color-border);">
+                  <td style="padding:10px 12px; font-family:monospace; font-size:12px;">${m.id}</td>
+                  <td style="padding:10px 12px; font-size:13px;">${m.name}</td>
+                  <td style="padding:10px 12px; font-size:12px; color:var(--color-text-secondary);">${m.course || '-'}</td>
+                  <td style="padding:10px 12px; text-align:right;">
+                    <button class="action-btn" onclick="goToKarte('${m.id}')">📋 カルテへ</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+      wrap.style.display = 'block';
+    }
+
+    // 検索条件のクリア
+    function clearTbSearch() {
+      document.getElementById('tb-search-input').value = '';
+      document.getElementById('tb-search-category').value = '';
+      closeTbSuggest();
+      document.getElementById('tb-search-members').style.display = 'none';
+      renderTbSearchResults();
     }
 
     // ===== 教材管理：タブ切替 =====
