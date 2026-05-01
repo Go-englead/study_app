@@ -1158,6 +1158,11 @@
     body.share-mode .center-modal-overlay {
       display: none !important;
     }
+    /* 共有モードで非表示にすべき編集系UI（登録・編集・削除ボタン等） */
+    /* このクラスを付けたボタンは、共有モード時に完全に非表示になる */
+    body.share-mode .share-hide {
+      display: none !important;
+    }
     /* 共有モードであることを示すバッジ（任意で表示用） */
     .share-mode-badge {
       display: none;
@@ -1415,6 +1420,10 @@
         <li class="nav-item" data-screen="textbooks" onclick="switchScreen('textbooks')">
           <span class="nav-icon"></span>
           <span>教材管理</span>
+        </li>
+        <li class="nav-item" data-screen="progos" onclick="switchScreen('progos')">
+          <span class="nav-icon"></span>
+          <span>PROGOS分析</span>
         </li>
         <li class="nav-item" data-screen="staff" onclick="switchScreen('staff')">
           <span class="nav-icon"></span>
@@ -1713,7 +1722,7 @@
                 </button>
               </div>
 
-              <!-- ⑦ PROGOSオーバーオール -->
+              <!-- ⑦ PROGOSオーバーオール（8段階） -->
               <div>
                 <div class="search-section-label">PROGOSオーバーオール</div>
                 <select class="form-select" id="search-progos">
@@ -1725,7 +1734,7 @@
                   <option value="A2 High">A2 High</option>
                   <option value="B1">B1</option>
                   <option value="B1 High">B1 High</option>
-                  <option value="B2+">B2 / B2 High 以上</option>
+                  <option value="B2 and above">B2 and above</option>
                 </select>
               </div>
 
@@ -1883,6 +1892,97 @@
 
               <!-- 右：割り当て表示 -->
               <div id="assign-main"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== PROGOS分析画面 ========== -->
+        <div class="screen" id="screen-progos">
+          <div class="page-header">
+            <div>
+              <div class="page-title">PROGOS分析</div>
+              <div class="page-sub" id="pa-subheader">全会員の最新受験スコアを集計</div>
+            </div>
+            <div>
+              <!-- PROGOS公式CSVを取込（隠しファイル入力 + 表示用ボタン） -->
+              <input type="file" id="pa-csv-file-input" accept=".csv,text/csv" style="display:none;" onchange="paOnCsvFileSelected(event)">
+              <button class="primary-btn" onclick="document.getElementById('pa-csv-file-input').click()">📥 PROGOS結果CSVを取込</button>
+            </div>
+          </div>
+
+          <!-- KPIカード（補助情報） -->
+          <div class="stats-row" id="pa-kpi-row" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-bottom:20px;">
+            <!-- JS で動的描画 -->
+          </div>
+
+          <!-- ★ 7つのドーナツ円グラフ -->
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">レベル別人数分布</div>
+                <div class="card-sub">最新受験回スコア（初回会員も含む）</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="pa-donuts-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">
+                <!-- JS で 7つのドーナツを動的描画 -->
+              </div>
+              <!-- 凡例 -->
+              <div id="pa-donut-legend" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; padding-top:14px; border-top:1px solid var(--color-border); font-size:11px; color:var(--color-text-secondary);">
+                <!-- JS で動的描画 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ★ レベル変動リスト（3分類＋初回別枠） -->
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">レベル変動（前回 vs 最新）</div>
+                <div class="card-sub" id="pa-trend-sub">受験日が新しい順に表示</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="pa-trend-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+                <!-- JS で動的描画（アップ／横ばい／ダウン） -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 会員一覧テーブル＋フィルタ -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">会員一覧（最新受験スコア）</div>
+                <div class="card-sub" id="pa-member-list-sub">行クリックで6項目を展開</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- フィルタ：Overall + 6項目（プルダウン7つ） -->
+              <div id="pa-filter-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:14px;">
+                <!-- JS で動的描画 -->
+              </div>
+              <div style="margin-bottom:10px;">
+                <button class="secondary-btn" style="padding:6px 12px; font-size:12px;" onclick="paClearFilters()">フィルタをクリア</button>
+                <span id="pa-filter-count" style="margin-left:12px; font-size:12px; color:var(--color-text-secondary);"></span>
+              </div>
+              <div style="overflow-x:auto;">
+                <table id="pa-member-table">
+                  <thead>
+                    <tr>
+                      <th style="width:30px;"></th>
+                      <th>氏名</th>
+                      <th>成績推移</th>
+                      <th>最新Overall</th>
+                      <th>最新受験日</th>
+                      <th>前回Overall</th>
+                      <th>前回受験日</th>
+                      <th>カルテ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pa-member-tbody"><!-- JS で動的描画 --></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -2094,6 +2194,12 @@
             </div>
           </div>
 
+          <div class="form-group">
+            <label class="form-label">1日の目標学習時間（分） <span style="color:var(--color-error);">*</span></label>
+            <input type="number" class="form-input" id="nm-dailyTargetMinutes" min="1" max="1440" step="1" placeholder="例：90" required>
+            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">平日・休日を平均した1日の目標学習時間（分単位）。達成率の自動算出に使用します。</div>
+          </div>
+
           <!-- 学習目標・備考セクション -->
           <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">コーチ入力</div>
 
@@ -2112,6 +2218,195 @@
       <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
         <button class="secondary-btn" onclick="closeNewMemberModal()">キャンセル</button>
         <button class="primary-btn" onclick="saveNewMember()">登録する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 学習記録 入力モーダル（admin.html / index.html 共用想定） ===== -->
+  <div class="center-modal-overlay" id="log-entry-overlay" onclick="closeLogEntryModal()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 560px;">
+      <div class="center-modal-header">
+        <div class="panel-title" id="log-entry-title">＋ 学習記録を追加</div>
+        <button class="panel-close" onclick="closeLogEntryModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="log-entry-member-info" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:10px 12px; border-radius:6px; font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;"></div>
+
+        <form id="log-entry-form" onsubmit="return false;">
+          <div class="form-group">
+            <label class="form-label">日付 <span style="color:var(--color-error);">*</span></label>
+            <input type="date" class="form-input" id="le-date" required>
+            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">未来日は登録できません。</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">教材 <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="le-textbookId" required>
+              <option value="">選択してください</option>
+            </select>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">開始ページ <span style="color:var(--color-error);">*</span></label>
+              <input type="number" class="form-input" id="le-startPage" min="1" step="1" placeholder="例：12" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">終了ページ <span style="color:var(--color-error);">*</span></label>
+              <input type="number" class="form-input" id="le-endPage" min="1" step="1" placeholder="例：18" required>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">開始時刻 <span style="color:var(--color-error);">*</span></label>
+              <input type="time" class="form-input" id="le-startTime" required oninput="updateLogEntryMinutesPreview()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">終了時刻 <span style="color:var(--color-error);">*</span></label>
+              <input type="time" class="form-input" id="le-endTime" required oninput="updateLogEntryMinutesPreview()">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div style="background:#EAF2F8; border-radius:6px; padding:10px 12px; font-size:13px; color:var(--color-primary-dark);">
+              📊 学習時間（自動計算）：<strong id="le-minutes-preview">―</strong>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">コメント <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="le-comment" rows="2" placeholder="例：単語の発音を意識して取り組んだ" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" onclick="closeLogEntryModal()">キャンセル</button>
+        <button class="primary-btn" onclick="saveLogEntry()">記録を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROGOS CSV 取込プレビューモーダル ===== -->
+  <div class="center-modal-overlay" id="pa-csv-preview-overlay" onclick="paCloseCsvPreview()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 1080px;">
+      <div class="center-modal-header">
+        <div class="panel-title">📥 PROGOS結果CSV 取込プレビュー</div>
+        <button class="panel-close" onclick="paCloseCsvPreview()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="pa-csv-summary" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:12px 14px; border-radius:6px; margin-bottom:14px; font-size:13px;"></div>
+        <div style="overflow-x:auto;">
+          <table id="pa-csv-preview-table" style="width:100%; font-size:12px;">
+            <thead>
+              <tr style="background:#ECF0F1;">
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">行</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">状態</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">Email</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">ID</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">氏名(CSV)</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">受験日</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">Overall</th>
+                <th style="padding:6px 8px; text-align:left;">エラー理由</th>
+              </tr>
+            </thead>
+            <tbody id="pa-csv-preview-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" onclick="paCloseCsvPreview()">キャンセル</button>
+        <button class="primary-btn" id="pa-csv-import-btn" onclick="paExecuteCsvImport()">取込実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROGOS CSV 取込完了モーダル ===== -->
+  <div class="center-modal-overlay" id="pa-csv-result-overlay" onclick="paCloseCsvResult()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 720px;">
+      <div class="center-modal-header">
+        <div class="panel-title">✅ CSV取込が完了しました</div>
+        <button class="panel-close" onclick="paCloseCsvResult()">×</button>
+      </div>
+      <div class="center-modal-body" style="padding:20px 24px; max-height:70vh; overflow-y:auto;">
+        <div id="pa-csv-result-summary" style="background:#E8F8F0; border-left:4px solid #27AE60; padding:12px 14px; border-radius:6px; font-size:13px; margin-bottom:14px;"></div>
+        <div id="pa-csv-result-errorbox" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <strong style="color:#E74C3C;">⚠️ 取込できなかった行（手動対応が必要）</strong>
+            <button class="secondary-btn" style="padding:6px 12px; font-size:12px;" onclick="paCopyCsvErrors(this)">エラー一覧をコピー</button>
+          </div>
+          <pre id="pa-csv-result-errors" style="background:#FDEDEC; border:1px solid #F5B7B1; border-radius:6px; padding:10px 12px; font-size:11px; white-space:pre-wrap; max-height:280px; overflow-y:auto; font-family:'Courier New', monospace;"></pre>
+        </div>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="primary-btn" onclick="paCloseCsvResult()">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROGOS スコア 入力モーダル（新規登録／編集 兼用） ===== -->
+  <div class="center-modal-overlay" id="progos-entry-overlay" onclick="closeProgosEntryModal()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 640px;">
+      <div class="center-modal-header">
+        <div class="panel-title" id="progos-entry-title">＋ PROGOSスコアを登録</div>
+        <button class="panel-close" onclick="closeProgosEntryModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="progos-entry-member-info" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:10px 12px; border-radius:6px; font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;"></div>
+
+        <form id="progos-entry-form" onsubmit="return false;">
+          <div class="form-group">
+            <label class="form-label">受験日 <span style="color:var(--color-error);">*</span></label>
+            <input type="date" class="form-input" id="pe-date" required>
+            <div style="font-size:11px; color:var(--color-text-muted); margin-tep:4px;">未来日は登録できません。</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">総合評価（オーバーオール） <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="pe-overall" required></select>
+          </div>
+
+          <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">6項目評価</div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Range（表現の幅） <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="pe-range" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Accuracy（正確さ） <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="pe-accuracy" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fluency（流暢さ） <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="pe-fluency" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Interaction（やりとり） <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="pe-interaction" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Coherence（一貫性） <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="pe-coherence" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phonology（音韻） <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="pe-phonology" required></select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">コメント <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="pe-comment" rows="2" placeholder="例：前回からRangeとFluencyが向上。次回はB2 and aboveを目指す" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:space-between; align-items:center; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="danger-btn" id="pe-delete-btn" onclick="deleteProgosEntry()" style="display:none;">🗑 削除</button>
+        <div style="display:flex; gap:8px; margin-left:auto;">
+          <button class="secondary-btn" onclick="closeProgosEntryModal()">キャンセル</button>
+          <button class="primary-btn" onclick="saveProgosEntry()">保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2383,13 +2678,16 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       return Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
     }
 
-    // CEFRレベルの数値マッピング（棒グラフ用）
+    // CEFRレベルの数値マッピング（PROGOS公式エクスポートに準拠した8段階）
+    // 棒グラフや昇順ソート用に、レベル文字列→数値にマップする
     const cefrLevels = {
       'Pre-A1': 1, 'A1': 2, 'A1 High': 3, 'A2': 4, 'A2 High': 5,
-      'B1': 6, 'B1 High': 7, 'B2': 8, 'C1': 9, 'C2': 10
+      'B1': 6, 'B1 High': 7, 'B2 and above': 8
     };
+    // 表示・プルダウン生成時に使用する順序付き配列
+    const cefrLevelList = ['Pre-A1', 'A1', 'A1 High', 'A2', 'A2 High', 'B1', 'B1 High', 'B2 and above'];
     function cefrToNum(cefr) { return cefrLevels[cefr] || 0; }
-    const cefrMax = 10;
+    const cefrMax = 8;
 
     // ===== 画面切替 =====
     function switchScreen(screenName) {
@@ -2412,9 +2710,15 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         'members': '会員管理',
         'karte': '会員カルテ',
         'textbooks': '教材管理',
+        'progos': 'PROGOS分析',
         'staff': 'スタッフ管理'
       };
       document.getElementById('topbar-title').textContent = titles[screenName];
+
+      // PROGOS分析画面：表示時に最新データで再描画
+      if (screenName === 'progos' && typeof renderProgosAnalysis === 'function') {
+        try { renderProgosAnalysis(); } catch (e) { console.warn('PROGOS分析の描画エラー', e); }
+      }
     }
 
     // ===== 期間別ダミーデータ =====
@@ -2620,14 +2924,18 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     // PROGOSの最新レベルを取得
     function getLatestProgosLevel(m) {
       if (!m.progos || m.progos.length === 0) return '';
-      return m.progos[m.progos.length - 1].cefr;
+      // 受験日昇順でソート済の前提だが、安全のため最後のエントリを正規化して返す
+      const last = m.progos[m.progos.length - 1];
+      const norm = (typeof normalizeProgosEntry === 'function') ? normalizeProgosEntry(last) : last;
+      return norm.overall || norm.cefr || '';
     }
 
     // PROGOSレベルが選択条件に合うかチェック
+    // 8段階対応：'B2 and above' というレベル文字列がそのまま設定値で渡される場合も対応
     function matchProgosLevel(memberLevel, filterLevel) {
-      if (filterLevel === 'B2+') {
+      if (filterLevel === 'B2+' || filterLevel === 'B2 and above') {
         const lv = cefrToNum(memberLevel);
-        return lv >= cefrToNum('B2');
+        return lv >= cefrToNum('B2 and above');
       }
       return memberLevel === filterLevel;
     }
@@ -2722,8 +3030,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         tags.push(`教材: ${names}`);
       }
       if (progosLevel) {
-        const label = progosLevel === 'B2+' ? 'B2 / B2 High 以上' : progosLevel;
-        tags.push(`PROGOS: ${label}`);
+        tags.push(`PROGOS: ${progosLevel}`);
       }
       if (startMonth) {
         tags.push(`受講開始: ${startMonth.replace('-', '年')}月`);
@@ -2761,6 +3068,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }
 
     function renderMembersTable(list) {
+      // 表示前に全会員の集計値を最新化（学習記録から動的算出）
+      if (typeof computeAllMemberStats === 'function') computeAllMemberStats();
       const data = list || members;
       const tbody = document.getElementById('members-tbody');
       if (data.length === 0) {
@@ -2794,6 +3103,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           </td>
           <td onclick="event.stopPropagation()">
             <button class="action-btn" onclick="openShareMode('${m.id}')" title="別タブで開き、他会員の情報を隠した状態でカルテを表示します">🔗 共有モード</button>
+            ${(typeof isCoach === 'function' && isCoach()) ? `<button class="action-btn" onclick="openProgosEntryModal('${m.id}')" title="この会員のPROGOSスコアを登録" style="margin-top:4px;">📊 PROGOS登録</button>` : ''}
           </td>
           <td>
             ${m.startDate || '-'}<br>
@@ -2845,6 +3155,12 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           </div>
         </div>
         <div class="form-group">
+          <label class="form-label">1日の目標学習時間（分）</label>
+          <input type="number" class="form-input" id="edit-dailyTargetMinutes-${m.id}" min="1" max="1440" step="1" value="${m.dailyTargetMinutes || ''}" placeholder="例：90">
+          <button class="secondary-btn" style="margin-top:8px; width:100%; padding:6px 12px; font-size:12px;" onclick="updateDailyTargetMinutes('${m.id}')">この目標時間を保存</button>
+          <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">達成率（その日の合計学習時間 ÷ この目標時間）の分母として使用されます。</div>
+        </div>
+        <div class="form-group">
           <label class="form-label">パスワード管理</label>
           <button class="secondary-btn" style="width:100%;" onclick="alert('【サンプル】新しいパスワードをメールで送信しました')">🔑 パスワード再発行</button>
         </div>
@@ -2856,6 +3172,560 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     function closeMemberPanel() {
       document.getElementById('overlay').classList.remove('show');
       document.getElementById('member-panel').classList.remove('show');
+    }
+
+    // ===== 会員情報スライドパネル：1日の目標学習時間を更新 =====
+    function updateDailyTargetMinutes(memberId) {
+      const input = document.getElementById(`edit-dailyTargetMinutes-${memberId}`);
+      if (!input) return;
+      const v = parseInt((input.value || '').trim(), 10);
+      if (!Number.isFinite(v) || v < 1 || v > 1440) {
+        alert('1日の目標学習時間は1〜1440（分）の範囲で入力してください。');
+        input.focus();
+        return;
+      }
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      m.dailyTargetMinutes = v;
+      saveAddedMembersToStorage();
+      alert(`${m.name} さんの1日の目標学習時間を ${v} 分に更新しました。`);
+    }
+
+    // ========================================
+    // ===== 学習記録（learningLogs_v1）保存・読込ヘルパー =====
+    // ========================================
+    // ステップ5：会員ごとの学習記録を localStorage に保存。グローバル配列＋members[].recentLogs の二重持ち
+    // 構造例：{ id, memberId, date, textbookId, startPage, endPage, startTime, endTime, minutes, comment, createdAt }
+    const LEARNING_LOGS_STORAGE_KEY = 'learningLogs_v1';
+
+    function loadLearningLogs() {
+      try {
+        const stored = localStorage.getItem(LEARNING_LOGS_STORAGE_KEY);
+        if (!stored) return [];
+        const arr = JSON.parse(stored);
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        console.warn('学習記録の読み込み失敗', e);
+        return [];
+      }
+    }
+
+    function saveLearningLogs(logs) {
+      localStorage.setItem(LEARNING_LOGS_STORAGE_KEY, JSON.stringify(logs));
+    }
+
+    // 開始時刻〜終了時刻から学習時間（分）を計算。日跨ぎ（深夜またぎ）は禁止する想定
+    function computeMinutesFromTimes(startTime, endTime) {
+      if (!startTime || !endTime) return 0;
+      const [sh, sm] = startTime.split(':').map(Number);
+      const [eh, em] = endTime.split(':').map(Number);
+      if ([sh, sm, eh, em].some(v => !Number.isFinite(v))) return 0;
+      const diff = (eh * 60 + em) - (sh * 60 + sm);
+      return diff > 0 ? diff : 0;
+    }
+
+    // 当日の達成率を計算（その日の合計学習時間 ÷ その会員の1日目標時間）
+    function computeDayAchievementRate(memberId, dateStr) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !m.dailyTargetMinutes || m.dailyTargetMinutes <= 0) return 0;
+      const logs = loadLearningLogs().filter(l => l.memberId === memberId && l.date === dateStr);
+      const total = logs.reduce((sum, l) => sum + (l.minutes || 0), 0);
+      return Math.round((total / m.dailyTargetMinutes) * 100);
+    }
+
+    // 会員の集計値を learningLogs_v1 から動的に計算して members[] に上書き
+    // 計算対象：今月の学習時間（h単位）、今月の達成率、週次達成率4週分、継続日数（streak）
+    function computeMemberStats(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const target = m.dailyTargetMinutes || 0;
+      const allLogs = loadLearningLogs().filter(l => l.memberId === memberId);
+
+      // ====== 日付ヘルパー（ローカル時刻基準） ======
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const yyyy = today.getFullYear();
+      const mm = today.getMonth(); // 0-indexed
+      const ymdStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+      // ====== 今月の集計 ======
+      const monthLogs = allLogs.filter(l => {
+        const d = new Date(l.date);
+        return d.getFullYear() === yyyy && d.getMonth() === mm;
+      });
+      const monthMinutes = monthLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+      // 今月のうち、これまでに経過した日数（1日〜今日）
+      const elapsedDaysThisMonth = today.getDate();
+      // 今月の達成率：今月の累計学習時間 ÷（経過日数 × 1日目標）
+      const monthRate = (target > 0 && elapsedDaysThisMonth > 0)
+        ? Math.round((monthMinutes / (elapsedDaysThisMonth * target)) * 100)
+        : 0;
+
+      // ====== 先月の集計（先月比表示用） ======
+      const lastMonth = new Date(yyyy, mm - 1, 1);
+      const lastY = lastMonth.getFullYear();
+      const lastM = lastMonth.getMonth();
+      const lastMonthLogs = allLogs.filter(l => {
+        const d = new Date(l.date);
+        return d.getFullYear() === lastY && d.getMonth() === lastM;
+      });
+      const lastMonthMinutes = lastMonthLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+
+      // ====== 週次達成率（直近4週分、古い→新しい） ======
+      // 各週は「今週/1週前/2週前/3週前」の月曜開始基準
+      const weekStartsMon = (d) => {
+        const x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        const day = x.getDay(); // 0=日, 1=月, ...
+        const diff = (day === 0 ? 6 : day - 1);
+        x.setDate(x.getDate() - diff);
+        return x;
+      };
+      const thisWeekStart = weekStartsMon(today);
+      const weeklyRates = [];
+      for (let i = 3; i >= 0; i--) {
+        const ws = new Date(thisWeekStart);
+        ws.setDate(ws.getDate() - 7 * i);
+        const we = new Date(ws);
+        we.setDate(we.getDate() + 6);
+        const wsStr = ymdStr(ws);
+        const weStr = ymdStr(we);
+        const wMinutes = allLogs.filter(l => l.date >= wsStr && l.date <= weStr)
+          .reduce((s, l) => s + (l.minutes || 0), 0);
+        // 週の経過日数：今週は今日まで、過去週は7日全て
+        const weekElapsedDays = (i === 0) ? Math.min(7, Math.floor((today - ws) / 86400000) + 1) : 7;
+        const wRate = (target > 0 && weekElapsedDays > 0)
+          ? Math.round((wMinutes / (weekElapsedDays * target)) * 100)
+          : 0;
+        weeklyRates.push(wRate);
+      }
+
+      // ====== 継続日数（今日から遡って連続して記録のある日数） ======
+      const dateSet = new Set(allLogs.map(l => l.date));
+      let streak = 0;
+      let cursor = new Date(today);
+      while (dateSet.has(ymdStr(cursor))) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      // 先月末時点での streak（先月比表示用、簡易版：先月最終日から遡る）
+      const lastMonthEnd = new Date(yyyy, mm, 0);
+      let lastMonthStreak = 0;
+      let cursor2 = new Date(lastMonthEnd);
+      while (dateSet.has(ymdStr(cursor2))) {
+        lastMonthStreak++;
+        cursor2.setDate(cursor2.getDate() - 1);
+      }
+
+      // ====== members[] に反映 ======
+      m.monthlyHours = Math.round((monthMinutes / 60) * 10) / 10;          // 時間（小数1位）
+      m.monthlyHoursCompare = Math.round(((monthMinutes - lastMonthMinutes) / 60) * 10) / 10;
+      m.rate = monthRate;
+      m.weeklyRates = weeklyRates;
+      m.streak = streak;
+      m.streakCompare = streak - lastMonthStreak;
+    }
+
+    // 全会員の集計値を再計算（ダッシュボードや会員一覧表示前に呼ぶ）
+    function computeAllMemberStats() {
+      members.forEach(m => computeMemberStats(m.id));
+    }
+
+    // members[].recentLogs を learningLogs_v1 から再構築（直近10件、日付降順）
+    // ダッシュボード集計や会員カルテの「直近の学習記録」表示で参照される
+    function syncMemberRecentLogs(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const all = loadLearningLogs().filter(l => l.memberId === memberId);
+      // 日付降順 → 同一日内は createdAt 降順
+      all.sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+      // recentLogs に表示用フィールド（textbook 名 / rate）を埋め込んで保存
+      m.recentLogs = all.slice(0, 10).map(l => {
+        const tb = (typeof getTextbook === 'function') ? getTextbook(l.textbookId) : null;
+        return {
+          date: l.date,
+          textbookId: l.textbookId,
+          textbook: tb ? tb.name : '(教材不明)',
+          minutes: l.minutes,
+          rate: computeDayAchievementRate(memberId, l.date),
+          startPage: l.startPage,
+          endPage: l.endPage,
+          startTime: l.startTime,
+          endTime: l.endTime,
+          comment: l.comment || ''
+        };
+      });
+      saveAddedMembersToStorage();
+    }
+
+    // ========================================
+    // ===== 学習記録 入力モーダル ロジック =====
+    // ========================================
+    // モーダルを開いた時の対象会員ID（保存時に参照）
+    let logEntryTargetMemberId = null;
+
+    // 教材プルダウンを描画（textbooks.csv 読み込み済みであれば全教材を一覧化）
+    function populateLogEntryTextbookOptions() {
+      const sel = document.getElementById('le-textbookId');
+      if (!sel) return;
+      // 既存のオプション（プレースホルダー）を残してリセット
+      sel.innerHTML = '<option value="">選択してください</option>';
+      const list = (typeof textbooks !== 'undefined' && Array.isArray(textbooks)) ? textbooks : [];
+      list.forEach(tb => {
+        const opt = document.createElement('option');
+        opt.value = tb.id;
+        opt.textContent = `${tb.id}：${tb.name}`;
+        sel.appendChild(opt);
+      });
+    }
+
+    // 学習時間プレビュー更新（開始/終了時刻 入力時に呼ばれる）
+    function updateLogEntryMinutesPreview() {
+      const st = document.getElementById('le-startTime').value;
+      const et = document.getElementById('le-endTime').value;
+      const min = computeMinutesFromTimes(st, et);
+      const el = document.getElementById('le-minutes-preview');
+      if (!el) return;
+      if (!st || !et) {
+        el.textContent = '―';
+      } else if (min <= 0) {
+        el.textContent = '⚠️ 開始時刻より後の終了時刻を指定してください';
+      } else {
+        el.textContent = `${min} 分（${Math.floor(min / 60)}時間 ${min % 60}分）`;
+      }
+    }
+
+    // 学習記録モーダルを開く（memberId を指定）
+    function openLogEntryModal(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) { alert('会員情報が見つかりません。'); return; }
+      logEntryTargetMemberId = memberId;
+
+      // 教材プルダウンを最新化
+      populateLogEntryTextbookOptions();
+
+      // フォーム初期化
+      document.getElementById('log-entry-form').reset();
+      // 日付：本日を初期値に
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      const dateInput = document.getElementById('le-date');
+      dateInput.value = todayStr;
+      dateInput.max = todayStr;  // 未来日入力を抑止
+      // プレビュー初期化
+      document.getElementById('le-minutes-preview').textContent = '―';
+
+      // 会員情報の表示
+      const targetMin = m.dailyTargetMinutes || 0;
+      document.getElementById('log-entry-member-info').innerHTML =
+        `<strong>${m.name} さん</strong>（会員ID：${m.id}）<br>1日の目標学習時間：<strong>${targetMin}分</strong>`;
+
+      document.getElementById('log-entry-overlay').classList.add('show');
+    }
+
+    function closeLogEntryModal() {
+      document.getElementById('log-entry-overlay').classList.remove('show');
+      logEntryTargetMemberId = null;
+    }
+
+    // 学習記録を保存（バリデーション → learningLogs_v1 に追加 → recentLogs 同期 → 画面更新）
+    function saveLogEntry() {
+      if (!logEntryTargetMemberId) { alert('対象会員が不明です。'); return; }
+      const m = members.find(x => x.id === logEntryTargetMemberId);
+      if (!m) { alert('会員情報が見つかりません。'); return; }
+
+      const date = (document.getElementById('le-date').value || '').trim();
+      const textbookId = (document.getElementById('le-textbookId').value || '').trim();
+      const startPageStr = (document.getElementById('le-startPage').value || '').trim();
+      const endPageStr = (document.getElementById('le-endPage').value || '').trim();
+      const startTime = (document.getElementById('le-startTime').value || '').trim();
+      const endTime = (document.getElementById('le-endTime').value || '').trim();
+      const comment = (document.getElementById('le-comment').value || '').trim();
+
+      if (!date) { alert('日付を入力してください。'); return; }
+      if (!textbookId) { alert('教材を選択してください。'); return; }
+      if (!startPageStr || !endPageStr) { alert('開始ページ・終了ページを入力してください。'); return; }
+      if (!startTime || !endTime) { alert('開始時刻・終了時刻を入力してください。'); return; }
+
+      const startPage = parseInt(startPageStr, 10);
+      const endPage = parseInt(endPageStr, 10);
+      if (!Number.isFinite(startPage) || startPage < 1) { alert('開始ページは1以上の整数を入力してください。'); return; }
+      if (!Number.isFinite(endPage) || endPage < startPage) { alert('終了ページは開始ページ以上の整数を入力してください。'); return; }
+
+      // 未来日チェック
+      const todayStr = (() => {
+        const t = new Date();
+        return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+      })();
+      if (date > todayStr) { alert('未来日は登録できません。'); return; }
+
+      // 学習時間計算
+      const minutes = computeMinutesFromTimes(startTime, endTime);
+      if (minutes <= 0) { alert('終了時刻は開始時刻より後にしてください（深夜またぎは不可）。'); return; }
+
+      // 保存（learningLogs_v1 にプッシュ）
+      const logs = loadLearningLogs();
+      const newLog = {
+        id: 'L' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        memberId: logEntryTargetMemberId,
+        date, textbookId,
+        startPage, endPage,
+        startTime, endTime,
+        minutes,
+        comment,
+        createdAt: Date.now()
+      };
+      logs.push(newLog);
+      saveLearningLogs(logs);
+
+      // members[].recentLogs を同期
+      syncMemberRecentLogs(logEntryTargetMemberId);
+
+      // 画面更新（カルテを開いていれば再描画）
+      if (typeof renderKarteMain === 'function') {
+        try { renderKarteMain(logEntryTargetMemberId); } catch (e) {}
+      }
+
+      closeLogEntryModal();
+      const rate = computeDayAchievementRate(newLog.memberId, newLog.date);
+      alert(`学習記録を保存しました。\n\n日付：${date}\n学習時間：${minutes}分\nその日の達成率：${rate}%`);
+    }
+
+    // ========================================
+    // ===== ロール判定ヘルパー =====
+    // ========================================
+    // 現在のスタッフが Coach かどうか（PROGOS登録の権限判定で使用）
+    function isCoach() {
+      try {
+        const stored = sessionStorage.getItem('currentStaff');
+        if (!stored) return false;
+        const s = JSON.parse(stored);
+        return (s && (s.role || '').toLowerCase() === 'coach');
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // ========================================
+    // ===== PROGOS スコア ヘルパー関数 =====
+    // ========================================
+    // PROGOS スコアのデータ型（保存単位）
+    // { id, date, overall, range, accuracy, fluency, interaction, coherence, phonology, comment, createdAt }
+    // - id: ローカル一意ID（編集・削除キー、'P' + timestamp + random）
+    // - date: 受験日 (YYYY-MM-DD)
+    // - overall / range / accuracy / fluency / interaction / coherence / phonology: cefrLevelList のいずれか
+    // - comment: 任意
+    // 保存先：members[].progos 配列に直接プッシュ（既存構造を活用）
+
+    // CEFRレベルのプルダウン用 option 文字列を生成
+    function buildCefrOptionsHtml(selected = '') {
+      const opts = [`<option value="">選択</option>`];
+      cefrLevelList.forEach(lv => {
+        const sel = (lv === selected) ? ' selected' : '';
+        opts.push(`<option value="${lv}"${sel}>${lv}</option>`);
+      });
+      return opts.join('');
+    }
+
+    // CEFRレベル文字列を、棒グラフ用の高さ%（最大100%）に変換
+    function cefrToPercent(cefr) {
+      const n = cefrToNum(cefr);
+      return n > 0 ? Math.round((n / cefrMax) * 100) : 0;
+    }
+
+    // 旧PROGOSサンプルデータとの互換のためのフィールド名正規化
+    // 旧: { cefr, fluency, coherence, accuracy, interaction, phonology, vocabulary } （vocabularyは数値スコアだった）
+    // 新: { overall, range, accuracy, fluency, interaction, coherence, phonology }（全てCEFRレベル文字列）
+    function normalizeProgosEntry(p) {
+      if (!p) return null;
+      return {
+        id: p.id || ('P' + (p.createdAt || Date.now()) + '_legacy'),
+        date: p.date || '',
+        overall: p.overall || p.cefr || '',
+        range: p.range || (typeof p.vocabulary === 'string' ? p.vocabulary : ''),
+        accuracy: p.accuracy || '',
+        fluency: p.fluency || '',
+        interaction: p.interaction || '',
+        coherence: p.coherence || '',
+        phonology: p.phonology || '',
+        comment: p.comment || '',
+        createdAt: p.createdAt || Date.now()
+      };
+    }
+
+    // ========================================
+    // ===== PROGOS スコア 入力モーダル ロジック =====
+    // ========================================
+    // モーダルを開いた時の対象会員ID（保存時に参照）
+    let progosEntryTargetMemberId = null;
+    // 編集中の PROGOS エントリID（null なら新規モード）
+    let progosEntryEditingId = null;
+
+    // 8段階プルダウンを6軸＋総合に流し込む
+    function populateProgosLevelSelects(selectedValues = {}) {
+      const ids = ['pe-overall', 'pe-range', 'pe-accuracy', 'pe-fluency', 'pe-interaction', 'pe-coherence', 'pe-phonology'];
+      const map = {
+        'pe-overall': 'overall',
+        'pe-range': 'range',
+        'pe-accuracy': 'accuracy',
+        'pe-fluency': 'fluency',
+        'pe-interaction': 'interaction',
+        'pe-coherence': 'coherence',
+        'pe-phonology': 'phonology'
+      };
+      ids.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const key = map[id];
+        sel.innerHTML = buildCefrOptionsHtml(selectedValues[key] || '');
+      });
+    }
+
+    // PROGOS入力モーダルを開く
+    // memberId 必須、entryId は編集モード時のみ指定（既存エントリのID）
+    function openProgosEntryModal(memberId, entryId = null) {
+      // ロール判定：Coach のみ操作可
+      if (!isCoach()) {
+        alert('PROGOSスコアの登録・編集・削除は Coach 権限のみ可能です。');
+        return;
+      }
+      const m = members.find(x => x.id === memberId);
+      if (!m) { alert('会員情報が見つかりません。'); return; }
+      progosEntryTargetMemberId = memberId;
+      progosEntryEditingId = entryId;
+
+      // 会員情報の表示
+      document.getElementById('progos-entry-member-info').innerHTML =
+        `<strong>${m.name} さん</strong>（会員ID：${m.id}）`;
+
+      // 編集モード／新規モードの判定
+      let initial = {};
+      if (entryId) {
+        const entry = (m.progos || []).map(normalizeProgosEntry).find(p => p.id === entryId);
+        if (!entry) { alert('編集対象のスコアが見つかりません。'); return; }
+        initial = entry;
+        document.getElementById('progos-entry-title').textContent = '✏️ PROGOSスコアを編集';
+        document.getElementById('pe-delete-btn').style.display = 'inline-block';
+      } else {
+        document.getElementById('progos-entry-title').textContent = '＋ PROGOSスコアを登録';
+        document.getElementById('pe-delete-btn').style.display = 'none';
+      }
+
+      // フォーム初期化
+      document.getElementById('progos-entry-form').reset();
+
+      // 受験日の初期値・上限設定
+      const today = new Date();
+      const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const dateInput = document.getElementById('pe-date');
+      dateInput.value = initial.date || ymd;
+      dateInput.max = ymd;
+
+      // プルダウン生成
+      populateProgosLevelSelects(initial);
+
+      // コメント
+      document.getElementById('pe-comment').value = initial.comment || '';
+
+      document.getElementById('progos-entry-overlay').classList.add('show');
+    }
+
+    function closeProgosEntryModal() {
+      document.getElementById('progos-entry-overlay').classList.remove('show');
+      progosEntryTargetMemberId = null;
+      progosEntryEditingId = null;
+    }
+
+    // 保存処理（新規追加 or 既存編集）
+    function saveProgosEntry() {
+      if (!isCoach()) { alert('Coach 権限が必要です。'); return; }
+      if (!progosEntryTargetMemberId) { alert('対象会員が不明です。'); return; }
+      const m = members.find(x => x.id === progosEntryTargetMemberId);
+      if (!m) { alert('会員情報が見つかりません。'); return; }
+
+      const date = (document.getElementById('pe-date').value || '').trim();
+      const overall = (document.getElementById('pe-overall').value || '').trim();
+      const range = (document.getElementById('pe-range').value || '').trim();
+      const accuracy = (document.getElementById('pe-accuracy').value || '').trim();
+      const fluency = (document.getElementById('pe-fluency').value || '').trim();
+      const interaction = (document.getElementById('pe-interaction').value || '').trim();
+      const coherence = (document.getElementById('pe-coherence').value || '').trim();
+      const phonology = (document.getElementById('pe-phonology').value || '').trim();
+      const comment = (document.getElementById('pe-comment').value || '').trim();
+
+      if (!date) { alert('受験日を入力してください。'); return; }
+      // 8段階レベル必須チェック
+      const checks = [
+        ['総合評価', overall], ['Range', range], ['Accuracy', accuracy],
+        ['Fluency', fluency], ['Interaction', interaction],
+        ['Coherence', coherence], ['Phonology', phonology]
+      ];
+      for (const [label, val] of checks) {
+        if (!val || cefrToNum(val) === 0) { alert(`${label} を選択してください。`); return; }
+      }
+
+      // 未来日チェック
+      const t = new Date();
+      const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+      if (date > todayStr) { alert('未来日は登録できません。'); return; }
+
+      // 既存配列を正規化して取得
+      const list = (m.progos || []).map(normalizeProgosEntry);
+
+      if (progosEntryEditingId) {
+        // 編集モード：該当IDを上書き
+        const idx = list.findIndex(p => p.id === progosEntryEditingId);
+        if (idx === -1) { alert('編集対象が見つかりません。'); return; }
+        list[idx] = {
+          ...list[idx],
+          date, overall, range, accuracy, fluency, interaction, coherence, phonology, comment
+        };
+      } else {
+        // 新規モード
+        list.push({
+          id: 'P' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          date, overall, range, accuracy, fluency, interaction, coherence, phonology, comment,
+          createdAt: Date.now()
+        });
+      }
+      // 受験日昇順で並べ替えて保存（推移グラフが時系列順になるように）
+      list.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      m.progos = list;
+      saveAddedMembersToStorage();
+
+      // カルテを開いていれば再描画
+      if (typeof renderKarteMain === 'function') {
+        try { renderKarteMain(progosEntryTargetMemberId); } catch (e) {}
+      }
+
+      const msg = progosEntryEditingId ? 'PROGOSスコアを更新しました。' : 'PROGOSスコアを登録しました。';
+      closeProgosEntryModal();
+      alert(msg);
+    }
+
+    // 削除処理（編集モードでのみ呼ばれる）
+    function deleteProgosEntry() {
+      if (!isCoach()) { alert('Coach 権限が必要です。'); return; }
+      if (!progosEntryTargetMemberId || !progosEntryEditingId) return;
+      const m = members.find(x => x.id === progosEntryTargetMemberId);
+      if (!m) return;
+
+      if (!confirm('このPROGOSスコアを削除します。よろしいですか？')) return;
+
+      m.progos = (m.progos || []).map(normalizeProgosEntry).filter(p => p.id !== progosEntryEditingId);
+      saveAddedMembersToStorage();
+
+      if (typeof renderKarteMain === 'function') {
+        try { renderKarteMain(progosEntryTargetMemberId); } catch (e) {}
+      }
+      closeProgosEntryModal();
+      alert('PROGOSスコアを削除しました。');
     }
 
     // ========================================
@@ -2966,6 +3836,15 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const currentClass = getRequiredVal('nm-currentClass', '現在のクラス');     if (currentClass === null) return;
       const initialClass = getRequiredVal('nm-initialClass', '入学時クラス');     if (initialClass === null) return;
 
+      // 1日の目標学習時間（必須・1〜1440分の数値）
+      const dailyTargetMinutesStr = getRequiredVal('nm-dailyTargetMinutes', '1日の目標学習時間'); if (dailyTargetMinutesStr === null) return;
+      const dailyTargetMinutes = parseInt(dailyTargetMinutesStr, 10);
+      if (!Number.isFinite(dailyTargetMinutes) || dailyTargetMinutes < 1 || dailyTargetMinutes > 1440) {
+        alert('1日の目標学習時間は1〜1440（分）の範囲で入力してください。');
+        document.getElementById('nm-dailyTargetMinutes').focus();
+        return;
+      }
+
       // 任意項目
       const coachLearningGoal = (document.getElementById('nm-coachLearningGoal').value || '').trim();
       const nickname = (document.getElementById('nm-nickname').value || '').trim();
@@ -3028,6 +3907,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         birthDate, email,
         startDate, graduateDate,
         currentClass, initialClass,
+        dailyTargetMinutes,           // 1日の目標学習時間（分）— 達成率の分母として使用
         note,
         coachLearningGoal,
         // ===== ログイン認証用（プロトタイプのためプレーンテキスト保存） =====
@@ -3146,6 +4026,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     function buildKarteHtml(memberId) {
       const m = members.find(x => x.id === memberId);
       if (!m) return null;
+      // 表示直前に学習記録から集計値を最新化
+      computeMemberStats(memberId);
       const remainDays = daysUntil(m.departureDate);
       const maxWeekly = Math.max(...m.weeklyRates, 100);
 
@@ -3190,39 +4072,46 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
       // 直近の学習記録（日付・教材・学習時間・達成率）
       const logsRows = m.recentLogs.map(log => {
-        const tb = getTextbook(log.tb);
+        // 新旧構造の互換：textbookId（新） or tb（旧）、minutes（新） or duration（旧）
+        const tb = getTextbook(log.textbookId || log.tb);
+        const minutes = (log.minutes != null) ? log.minutes : (log.duration || 0);
         const logRate = (log.rate != null) ? log.rate : 0;
         return `
           <tr>
             <td>${log.date}</td>
             <td>${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</td>
-            <td>${log.duration}分</td>
+            <td>${minutes}分</td>
             <td><span class="rate-badge ${getRateClass(logRate)}">${logRate}%</span></td>
           </tr>
         `;
       }).join('');
 
       // PROGOSセクション
-      const progosRows = (m.progos || []).map(p => `
+      // PROGOSデータを新構造に正規化（旧サンプルとの互換のため）
+      const progosListNorm = (m.progos || []).map(normalizeProgosEntry);
+      const coachMode = (typeof isCoach === 'function') ? isCoach() : false;
+
+      const progosRows = progosListNorm.map(p => `
         <tr>
           <td>${p.date}</td>
-          <td><span class="rate-badge rate-blue" style="font-size:11px;">${p.cefr}</span></td>
-          <td>${p.fluency}</td>
-          <td>${p.coherence}</td>
-          <td>${p.accuracy}</td>
-          <td>${p.interaction}</td>
-          <td>${p.phonology}</td>
-          <td>${p.vocabulary}</td>
+          <td><span class="rate-badge rate-blue" style="font-size:11px;">${p.overall}</span></td>
+          <td><span style="font-size:11px;">${p.range}</span></td>
+          <td><span style="font-size:11px;">${p.accuracy}</span></td>
+          <td><span style="font-size:11px;">${p.fluency}</span></td>
+          <td><span style="font-size:11px;">${p.interaction}</span></td>
+          <td><span style="font-size:11px;">${p.coherence}</span></td>
+          <td><span style="font-size:11px;">${p.phonology}</span></td>
+          ${coachMode ? `<td class="share-hide"><button class="action-btn" onclick="openProgosEntryModal('${m.id}', '${p.id}')">編集</button></td>` : '<td></td>'}
         </tr>
       `).join('');
 
-      const progosChart = (m.progos || []).map((p, i) => {
-        const h = (cefrToNum(p.cefr) / cefrMax) * 100;
+      const progosChart = progosListNorm.map((p, i) => {
+        const h = cefrToPercent(p.overall);
         return `
           <div class="progos-cefr-item">
             <div class="progos-cefr-bar-wrap">
-              <div class="progos-cefr-bar" style="height: ${h}%; background: ${i === m.progos.length - 1 ? '#27AE60' : '#D6EAF8'};">
-                <div class="bar-value">${p.cefr}</div>
+              <div class="progos-cefr-bar" style="height: ${h}%; background: ${i === progosListNorm.length - 1 ? '#27AE60' : '#D6EAF8'};">
+                <div class="bar-value">${p.overall}</div>
               </div>
             </div>
             <div class="progos-cefr-label">${p.date}</div>
@@ -3230,21 +4119,21 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         `;
       }).join('');
 
-      const latestProgos = (m.progos && m.progos.length > 0) ? m.progos[m.progos.length - 1] : null;
+      const latestProgos = (progosListNorm.length > 0) ? progosListNorm[progosListNorm.length - 1] : null;
       const skillBars = latestProgos ? [
-        { name: '流暢さ', score: latestProgos.fluency },
-        { name: '一貫性', score: latestProgos.coherence },
-        { name: '正確さ', score: latestProgos.accuracy },
-        { name: 'やり取り', score: latestProgos.interaction },
-        { name: '音韻', score: latestProgos.phonology },
-        { name: '語彙', score: latestProgos.vocabulary }
+        { name: 'Range（表現の幅）', level: latestProgos.range },
+        { name: 'Accuracy（正確さ）', level: latestProgos.accuracy },
+        { name: 'Fluency（流暢さ）', level: latestProgos.fluency },
+        { name: 'Interaction（やりとり）', level: latestProgos.interaction },
+        { name: 'Coherence（一貫性）', level: latestProgos.coherence },
+        { name: 'Phonology（音韻）', level: latestProgos.phonology }
       ].map(s => `
         <div class="progos-skill-row">
           <div class="progos-skill-name">${s.name}</div>
           <div class="progos-skill-track">
-            <div class="progos-skill-fill" style="width: ${(s.score / 6) * 100}%;"></div>
+            <div class="progos-skill-fill" style="width: ${cefrToPercent(s.level)}%;"></div>
           </div>
-          <div class="progos-skill-score">${s.score}/6</div>
+          <div class="progos-skill-score">${s.level || '-'}</div>
         </div>
       `).join('') : '';
 
@@ -3357,6 +4246,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
               <div class="card-title">直近の学習記録</div>
               <div class="card-sub">最新${m.recentLogs.length}件</div>
             </div>
+            <button class="primary-btn share-hide" onclick="openLogEntryModal('${m.id}')">＋ 学習記録を追加</button>
           </div>
           <table>
             <thead>
@@ -3376,35 +4266,44 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           <div class="card-header">
             <div>
               <div class="card-title">PROGOSスコア</div>
-              <div class="card-sub">スピーキング力の推移</div>
+              <div class="card-sub">スピーキング力の推移（CEFR 8段階）</div>
             </div>
-            <button class="primary-btn" onclick="alert('【サンプル】PROGOSスコア登録フォームを表示します')">スコアを登録する</button>
+            ${coachMode ? `<button class="primary-btn share-hide" onclick="openProgosEntryModal('${m.id}')">＋ スコアを登録</button>` : ''}
           </div>
           <div class="card-body">
-            <div style="margin-bottom:20px;">
-              <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:8px;">CEFRレベルの推移</div>
-              <div class="progos-cefr-chart">${progosChart}</div>
-            </div>
-            <div style="margin-bottom:20px;">
-              <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:12px;">最新スコア（6項目）</div>
-              ${skillBars}
-            </div>
+            ${progosListNorm.length === 0 ? `
+              <div style="padding:24px; text-align:center; color:#999; font-size:13px;">
+                PROGOSスコアがまだ登録されていません。${coachMode ? '<br><span style="font-size:11px;">右上の「＋ スコアを登録」ボタンから追加できます</span>' : ''}
+              </div>
+            ` : `
+              <div style="margin-bottom:20px;">
+                <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:8px;">CEFRレベルの推移（オーバーオール）</div>
+                <div class="progos-cefr-chart">${progosChart}</div>
+              </div>
+              <div style="margin-bottom:20px;">
+                <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:12px;">最新スコア（6項目）</div>
+                ${skillBars}
+              </div>
+            `}
           </div>
+          ${progosListNorm.length === 0 ? '' : `
           <table>
             <thead>
               <tr>
                 <th>受験日</th>
-                <th>CEFR</th>
-                <th>流暢さ</th>
-                <th>一貫性</th>
-                <th>正確さ</th>
-                <th>やり取り</th>
-                <th>音韻</th>
-                <th>語彙</th>
+                <th>総合</th>
+                <th>Range</th>
+                <th>Accuracy</th>
+                <th>Fluency</th>
+                <th>Interaction</th>
+                <th>Coherence</th>
+                <th>Phonology</th>
+                <th class="share-hide"></th>
               </tr>
             </thead>
             <tbody>${progosRows}</tbody>
           </table>
+          `}
         </div>
       `;
     }
@@ -3693,6 +4592,860 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         sessionStorage.removeItem('currentStaff');
         window.location.href = 'login.html';
       }
+    }
+
+    // ========================================
+    // ===== PROGOS分析画面（サイドバータブ）=====
+    // ========================================
+    // 集計：各会員の最新PROGOS受験回スコア＋前回比較を返す
+    function paBuildMemberSummary() {
+      const result = members.map(m => {
+        const list = (m.progos || []).map(normalizeProgosEntry)
+          .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        const latest = list.length > 0 ? list[list.length - 1] : null;
+        const prev = list.length > 1 ? list[list.length - 2] : null;
+        return {
+          id: m.id,
+          name: m.name,
+          latest,
+          prev,
+          totalCount: list.length
+        };
+      });
+      return result;
+    }
+
+    // フィルタ状態
+    const paFilterState = {
+      overall: '', range: '', accuracy: '', fluency: '',
+      interaction: '', coherence: '', phonology: ''
+    };
+
+    // フィルタ用 6項目リスト（描画とソート用）
+    const paAxisDefs = [
+      { key: 'overall',     label: 'Overall（総合）' },
+      { key: 'range',       label: 'Range（表現の幅）' },
+      { key: 'accuracy',    label: 'Accuracy（正確さ）' },
+      { key: 'fluency',     label: 'Fluency（流暢さ）' },
+      { key: 'interaction', label: 'Interaction（やりとり）' },
+      { key: 'coherence',   label: 'Coherence（一貫性）' },
+      { key: 'phonology',   label: 'Phonology（音韻）' }
+    ];
+
+    // ====== KPIカードの描画（今月の受験者数のみ）======
+    function paRenderKpis(summaries) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const yyyy = today.getFullYear();
+      const mm = today.getMonth();
+      // 今月の受験者数：「最新受験日」ではなく「progos配列のいずれかの受験日」が当月に該当する会員数
+      let thisMonthCount = 0;
+      members.forEach(m => {
+        const list = (m.progos || []).map(normalizeProgosEntry);
+        const hit = list.some(p => {
+          if (!p.date) return false;
+          const d = new Date(p.date);
+          return d.getFullYear() === yyyy && d.getMonth() === mm;
+        });
+        if (hit) thisMonthCount++;
+      });
+
+      const row = document.getElementById('pa-kpi-row');
+      if (!row) return;
+      row.style.gridTemplateColumns = 'repeat(1, 1fr)';
+      row.innerHTML = `
+        <div class="card" style="padding:16px;">
+          <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:6px;">今月の受験者数</div>
+          <div style="font-size:28px; font-weight:800; color:var(--color-accent);">${thisMonthCount}<span style="font-size:14px; color:var(--color-text-muted); margin-left:6px;">人</span></div>
+        </div>
+      `;
+
+      const todayStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+      const sub = document.getElementById('pa-subheader');
+      if (sub) sub.textContent = `全会員の最新受験スコアを集計（${todayStr} 時点）`;
+    }
+
+    // ====== 8段階レベルの色定義（ドーナツ・凡例で共有）======
+    const paLevelColors = {
+      'Pre-A1':         '#BDC3C7',
+      'A1':             '#85C1E9',
+      'A1 High':        '#5DADE2',
+      'A2':             '#48C9B0',
+      'A2 High':        '#1ABC9C',
+      'B1':             '#F5B041',
+      'B1 High':        '#E67E22',
+      'B2 and above':   '#27AE60'
+    };
+
+    // ====== ドーナツSVG生成（リング太め＋扇内にレベル名＋人数、円外に%リーダーライン）======
+    // isLarge: true=Overall（大）、false=6項目（中）
+    function paBuildDonutSvg(counts, axisLabel, isLarge) {
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      // viewBox：リーダーラインの引き出し余白を確保
+      const vb = isLarge ? 420 : 300;
+      const cx = vb / 2, cy = vb / 2;
+      // ★ リング厚を大幅に厚く（情報量を増やすため）
+      const radiusOuter = isLarge ? 130 : 95;
+      const radiusInner = isLarge ? 50 : 38;
+      const insideThreshold = 0.06;  // 6%未満なら扇内ラベル省略（外側のみ表示）
+      const fontSizeArcLevel = isLarge ? 15 : 12;
+      const fontSizeArcCount = isLarge ? 11 : 9;
+      const fontSizeOuter = isLarge ? 12 : 10;
+
+      if (total === 0) {
+        return `
+          <div style="text-align:center;">
+            <svg width="100%" viewBox="0 0 ${vb} ${vb}" style="max-width:${vb}px;">
+              <circle cx="${cx}" cy="${cy}" r="${radiusOuter}" fill="#ECF0F1"/>
+              <circle cx="${cx}" cy="${cy}" r="${radiusInner}" fill="#FFFFFF"/>
+              <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="13" fill="#999">データなし</text>
+            </svg>
+            <div style="font-size:${isLarge ? 16 : 13}px; font-weight:700; color:var(--color-primary-dark); margin-top:6px;">${axisLabel}</div>
+          </div>
+        `;
+      }
+
+      let startAngle = -Math.PI / 2;
+      const arcs = [];
+      const insideLabels = [];
+      const outsideLabels = [];
+
+      cefrLevelList.forEach(lv => {
+        const c = counts[lv] || 0;
+        if (c === 0) return;
+        const ratio = c / total;
+        const endAngle = startAngle + ratio * Math.PI * 2;
+        const largeArc = ratio > 0.5 ? 1 : 0;
+        const x1 = cx + radiusOuter * Math.cos(startAngle);
+        const y1 = cy + radiusOuter * Math.sin(startAngle);
+        const x2 = cx + radiusOuter * Math.cos(endAngle);
+        const y2 = cy + radiusOuter * Math.sin(endAngle);
+        const x3 = cx + radiusInner * Math.cos(endAngle);
+        const y3 = cy + radiusInner * Math.sin(endAngle);
+        const x4 = cx + radiusInner * Math.cos(startAngle);
+        const y4 = cy + radiusInner * Math.sin(startAngle);
+        const path = [
+          `M ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+          `A ${radiusOuter} ${radiusOuter} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`,
+          `L ${x3.toFixed(2)} ${y3.toFixed(2)}`,
+          `A ${radiusInner} ${radiusInner} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)}`,
+          'Z'
+        ].join(' ');
+        const pct = (ratio * 100).toFixed(2);
+        arcs.push(`<path d="${path}" fill="${paLevelColors[lv] || '#CCC'}"><title>${lv}: ${c}人 (${pct}%)</title></path>`);
+
+        // 扇の中央角度
+        const midAngle = (startAngle + endAngle) / 2;
+        // 1) 扇内：レベル名（CEFR ランク）のみを白文字で表示
+        if (ratio >= insideThreshold) {
+          const labelR = (radiusOuter + radiusInner) / 2;
+          const lx = cx + labelR * Math.cos(midAngle);
+          const ly = cy + labelR * Math.sin(midAngle);
+          insideLabels.push(
+            `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSizeArcLevel}" font-weight="800" fill="#FFFFFF" style="paint-order:stroke; stroke:rgba(0,0,0,0.25); stroke-width:0.6px;">${lv}</text>`
+          );
+        }
+        // 2) 円外にリーダーライン＋パーセンテージのみ
+        const elbowR = radiusOuter + 12;
+        const endR = radiusOuter + 28;
+        const ex = cx + endR * Math.cos(midAngle);
+        const ey = cy + endR * Math.sin(midAngle);
+        const elbX = cx + elbowR * Math.cos(midAngle);
+        const elbY = cy + elbowR * Math.sin(midAngle);
+        const isRight = Math.cos(midAngle) >= 0;
+        const tx = isRight ? ex + 4 : ex - 4;
+        const anchor = isRight ? 'start' : 'end';
+        outsideLabels.push(
+          `<polyline points="${(cx + radiusOuter * Math.cos(midAngle)).toFixed(2)},${(cy + radiusOuter * Math.sin(midAngle)).toFixed(2)} ${elbX.toFixed(2)},${elbY.toFixed(2)} ${ex.toFixed(2)},${ey.toFixed(2)}" fill="none" stroke="#BDC3C7" stroke-width="0.7"/>` +
+          `<text x="${tx.toFixed(2)}" y="${ey.toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${fontSizeOuter}" font-weight="700" fill="#2C3E50">${pct}%</text>`
+        );
+        startAngle = endAngle;
+      });
+
+      return `
+        <div style="text-align:center;">
+          <svg width="100%" viewBox="0 0 ${vb} ${vb}" style="max-width:${vb}px;">
+            ${arcs.join('')}
+            <circle cx="${cx}" cy="${cy}" r="${radiusInner}" fill="#FFFFFF"/>
+            ${insideLabels.join('')}
+            ${outsideLabels.join('')}
+          </svg>
+          <div style="font-size:${isLarge ? 16 : 13}px; font-weight:700; color:var(--color-primary-dark); margin-top:6px;">${axisLabel}</div>
+        </div>
+      `;
+    }
+
+    // ====== 統計サマリーHTML（前月/今月の受験者数、スコアアップ／横ばい／ダウン人数）======
+    function paBuildSummaryStatsHtml(summaries) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const yyyy = today.getFullYear();
+      const mm = today.getMonth();
+      const lastMonthDate = new Date(yyyy, mm - 1, 1);
+      const lastY = lastMonthDate.getFullYear();
+      const lastM = lastMonthDate.getMonth();
+
+      // progos配列の中で当月／前月に該当する受験を持つ会員数を集計
+      let thisMonth = 0, lastMonth = 0;
+      members.forEach(m => {
+        const list = (m.progos || []).map(normalizeProgosEntry);
+        let hitThis = false, hitLast = false;
+        list.forEach(p => {
+          if (!p.date) return;
+          const d = new Date(p.date);
+          if (d.getFullYear() === yyyy && d.getMonth() === mm) hitThis = true;
+          if (d.getFullYear() === lastY && d.getMonth() === lastM) hitLast = true;
+        });
+        if (hitThis) thisMonth++;
+        if (hitLast) lastMonth++;
+      });
+
+      // スコアアップ・横ばい・ダウン
+      const compared = summaries.filter(s => s.latest && s.prev);
+      let up = 0, same = 0, down = 0;
+      compared.forEach(s => {
+        const cur = cefrToNum(s.latest.overall);
+        const prev = cefrToNum(s.prev.overall);
+        if (cur > prev) up++;
+        else if (cur < prev) down++;
+        else same++;
+      });
+
+      const cell = (label, value, color) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid #EEF1F4;">
+          <div style="font-size:12px; color:var(--color-text-secondary);">${label}</div>
+          <div style="font-size:20px; font-weight:800; color:${color};">${value}<span style="font-size:11px; color:var(--color-text-muted); margin-left:4px;">人</span></div>
+        </div>
+      `;
+
+      return `
+        <div style="background:#fff; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; min-width:240px;">
+          <div style="background:var(--color-primary); color:#fff; padding:8px 14px; font-size:12px; font-weight:700; letter-spacing:0.05em;">サマリー（前回比較）</div>
+          ${cell('前月の受験者数', lastMonth, '#7F8C8D')}
+          ${cell('今月の受験者数', thisMonth, 'var(--color-accent)')}
+          ${cell('▲ Improved', up, '#27AE60')}
+          ${cell('― Maintained', same, '#7F8C8D')}
+          ${cell('▼ Declined', down, '#E74C3C')}
+        </div>
+      `;
+    }
+
+    // ====== 棒グラフSVG生成（縦軸＝割合%、横軸＝7観点、CEFR色で積み上げ）======
+    // 全棒は100%固定で正規化、下から上にCEFRランクが上がるように積み上げ
+    function paBuildStackedBarSvg(perAxisCounts, totalPeople) {
+      const w = 1200, h = 460;
+      const padL = 60, padR = 80, padT = 24, padB = 70;
+      const chartW = w - padL - padR;
+      const chartH = h - padT - padB;
+      const axes = paAxisDefs;
+      const barCount = axes.length;
+      const barWidth = chartW / barCount * 0.62;
+      const barGap = chartW / barCount;
+
+      // Y軸：固定で 0〜100%
+      const yMax = 100;
+      const yTicks = 5;
+      const yToPx = (v) => padT + chartH - (v / yMax) * chartH;
+
+      // Y軸目盛り（0%, 20%, 40%, 60%, 80%, 100%）
+      const yTickLines = [];
+      for (let i = 0; i <= yTicks; i++) {
+        const v = (yMax / yTicks) * i;
+        const y = yToPx(v);
+        yTickLines.push(`<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#E5E7EB" stroke-width="0.5"/>`);
+        yTickLines.push(`<text x="${padL - 8}" y="${y + 3}" text-anchor="end" font-size="11" fill="#666">${v}%</text>`);
+      }
+
+      // 各観点ごとに積み上げバー（下→上が低レベル→高レベル）
+      const bars = [];
+      const xLabels = [];
+      axes.forEach((ax, i) => {
+        const cx = padL + barGap * i + barGap / 2;
+        const x = cx - barWidth / 2;
+        const counts = perAxisCounts[ax.key] || {};
+        const axisTotal = Object.values(counts).reduce((s, v) => s + v, 0);
+
+        if (axisTotal === 0) {
+          // データなしの観点はグレーで100%を埋める
+          bars.push(`<rect x="${x}" y="${padT}" width="${barWidth}" height="${chartH}" fill="#ECF0F1" stroke="#fff" stroke-width="0.5"/>`);
+          bars.push(`<text x="${cx}" y="${padT + chartH / 2}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#999">受験者なし</text>`);
+        } else {
+          let yCursor = padT + chartH;
+          // ★ cefrLevelList は Pre-A1（低）→ B2 and above（高）の順で並んでいる
+          //   下から積むことで、下=低レベル、上=高レベルの積み上げになる
+          cefrLevelList.forEach(lv => {
+            const c = counts[lv] || 0;
+            if (c === 0) return;
+            const ratio = c / axisTotal;
+            const pct = (ratio * 100).toFixed(2);
+            const segH = ratio * chartH;
+            const yTop = yCursor - segH;
+            bars.push(`<rect x="${x}" y="${yTop}" width="${barWidth}" height="${segH}" fill="${paLevelColors[lv]}" stroke="#fff" stroke-width="0.5"><title>${ax.label} - ${lv}: ${c}人 (${pct}%)</title></rect>`);
+            if (segH > 18) {
+              bars.push(`<text x="${cx}" y="${yTop + segH / 2 - 2}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#fff" font-weight="700">${lv}</text>`);
+              bars.push(`<text x="${cx}" y="${yTop + segH / 2 + 12}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="#fff" font-weight="600">${pct}%</text>`);
+            } else if (segH > 8) {
+              bars.push(`<text x="${cx}" y="${yTop + segH / 2 + 3}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${pct}%</text>`);
+            }
+            yCursor = yTop;
+          });
+        }
+        // X軸ラベル（観点名・短縮）
+        const short = ax.label.split('（')[0];
+        xLabels.push(`<text x="${cx}" y="${padT + chartH + 18}" text-anchor="middle" font-size="12" font-weight="600" fill="#2C3E50">${short}</text>`);
+      });
+
+      return `
+        <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%; max-width:100%; display:block;">
+          ${yTickLines.join('')}
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="#666" stroke-width="0.8"/>
+          <line x1="${padL}" y1="${padT + chartH}" x2="${w - padR}" y2="${padT + chartH}" stroke="#666" stroke-width="0.8"/>
+          ${bars.join('')}
+          ${xLabels.join('')}
+          <text x="${padL - 38}" y="${padT + chartH / 2}" text-anchor="middle" font-size="11" fill="#666" transform="rotate(-90 ${padL - 38} ${padT + chartH / 2})">割合（%）</text>
+        </svg>
+      `;
+    }
+
+    // 円／棒グラフ切替の現在モード
+    let paChartMode = 'donut'; // 'donut' | 'bar'
+
+    function paSetChartMode(mode) {
+      paChartMode = mode;
+      const summaries = paBuildMemberSummary();
+      paRenderDonuts(summaries);
+    }
+
+    // ====== レベル分布の描画（モードによって円グラフ or 棒グラフ）======
+    function paRenderDonuts(summaries) {
+      const grid = document.getElementById('pa-donuts-grid');
+      if (!grid) return;
+
+      // 各軸ごとに人数カウント
+      const perAxisCounts = {};
+      paAxisDefs.forEach(ax => {
+        const counts = {};
+        cefrLevelList.forEach(lv => counts[lv] = 0);
+        summaries.forEach(s => {
+          if (!s.latest) return;
+          const v = s.latest[ax.key];
+          if (v && counts[v] !== undefined) counts[v]++;
+        });
+        perAxisCounts[ax.key] = counts;
+      });
+      const totalPeople = summaries.filter(s => s.latest).length;
+
+      // モード切替トグル
+      const toggleBar = `
+        <div style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:6px; margin-bottom:8px;">
+          <button class="${paChartMode === 'donut' ? 'primary-btn' : 'secondary-btn'}" style="padding:6px 14px; font-size:12px;" onclick="paSetChartMode('donut')">🍩 円グラフ</button>
+          <button class="${paChartMode === 'bar' ? 'primary-btn' : 'secondary-btn'}" style="padding:6px 14px; font-size:12px;" onclick="paSetChartMode('bar')">📊 棒グラフ</button>
+        </div>
+      `;
+
+      if (paChartMode === 'bar') {
+        grid.style.gridTemplateColumns = '1fr';
+        grid.innerHTML = toggleBar +
+          `<div style="grid-column:1 / -1;">${paBuildStackedBarSvg(perAxisCounts, totalPeople)}</div>`;
+      } else {
+        // ドーナツモード：上段【Overall（左寄せ） + サマリー（右）】、下段：6項目を3列x2段
+        grid.style.gridTemplateColumns = '1fr';
+        const overallHtml = paBuildDonutSvg(perAxisCounts['overall'], paAxisDefs[0].label, true);
+        const summaryHtml = paBuildSummaryStatsHtml(summaries);
+        const sixHtml = paAxisDefs.slice(1).map(ax =>
+          `<div>${paBuildDonutSvg(perAxisCounts[ax.key], ax.label, false)}</div>`
+        ).join('');
+        grid.innerHTML = toggleBar +
+          // 上段：左に Overall（最大幅 480px、左寄せ）、右にサマリーカード
+          `<div style="display:grid; grid-template-columns: minmax(420px, 1fr) auto; gap:24px; align-items:center; padding:8px 0 16px;">
+            <div style="max-width:480px;">${overallHtml}</div>
+            <div>${summaryHtml}</div>
+          </div>` +
+          // 下段：6項目を3列x2段で表示
+          `<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${sixHtml}</div>`;
+      }
+
+      // 凡例
+      const legend = document.getElementById('pa-donut-legend');
+      if (legend) {
+        legend.innerHTML = cefrLevelList.map(lv =>
+          `<div style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${paLevelColors[lv]};"></span>${lv}</div>`
+        ).join('');
+      }
+    }
+
+    // ====== レベル変動リスト（アップ／横ばい／ダウン）======
+    function paRenderTrendLists(summaries) {
+      // 比較対象：latestとprevの両方がある会員のみ
+      const compared = summaries.filter(s => s.latest && s.prev);
+      const firstTimeOnly = summaries.filter(s => s.latest && !s.prev);
+
+      const up = [], same = [], down = [];
+      compared.forEach(s => {
+        const cur = cefrToNum(s.latest.overall);
+        const prev = cefrToNum(s.prev.overall);
+        const item = {
+          name: s.name, id: s.id, date: s.latest.date,
+          fromLv: s.prev.overall, toLv: s.latest.overall,
+          diff: cur - prev
+        };
+        if (cur > prev) up.push(item);
+        else if (cur < prev) down.push(item);
+        else same.push(item);
+      });
+
+      // 受験日の新しい順
+      const byDate = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+      up.sort(byDate); same.sort(byDate); down.sort(byDate);
+
+      const buildList = (items, color, emoji, title) => {
+        const rows = items.length === 0
+          ? `<div style="padding:12px; color:#999; font-size:12px; text-align:center;">該当者なし</div>`
+          : items.map(it => `
+            <div style="padding:8px 10px; border-bottom:1px solid #F0F2F4; font-size:12px;">
+              <div style="font-weight:600; color:var(--color-text-primary);">${it.name}</div>
+              <div style="font-size:11px; color:var(--color-text-secondary);">
+                ${it.fromLv} → <strong style="color:${color};">${it.toLv}</strong>
+                <span style="color:var(--color-text-muted); margin-left:6px;">${it.date}</span>
+              </div>
+            </div>
+          `).join('');
+        return `
+          <div style="border:1px solid var(--color-border); border-radius:8px; overflow:hidden;">
+            <div style="background:${color}; color:#fff; padding:8px 12px; font-size:13px; font-weight:700;">
+              ${emoji} ${title}：${items.length}人
+            </div>
+            <div style="max-height:280px; overflow-y:auto;">${rows}</div>
+          </div>
+        `;
+      };
+
+      const grid = document.getElementById('pa-trend-grid');
+      if (grid) {
+        grid.innerHTML =
+          buildList(up,   '#27AE60', '📈', 'アップ') +
+          buildList(same, '#7F8C8D', '➖', '横ばい') +
+          buildList(down, '#E74C3C', '📉', 'ダウン');
+      }
+
+      // 初回受験者のリスト表示は削除（前回比較対象外のため非表示）
+    }
+
+    // ====== 会員一覧テーブル＋フィルタ ======
+    function paRenderMemberTable(summaries) {
+      // フィルタ描画（プルダウン7つ）
+      const filterGrid = document.getElementById('pa-filter-grid');
+      if (filterGrid) {
+        filterGrid.innerHTML = paAxisDefs.map(ax => {
+          const opts = ['<option value="">すべて</option>']
+            .concat(cefrLevelList.map(lv =>
+              `<option value="${lv}"${paFilterState[ax.key] === lv ? ' selected' : ''}>${lv}</option>`
+            ));
+          return `
+            <div>
+              <label style="display:block; font-size:11px; color:var(--color-text-secondary); margin-bottom:4px;">${ax.label}</label>
+              <select class="form-select" style="width:100%; padding:6px;" onchange="paOnFilterChange('${ax.key}', this.value)">
+                ${opts.join('')}
+              </select>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // フィルタ適用（latestがあり、各軸が一致するもの）
+      const filtered = summaries.filter(s => {
+        if (!s.latest) return false;  // 未受験者はテーブル対象外
+        return paAxisDefs.every(ax => {
+          const f = paFilterState[ax.key];
+          if (!f) return true;
+          return s.latest[ax.key] === f;
+        });
+      });
+
+      const cnt = document.getElementById('pa-filter-count');
+      if (cnt) cnt.textContent = `${filtered.length}件 / 受験者 ${summaries.filter(s => s.latest).length}人 中`;
+
+      // テーブル本体（行クリックで6項目展開）
+      const tbody = document.getElementById('pa-member-tbody');
+      if (!tbody) return;
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:#999;">該当する会員はいません</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = filtered.map(s => {
+        const cur = cefrToNum(s.latest.overall);
+        const prev = s.prev ? cefrToNum(s.prev.overall) : 0;
+        // 成績推移（英単語ラベル）：初回は無表記
+        let diffHtml = '';
+        if (s.prev) {
+          if (cur > prev) diffHtml = `<span style="background:#E8F8F0; color:#27AE60; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">▲ Improved</span>`;
+          else if (cur < prev) diffHtml = `<span style="background:#FDEDEC; color:#E74C3C; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">▼ Declined</span>`;
+          else diffHtml = `<span style="background:#ECEFF1; color:#7F8C8D; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">― Maintained</span>`;
+        }
+        const detailRowId = `pa-detail-${s.id}`;
+        const prevOverall = s.prev ? `<span class="rate-badge" style="background:${paLevelColors[s.prev.overall] || '#CCC'}; color:#fff; font-size:11px;">${s.prev.overall}</span>` : '<span style="color:#999; font-size:11px;">―</span>';
+        const prevDate = s.prev ? s.prev.date : '<span style="color:#999;">―</span>';
+        return `
+          <tr style="cursor:pointer;" onclick="paToggleDetail('${detailRowId}', this)">
+            <td><span class="pa-toggle-mark" style="display:inline-block; width:14px; transition:transform 0.2s;">▶</span></td>
+            <td>${s.name}</td>
+            <td>${diffHtml}</td>
+            <td><span class="rate-badge" style="background:${paLevelColors[s.latest.overall] || '#CCC'}; color:#fff; font-size:11px;">${s.latest.overall}</span></td>
+            <td style="font-size:12px;">${s.latest.date}</td>
+            <td>${prevOverall}</td>
+            <td style="font-size:12px;">${prevDate}</td>
+            <td onclick="event.stopPropagation()">
+              <button class="action-btn" onclick="openShareMode('${s.id}')" title="共有モードで会員カルテを別タブに開く">🔗 カルテ</button>
+            </td>
+          </tr>
+          <tr id="${detailRowId}" style="display:none; background:#F8F9FA;">
+            <td></td>
+            <td colspan="7" style="padding:12px;">
+              <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; font-size:12px;">
+                ${paAxisDefs.filter(ax => ax.key !== 'overall').map(ax => `
+                  <div><span style="color:var(--color-text-muted);">${ax.label}：</span><strong>${s.latest[ax.key] || '-'}</strong></div>
+                `).join('')}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // フィルタ変更ハンドラ
+    function paOnFilterChange(key, value) {
+      paFilterState[key] = value;
+      const summaries = paBuildMemberSummary();
+      paRenderMemberTable(summaries);
+    }
+
+    // フィルタクリア
+    function paClearFilters() {
+      Object.keys(paFilterState).forEach(k => paFilterState[k] = '');
+      const summaries = paBuildMemberSummary();
+      paRenderMemberTable(summaries);
+    }
+
+    // 行クリックで6項目を展開
+    function paToggleDetail(detailId, triggerRow) {
+      const detail = document.getElementById(detailId);
+      if (!detail) return;
+      const isOpen = detail.style.display !== 'none';
+      detail.style.display = isOpen ? 'none' : 'table-row';
+      const mark = triggerRow.querySelector('.pa-toggle-mark');
+      if (mark) mark.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+    }
+
+    // ========================================
+    // ===== PROGOS CSV 取込ロジック =====
+    // ========================================
+    // CSVをパース：UTF-8 BOMを除去、ダブルクォート対応、改行(LF/CRLF)対応
+    function paParseCsv(text) {
+      // BOM除去
+      let t = text.replace(/^﻿/, '');
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let inQuote = false;
+      for (let i = 0; i < t.length; i++) {
+        const c = t[i];
+        if (inQuote) {
+          if (c === '"') {
+            if (t[i + 1] === '"') { cell += '"'; i++; }
+            else { inQuote = false; }
+          } else {
+            cell += c;
+          }
+        } else {
+          if (c === '"') { inQuote = true; }
+          else if (c === ',') { row.push(cell); cell = ''; }
+          else if (c === '\r') { /* skip */ }
+          else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+          else { cell += c; }
+        }
+      }
+      // 最終行（末尾改行なしのケース）
+      if (cell.length > 0 || row.length > 0) { row.push(cell); rows.push(row); }
+      // 全列空の行を除去
+      return rows.filter(r => r.some(v => (v || '').trim() !== ''));
+    }
+
+    // 会員IDを正規化（数値文字列に統一、'31277.0' → '31277'）
+    function paNormalizeId(v) {
+      const s = String(v == null ? '' : v).trim();
+      if (s === '') return '';
+      const n = parseInt(s, 10);
+      // 数値変換できればそれを文字列化、できなければ元の文字列
+      if (Number.isFinite(n) && String(n) === s.replace(/\.0+$/, '').replace(/^0+(?=\d)/, '')) {
+        return String(n);
+      }
+      // 小数点形式（31277.0）対応
+      const f = parseFloat(s);
+      if (Number.isFinite(f) && Math.floor(f) === f) return String(Math.floor(f));
+      return s;
+    }
+
+    // 会員一覧から Email + ID 完全一致で会員を検索
+    function paFindMember(email, csvId) {
+      const e = String(email || '').trim();
+      if (!e) return null;
+      const idNorm = paNormalizeId(csvId);
+      // Email完全一致 + ID完全一致（大小区別、Emailは完全一致のため case-sensitive）
+      return members.find(m =>
+        String(m.email || '').trim() === e &&
+        paNormalizeId(m.id) === idNorm
+      ) || null;
+    }
+
+    // CSVファイル選択ハンドラ
+    let paCsvParsedRows = null;  // プレビュー用に解析結果を一時保持
+    function paOnCsvFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          paShowCsvPreview(text);
+        } catch (err) {
+          alert('CSVの読み込みに失敗しました：' + (err.message || err));
+        } finally {
+          // 同じファイルを再選択できるように input を初期化
+          event.target.value = '';
+        }
+      };
+      reader.onerror = () => alert('ファイルの読み込みに失敗しました');
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // CSVを解析してプレビューモーダルを表示
+    function paShowCsvPreview(text) {
+      const rows = paParseCsv(text);
+      if (rows.length < 2) { alert('CSVが空、またはヘッダーのみで取込対象がありません。'); return; }
+      const header = rows[0].map(h => String(h || '').replace(/^﻿/, '').trim());
+      // 列インデックスを名前で取得（必須列が無ければエラー）
+      const colIdx = (name) => header.findIndex(h => h === name);
+      const cIdEmail = colIdx('Email Address');
+      const cIdId = colIdx('ID');
+      const cIdName = colIdx('User Name');
+      const cIdStatus = colIdx('Status');
+      const cIdStart = colIdx('Test_started_at(JST)');
+      const cIdOverall = colIdx('CEFR(Overall)');
+      const cIdRange = colIdx('Range');
+      const cIdAccuracy = colIdx('Accuracy');
+      const cIdFluency = colIdx('Fluency');
+      const cIdInteraction = colIdx('Interaction');
+      const cIdCoherence = colIdx('Coherence');
+      const cIdPhonology = colIdx('Phonology');
+      const cIdTestId = colIdx('Test ID');
+
+      const required = { 'Email Address': cIdEmail, 'ID': cIdId, 'Status': cIdStatus, 'Test_started_at(JST)': cIdStart, 'CEFR(Overall)': cIdOverall, 'Test ID': cIdTestId };
+      const missing = Object.keys(required).filter(k => required[k] === -1);
+      if (missing.length > 0) {
+        alert('CSVに必要な列が見つかりません：\n' + missing.join('\n'));
+        return;
+      }
+
+      // 既存スコアの全 Test ID をセットに格納（重複検出）
+      const existingTestIds = new Set();
+      members.forEach(m => {
+        (m.progos || []).map(normalizeProgosEntry).forEach(p => {
+          // 既存スコアに testId フィールドがあれば追加
+          if (p.testId) existingTestIds.add(String(p.testId));
+        });
+      });
+
+      const parsed = [];
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        const email = String(r[cIdEmail] || '').trim();
+        const idRaw = r[cIdId];
+        const status = String(r[cIdStatus] || '').trim();
+        const testStartedAt = String(r[cIdStart] || '').trim();
+        const date = testStartedAt.split(' ')[0];  // YYYY-MM-DD部分
+        const overall = String(r[cIdOverall] || '').trim();
+        const range = String(r[cIdRange] || '').trim();
+        const accuracy = String(r[cIdAccuracy] || '').trim();
+        const fluency = String(r[cIdFluency] || '').trim();
+        const interaction = String(r[cIdInteraction] || '').trim();
+        const coherence = String(r[cIdCoherence] || '').trim();
+        const phonology = String(r[cIdPhonology] || '').trim();
+        const testId = String(r[cIdTestId] || '').trim();
+        const userName = String(r[cIdName] || '').trim();
+        const idNorm = paNormalizeId(idRaw);
+
+        let state = 'ok', reason = '';
+        // 1. 採点未完了
+        if (status !== 'scoring_complete') {
+          state = 'error'; reason = `Status="${status}"（採点未完了）`;
+        }
+        // 2. ID=0 → 入力漏れ
+        else if (idNorm === '0' || idNorm === '') {
+          state = 'error'; reason = 'IDが0または未入力（PROGOS受験時の会員ID入力漏れ）';
+        }
+        // 3. Email + ID で会員紐付け不可
+        else {
+          const m = paFindMember(email, idRaw);
+          if (!m) {
+            state = 'error'; reason = `会員未照合（Email="${email}" / ID="${idNorm}" に一致する会員が登録されていません）`;
+          }
+          // 4. Test ID 重複
+          else if (testId && existingTestIds.has(testId)) {
+            state = 'duplicate'; reason = `Test ID="${testId}" は既に登録済み`;
+          }
+        }
+
+        parsed.push({
+          rowNum: i, state, reason,
+          email, idRaw, idNorm, userName, date, status, testId,
+          overall, range, accuracy, fluency, interaction, coherence, phonology,
+          memberMatch: state === 'ok' ? paFindMember(email, idRaw) : null
+        });
+      }
+
+      paCsvParsedRows = parsed;
+
+      // サマリー
+      const okCount = parsed.filter(p => p.state === 'ok').length;
+      const dupCount = parsed.filter(p => p.state === 'duplicate').length;
+      const errCount = parsed.filter(p => p.state === 'error').length;
+      document.getElementById('pa-csv-summary').innerHTML =
+        `📊 <strong>合計 ${parsed.length} 行</strong>　／　` +
+        `<span style="color:#27AE60; font-weight:700;">✅ 取込可: ${okCount}</span>　` +
+        `<span style="color:#F39C12; font-weight:700;">⚠️ 重複: ${dupCount}</span>　` +
+        `<span style="color:#E74C3C; font-weight:700;">❌ エラー: ${errCount}</span>`;
+
+      // プレビューテーブル描画
+      const stateBadge = (s) => {
+        if (s === 'ok') return '<span style="background:#E8F8F0; color:#27AE60; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">✅ 取込可</span>';
+        if (s === 'duplicate') return '<span style="background:#FEF5E7; color:#B7791F; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">⚠️ 重複</span>';
+        return '<span style="background:#FDEDEC; color:#E74C3C; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">❌ エラー</span>';
+      };
+      const tbody = document.getElementById('pa-csv-preview-tbody');
+      tbody.innerHTML = parsed.map(p => `
+        <tr style="border-bottom:1px solid #ECEFF1;">
+          <td style="padding:6px 8px; color:#999;">${p.rowNum}</td>
+          <td style="padding:6px 8px;">${stateBadge(p.state)}</td>
+          <td style="padding:6px 8px;">${p.email || '<span style="color:#999;">―</span>'}</td>
+          <td style="padding:6px 8px;">${p.idNorm || '<span style="color:#999;">―</span>'}</td>
+          <td style="padding:6px 8px;">${p.userName || '<span style="color:#999;">―</span>'}</td>
+          <td style="padding:6px 8px; font-size:11px; color:#666;">${p.date || '<span style="color:#999;">―</span>'}</td>
+          <td style="padding:6px 8px;"><span class="rate-badge" style="background:${paLevelColors[p.overall] || '#CCC'}; color:#fff; font-size:11px;">${p.overall || '-'}</span></td>
+          <td style="padding:6px 8px; font-size:11px; color:#666;">${p.reason || ''}</td>
+        </tr>
+      `).join('');
+
+      // 取込ボタンの有効/無効
+      const importBtn = document.getElementById('pa-csv-import-btn');
+      if (okCount === 0) {
+        importBtn.disabled = true;
+        importBtn.textContent = '取込可能な行がありません';
+        importBtn.style.opacity = '0.5';
+        importBtn.style.cursor = 'not-allowed';
+      } else {
+        importBtn.disabled = false;
+        importBtn.textContent = `✅ ${okCount}件を取込`;
+        importBtn.style.opacity = '';
+        importBtn.style.cursor = '';
+      }
+
+      document.getElementById('pa-csv-preview-overlay').classList.add('show');
+    }
+
+    function paCloseCsvPreview() {
+      document.getElementById('pa-csv-preview-overlay').classList.remove('show');
+      paCsvParsedRows = null;
+    }
+
+    // 取込実行
+    function paExecuteCsvImport() {
+      if (!paCsvParsedRows) return;
+      let imported = 0, skipped = 0, errors = 0;
+      const errorLines = [];
+
+      paCsvParsedRows.forEach(p => {
+        if (p.state === 'duplicate') { skipped++; return; }
+        if (p.state === 'error') {
+          errors++;
+          errorLines.push(`行${p.rowNum} | Email=${p.email || '-'} | ID=${p.idNorm || '-'} | 氏名=${p.userName || '-'} | 受験日=${p.date || '-'} | 理由: ${p.reason}`);
+          return;
+        }
+        // 取込：該当会員の progos 配列に追加
+        const m = p.memberMatch;
+        if (!m) return;  // 念のため
+        if (!Array.isArray(m.progos)) m.progos = [];
+        m.progos.push({
+          id: 'P' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          date: p.date,
+          overall: p.overall,
+          range: p.range, accuracy: p.accuracy, fluency: p.fluency,
+          interaction: p.interaction, coherence: p.coherence, phonology: p.phonology,
+          comment: '',
+          testId: p.testId,    // ★ 重複検出のため保存
+          source: 'csv',       // ★ どこから登録されたか（手入力 or CSV）
+          createdAt: Date.now()
+        });
+        // 受験日昇順でソート
+        m.progos.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        imported++;
+      });
+
+      saveAddedMembersToStorage();
+
+      // PROGOS分析画面を再描画
+      try { renderProgosAnalysis(); } catch (e) {}
+
+      // プレビューを閉じて完了モーダル表示
+      paCloseCsvPreview();
+      paShowCsvResult(imported, skipped, errors, errorLines);
+    }
+
+    function paShowCsvResult(imported, skipped, errors, errorLines) {
+      const summary = document.getElementById('pa-csv-result-summary');
+      summary.innerHTML =
+        `<div style="font-size:14px; font-weight:700; color:#1B4F72; margin-bottom:6px;">📊 取込結果</div>` +
+        `<div>✅ 新規取込: <strong>${imported}件</strong></div>` +
+        `<div>⚠️ 重複スキップ: <strong>${skipped}件</strong></div>` +
+        `<div>❌ エラー（手動対応必要）: <strong>${errors}件</strong></div>`;
+
+      const errBox = document.getElementById('pa-csv-result-errorbox');
+      const errEl = document.getElementById('pa-csv-result-errors');
+      if (errors > 0) {
+        errBox.style.display = 'block';
+        errEl.textContent = errorLines.join('\n');
+      } else {
+        errBox.style.display = 'none';
+        errEl.textContent = '';
+      }
+
+      document.getElementById('pa-csv-result-overlay').classList.add('show');
+    }
+
+    function paCloseCsvResult() {
+      document.getElementById('pa-csv-result-overlay').classList.remove('show');
+    }
+
+    // エラーリストをクリップボードへコピー
+    function paCopyCsvErrors(btn) {
+      const text = document.getElementById('pa-csv-result-errors').textContent;
+      const original = btn.textContent;
+      const after = (label) => { btn.textContent = label; setTimeout(() => btn.textContent = original, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => after('✓ コピー済')).catch(() => after('失敗'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); after('✓ コピー済'); }
+        catch (e) { after('失敗'); }
+        document.body.removeChild(ta);
+      }
+    }
+
+    // ====== エントリーポイント：画面表示時に呼ぶ ======
+    function renderProgosAnalysis() {
+      const summaries = paBuildMemberSummary();
+      paRenderKpis(summaries);
+      paRenderDonuts(summaries);
+      paRenderTrendLists(summaries);
+      paRenderMemberTable(summaries);
     }
 
     // ========================================
