@@ -198,8 +198,8 @@
     <!-- ヘッダー -->
     <div class="login-header">
       <div class="login-logo">学</div>
-      <div class="login-title">学習管理アプリ</div>
-      <div class="login-sub">アカウント情報を入力してください</div>
+      <div class="login-title" id="card-title">学習管理アプリ</div>
+      <div class="login-sub" id="card-sub">アカウント情報を入力してください</div>
     </div>
 
     <!-- エラーメッセージ -->
@@ -207,10 +207,10 @@
       IDまたはパスワードが正しくありません
     </div>
 
-    <!-- ログインフォーム -->
+    <!-- ===== ログインフォーム（通常時に表示） ===== -->
     <form id="login-form" onsubmit="handleLogin(event)">
       <div class="form-group">
-        <label class="form-label" for="user-id">メールアドレス または 会員ID</label>
+        <label class="form-label" for="user-id">メールアドレス</label>
         <input type="text" id="user-id" class="form-input" autocomplete="username" required>
       </div>
       <div class="form-group">
@@ -218,6 +218,24 @@
         <input type="password" id="password" class="form-input" autocomplete="current-password" required>
       </div>
       <button type="submit" class="login-btn">ログイン</button>
+    </form>
+
+    <!-- ===== 初回パスワード変更フォーム（初回ログイン会員のみ表示） ===== -->
+    <form id="change-pw-form" onsubmit="handleChangePassword(event)" style="display:none;">
+      <div style="background:#FFF8E1; border-left:4px solid #F39C12; padding:12px 14px; border-radius:6px; font-size:13px; color:#7E5109; margin-bottom:16px; line-height:1.6;">
+        <strong>🔑 初回ログインです</strong><br>
+        セキュリティのため、新しいパスワードに変更してください。
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="new-password">新しいパスワード</label>
+        <input type="password" id="new-password" class="form-input" autocomplete="new-password" required minlength="8" placeholder="8文字以上">
+        <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">8文字以上で入力してください。</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="new-password-confirm">新しいパスワード（確認）</label>
+        <input type="password" id="new-password-confirm" class="form-input" autocomplete="new-password" required minlength="8" placeholder="もう一度入力">
+      </div>
+      <button type="submit" class="login-btn">パスワードを変更してログイン</button>
     </form>
   </div>
 
@@ -261,21 +279,62 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
     // ページ読み込み時に staff.csv を読み込んでおく
     loadStaff();
 
-    // ログイン処理
+    // ===== 会員データの読み込み（admin.html と同じ localStorage キーを参照） =====
+    const MEMBERS_STORAGE_KEY = 'addedMembers_v2';
+
+    function loadMembers() {
+      try {
+        const stored = localStorage.getItem(MEMBERS_STORAGE_KEY);
+        if (!stored) return [];
+        const arr = JSON.parse(stored);
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        console.warn('会員データ読み込み失敗', e);
+        return [];
+      }
+    }
+
+    function saveMembers(members) {
+      localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
+    }
+
+    // 初回パスワード変更画面に渡す会員ID（一時保持）
+    let pendingMemberId = null;
+
+    // ===== ログイン処理（会員 → スタッフの順で照合） =====
     function handleLogin(event) {
       event.preventDefault();
       const id = document.getElementById('user-id').value.trim();
-      const pw = document.getElementById('password').value;
+      // パスワードも前後空白を除去（コピペ時の改行混入対策）
+      const pw = document.getElementById('password').value.trim();
       const errorMsg = document.getElementById('error-msg');
+      errorMsg.classList.remove('show');
 
-      // --- 会員ログイン（member / study2026）----
-      if (id === 'member' && pw === 'study2026') {
+      // --- 1. 会員ログイン（addedMembers_v2 と照合）----
+      // メールアドレスの大文字小文字は区別しない
+      const members = loadMembers();
+      const member = members.find(m =>
+        (m.email || '').toLowerCase() === id.toLowerCase() && m.password === pw
+      );
+      if (member) {
+        // 初回ログインフラグが立っていればパスワード変更画面へ
+        if (member.requirePasswordChange === true) {
+          pendingMemberId = member.id;
+          showChangePasswordForm();
+          return;
+        }
+        // 通常ログイン：会員情報を sessionStorage に保存して index.html へ
+        sessionStorage.setItem('currentMember', JSON.stringify({
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          nickname: member.nickname || ''
+        }));
         window.location.href = 'index.html';
         return;
       }
 
-      // --- スタッフログイン（staff.csv のメールアドレス＋パスワード）----
-      // メールアドレスの大文字小文字は区別しない
+      // --- 2. スタッフログイン（staff.csv のメールアドレス＋パスワード）----
       const staff = staffList.find(s =>
         s.email.toLowerCase() === id.toLowerCase() && s.password === pw
       );
@@ -283,7 +342,6 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
         const roleLower = (staff.role || '').toLowerCase();
         // coach / teacher のみ admin.html へ遷移
         if (roleLower === 'coach' || roleLower === 'teacher') {
-          // sessionStorage にログイン中スタッフ情報を保存
           sessionStorage.setItem('currentStaff', JSON.stringify({
             id: staff.id,
             name: staff.name,
@@ -293,16 +351,77 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
           window.location.href = 'admin.html';
           return;
         } else {
-          // 役割が対応外
           errorMsg.textContent = 'このアカウントはまだ対応していません（役割：' + staff.role + '）';
           errorMsg.classList.add('show');
           return;
         }
       }
 
-      // --- ログイン失敗 ----
+      // --- 3. ログイン失敗 ----
       errorMsg.textContent = 'メールアドレスまたはパスワードが正しくありません';
       errorMsg.classList.add('show');
+    }
+
+    // ===== 初回パスワード変更フォームへ切替 =====
+    function showChangePasswordForm() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('change-pw-form').style.display = 'block';
+      document.getElementById('error-msg').classList.remove('show');
+      document.getElementById('card-title').textContent = '初回ログイン';
+      document.getElementById('card-sub').textContent = 'パスワードを設定してください';
+      // 新パスワード欄にフォーカス
+      setTimeout(() => document.getElementById('new-password').focus(), 50);
+    }
+
+    // ===== 初回パスワード変更処理 =====
+    function handleChangePassword(event) {
+      event.preventDefault();
+      const newPw = document.getElementById('new-password').value;
+      const confirmPw = document.getElementById('new-password-confirm').value;
+      const errorMsg = document.getElementById('error-msg');
+      errorMsg.classList.remove('show');
+
+      // バリデーション：8文字以上
+      if (newPw.length < 8) {
+        errorMsg.textContent = 'パスワードは8文字以上で入力してください。';
+        errorMsg.classList.add('show');
+        return;
+      }
+      // バリデーション：確認用と一致
+      if (newPw !== confirmPw) {
+        errorMsg.textContent = '新しいパスワードと確認用パスワードが一致しません。';
+        errorMsg.classList.add('show');
+        return;
+      }
+      // バリデーション：旧パスワードと同じはNG
+      const members = loadMembers();
+      const idx = members.findIndex(m => m.id === pendingMemberId);
+      if (idx === -1) {
+        errorMsg.textContent = '会員情報が見つかりません。最初からやり直してください。';
+        errorMsg.classList.add('show');
+        return;
+      }
+      if (members[idx].password === newPw) {
+        errorMsg.textContent = '仮パスワードと同じものは使用できません。別のパスワードを入力してください。';
+        errorMsg.classList.add('show');
+        return;
+      }
+
+      // 会員データ更新（パスワード上書き＋初回フラグOFF）
+      members[idx].password = newPw;
+      members[idx].requirePasswordChange = false;
+      saveMembers(members);
+
+      // sessionStorage に会員情報を保存して index.html へ
+      const m = members[idx];
+      sessionStorage.setItem('currentMember', JSON.stringify({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        nickname: m.nickname || ''
+      }));
+      alert('パスワードを変更しました。学習管理アプリへログインします。');
+      window.location.href = 'index.html';
     }
   </script>
 </body>

@@ -1021,11 +1021,11 @@
   </div>
   <!-- アバター（クリックでメニュー表示） -->
   <div class="avatar-wrap">
-    <div class="avatar" onclick="toggleAvatarMenu(event)">田中</div>
+    <div class="avatar" id="member-avatar" onclick="toggleAvatarMenu(event)">―</div>
     <div class="avatar-menu" id="avatar-menu">
       <div class="avatar-menu-header">
-        <div class="avatar-menu-name">田中 太郎</div>
-        <div class="avatar-menu-sub">会員 / 大学受験コース</div>
+        <div class="avatar-menu-name" id="member-name-full">―</div>
+        <div class="avatar-menu-sub">会員</div>
       </div>
       <button class="avatar-menu-item logout" onclick="handleLogout()">
         ログアウト
@@ -2013,9 +2013,36 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
   // ===== ログアウト処理 =====
   function handleLogout() {
     if (confirm('ログアウトしますか？')) {
+      // 会員のセッション情報を削除（ブラウザの戻るボタンでも index.html に戻れないようにする）
+      sessionStorage.removeItem('currentMember');
       window.location.href = 'login.html';
     }
   }
+
+  // ===== 認証チェック：sessionStorage から会員情報を取得（未ログインなら login.html へ） =====
+  (function checkMemberAuth() {
+    let member = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) member = JSON.parse(stored);
+    } catch (e) {
+      console.warn('currentMember 読み込み失敗', e);
+    }
+    if (!member || !member.id) {
+      // 未ログインならログイン画面へ強制遷移
+      window.location.href = 'login.html';
+      return;
+    }
+    // ナビバーに会員情報を反映
+    // アバター内：姓（lastNameKanji があれば優先、なければ name の先頭1文字）
+    const nameForAvatar = (member.name || '').trim();
+    const initial = nameForAvatar.split(/[\s　]+/)[0] || nameForAvatar.charAt(0) || '―';
+    const avatarEl = document.getElementById('member-avatar');
+    if (avatarEl) avatarEl.textContent = initial;
+    // メニュー内：氏名 ＋ 敬称「様」
+    const fullEl = document.getElementById('member-name-full');
+    if (fullEl) fullEl.textContent = `${nameForAvatar} 様`;
+  })();
 
   // ===== 初期化（CSVロード後にレンダリング） =====
   loadTextbooks().then(() => {

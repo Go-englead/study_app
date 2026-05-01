@@ -2098,9 +2098,9 @@
           <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">コーチ入力</div>
 
           <div class="form-group">
-            <label class="form-label">学習目標・目的 <span style="color:var(--color-error);">*</span></label>
-            <textarea class="form-input" id="nm-coachLearningGoal" rows="3" placeholder="例：オーストラリア渡航までにIELTS 6.5を取得。ライティング強化を最優先とし、日々の学習習慣を着実に定着させる。" required style="resize:vertical; font-family:inherit;"></textarea>
-            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">1〜2文程度で、コーチング方針や目標を記載</div>
+            <label class="form-label">学習目標・目的 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="nm-coachLearningGoal" rows="3" placeholder="例：オーストラリア渡航までにIELTS 6.5を取得。ライティング強化を最優先とし、日々の学習習慣を着実に定着させる。" style="resize:vertical; font-family:inherit;"></textarea>
+            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">1〜2文程度で、コーチング方針や目標を記載（後から追記可）</div>
           </div>
 
           <div class="form-group">
@@ -2814,17 +2814,6 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     function openMemberPanel(memberId) {
       const m = members.find(x => x.id === memberId);
       if (!m) return;
-      const assignedList = (assignments[memberId] || []).map(a => {
-        const tb = getTextbook(a.tbId);
-        return `
-          <div class="assigned-item">
-            <span class="assigned-emoji">${renderTextbookIcon(tb.iconUrl, 'small')}</span>
-            <span class="assigned-name">${tb.name}</span>
-            <span class="assigned-target">1日 ${a.dailyGoal}分</span>
-            <button class="assigned-remove" onclick="alert('【サンプル】教材を解除しました')">×</button>
-          </div>
-        `;
-      }).join('');
 
       document.getElementById('panel-body').innerHTML = `
         <div class="form-row">
@@ -2855,17 +2844,6 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             <input type="date" class="form-input" value="${m.graduateDate}">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">週次目標学習時間</label>
-          <input type="number" class="form-input" value="${m.weeklyGoalHours}"> <span style="font-size:12px; color:#666;">時間/週</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">割り当て教材（1日の目標時間）</label>
-          ${assignedList || '<div style="font-size:12px; color:#999; padding:8px;">割り当て教材はありません</div>'}
-          <button class="secondary-btn" style="margin-top:8px; width:100%;" onclick="alert('【サンプル】教材選択モーダルを表示')">＋ 教材を追加</button>
-        </div>
-
         <div class="form-group">
           <label class="form-label">パスワード管理</label>
           <button class="secondary-btn" style="width:100%;" onclick="alert('【サンプル】新しいパスワードをメールで送信しました')">🔑 パスワード再発行</button>
@@ -2987,9 +2965,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const graduateDate = getRequiredVal('nm-graduateDate', '卒業予定日');       if (graduateDate === null) return;
       const currentClass = getRequiredVal('nm-currentClass', '現在のクラス');     if (currentClass === null) return;
       const initialClass = getRequiredVal('nm-initialClass', '入学時クラス');     if (initialClass === null) return;
-      const coachLearningGoal = getRequiredVal('nm-coachLearningGoal', '学習目標・目的'); if (coachLearningGoal === null) return;
 
       // 任意項目
+      const coachLearningGoal = (document.getElementById('nm-coachLearningGoal').value || '').trim();
       const nickname = (document.getElementById('nm-nickname').value || '').trim();
       const note = (document.getElementById('nm-note').value || '').trim();
 
@@ -3000,10 +2978,36 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         return;
       }
 
-      // メール重複チェック
+      // メール重複チェック（会員側）
       const dupEmail = members.find(m => (m.email || '').toLowerCase() === email.toLowerCase());
       if (dupEmail) {
         alert(`メールアドレス「${email}」は既に「${dupEmail.name || dupEmail.lastNameKanji + ' ' + dupEmail.firstNameKanji}」さんが使用しています。`);
+        document.getElementById('nm-email').focus();
+        return;
+      }
+
+      // メール重複チェック（スタッフ側）
+      // 会員と同じメールでスタッフが存在する場合、ログイン時に会員側が優先されてしまうため事前にブロック
+      // staffData（非同期初期化）に依存せず、localStorage と現在のメモリ上の staffData の両方から確実に取得する
+      let allStaff = [];
+      try {
+        const storedStaff = localStorage.getItem('staffList_v1');
+        if (storedStaff) {
+          const parsed = JSON.parse(storedStaff);
+          if (Array.isArray(parsed)) allStaff = parsed;
+        }
+      } catch (e) { console.warn('staffList_v1 読み込み失敗', e); }
+      // メモリ上の staffData も併せて確認（CSV から読み込んだ直後で localStorage 未保存の場合に備える）
+      if (typeof staffData !== 'undefined' && Array.isArray(staffData)) {
+        staffData.forEach(s => {
+          if (!allStaff.find(x => (x.email || '').toLowerCase() === (s.email || '').toLowerCase())) {
+            allStaff.push(s);
+          }
+        });
+      }
+      const dupStaff = allStaff.find(s => (s.email || '').toLowerCase() === email.toLowerCase());
+      if (dupStaff) {
+        alert(`メールアドレス「${email}」は既にスタッフ「${dupStaff.name}」さんが使用しています。\n会員登録には別のメールアドレスを使用してください。`);
         document.getElementById('nm-email').focus();
         return;
       }
@@ -3080,7 +3084,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
     // クリップボードへコピー（HTTPS / localhost で動作。失敗時は手動選択を案内）
     function copyMemberCredential(elementId, btn) {
-      const text = document.getElementById(elementId).textContent;
+      // textContent から取得し、念のため前後空白も除去（コピー先で余分な改行が入らないように）
+      const text = (document.getElementById(elementId).textContent || '').trim();
       const originalLabel = btn.textContent;
       const showResult = (label) => {
         btn.textContent = label;
