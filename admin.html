@@ -6202,7 +6202,7 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
         };
       }
 
-      // 会員1名以上：実データから集計（学習記録は recentLogs から積み上げ）
+      // 会員1名以上：実データから集計（learningLogs_v1 全件 + members[].dailyTargetMinutes ベース）
       // 期間別の日数定義
       const periods = {
         today: { days: 1, prevDays: 1, rateLabel: '前日比', hoursLabel: '前日比', activeLabel: '前日比' },
@@ -6213,13 +6213,13 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
 
       const today = todayBase();
       const result = {};
+      // 学習記録全件（一度だけ取得して使い回す）
+      const allLogs = (typeof loadLearningLogs === 'function') ? loadLearningLogs() : [];
 
       Object.keys(periods).forEach(key => {
         const p = periods[key];
         const calcRange = (daysOffset) => {
-          // 開始日（今日からdaysOffset日前）と終了日
           if (p.days === null) {
-            // all：累積（受講開始から本日まで）
             return { start: null, end: today };
           }
           const start = new Date(today);
@@ -6229,17 +6229,17 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
           return { start, end };
         };
 
+        // 学習時間合計＋アクティブ会員数
         const aggregate = (range) => {
           let totalMinutes = 0;
           const activeIds = new Set();
-          members.forEach(m => {
-            (m.recentLogs || []).forEach(log => {
-              const d = new Date(log.date);
-              if (range.start === null || (d >= range.start && d < range.end)) {
-                totalMinutes += (log.duration || 0);
-                activeIds.add(m.id);
-              }
-            });
+          allLogs.forEach(log => {
+            const d = new Date(log.date);
+            if (range.start === null || (d >= range.start && d < range.end)) {
+              // 新構造：log.minutes、旧構造との互換のため log.duration もフォールバック
+              totalMinutes += (log.minutes != null ? log.minutes : (log.duration || 0));
+              activeIds.add(log.memberId);
+            }
           });
           return { hours: +(totalMinutes / 60).toFixed(1), active: activeIds.size };
         };
@@ -6249,22 +6249,32 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
         const curr = aggregate(currRange);
         const prev = aggregate(prevRange);
 
-        // 達成率の計算（簡易版）：会員ごとの recentLogs に rate がある場合の平均
-        const calcAvgRate = (range) => {
-          let sum = 0, count = 0;
-          members.forEach(m => {
-            (m.recentLogs || []).forEach(log => {
-              const d = new Date(log.date);
-              if (range.start === null || (d >= range.start && d < range.end)) {
-                if (typeof log.rate === 'number') { sum += log.rate; count++; }
-              }
-            });
+        // 達成率：期間内の合計学習時間 ÷ (期間日数 × 全会員の1日目標学習時間合計)
+        // 期間日数の決定（rangeから日数を逆算、all は会員受講開始日からの平均）
+        const calcRate = (range) => {
+          // 期間日数
+          let periodDays = 1;
+          if (range.start && range.end) {
+            periodDays = Math.max(1, Math.round((range.end - range.start) / 86400000));
+          }
+          // 全会員の1日目標時間の合計（dailyTargetMinutes 未設定は0扱い）
+          const totalTargetPerDay = members.reduce((s, m) => s + (m.dailyTargetMinutes || 0), 0);
+          if (totalTargetPerDay === 0) return 0;
+          // 期間内の合計学習時間（分）
+          let totalMin = 0;
+          allLogs.forEach(log => {
+            const d = new Date(log.date);
+            if (range.start === null || (d >= range.start && d < range.end)) {
+              totalMin += (log.minutes != null ? log.minutes : (log.duration || 0));
+            }
           });
-          return count > 0 ? Math.round(sum / count) : 0;
+          // 期間内の目標合計（分）
+          const totalTarget = totalTargetPerDay * periodDays;
+          return Math.round((totalMin / totalTarget) * 100);
         };
 
         result[key] = {
-          rate: { curr: calcAvgRate(currRange), prev: calcAvgRate(prevRange) },
+          rate: { curr: calcRate(currRange), prev: calcRate(prevRange) },
           hours: { curr: curr.hours, prev: prev.hours },
           active: { curr: curr.active, prev: prev.active, total: total },
           rateLabel: p.rateLabel, hoursLabel: p.hoursLabel, activeLabel: p.activeLabel
@@ -6274,23 +6284,27 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       return result;
     }
 
-    // エリアグラフ用データ：会員の学習記録から動的に集計
+    // エリアグラフ用データ：会員の学習記録から動的に集計（learningLogs_v1 全件）
     function dnComputeAreaData() {
       const total = members.length;
       // 会員0なら全期間 0% に
       const emptyValues = (n) => Array(n).fill(0);
+      // 学習記録全件（一度だけ取得）
+      const allLogs = (typeof loadLearningLogs === 'function') ? loadLearningLogs() : [];
 
+      // 期間内の達成率 = 期間内学習時間合計 ÷ (期間日数 × 全会員1日目標時間合計)
       const calcPeriodAvg = (start, end) => {
-        let sum = 0, count = 0;
-        members.forEach(m => {
-          (m.recentLogs || []).forEach(log => {
-            const d = new Date(log.date);
-            if (d >= start && d < end) {
-              if (typeof log.rate === 'number') { sum += log.rate; count++; }
-            }
-          });
+        const periodDays = Math.max(1, Math.round((end - start) / 86400000));
+        const totalTargetPerDay = members.reduce((s, m) => s + (m.dailyTargetMinutes || 0), 0);
+        if (totalTargetPerDay === 0) return 0;
+        let totalMin = 0;
+        allLogs.forEach(log => {
+          const d = new Date(log.date);
+          if (d >= start && d < end) {
+            totalMin += (log.minutes != null ? log.minutes : (log.duration || 0));
+          }
         });
-        return count > 0 ? Math.round(sum / count) : 0;
+        return Math.round((totalMin / (totalTargetPerDay * periodDays)) * 100);
       };
 
       const today = todayBase();
