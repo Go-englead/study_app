@@ -1650,7 +1650,10 @@
               <div class="page-title">会員管理</div>
               <div class="page-sub">会員情報の確認・編集</div>
             </div>
-            <button class="primary-btn" onclick="openNewMemberModal()">＋ 新規会員を登録</button>
+            <div style="display:flex; gap:8px;">
+              <button class="secondary-btn" onclick="exportMembersCsv()" title="登録会員全件をCSVファイルとしてダウンロードします">📥 会員CSVエクスポート</button>
+              <button class="primary-btn" onclick="openNewMemberModal()">＋ 新規会員を登録</button>
+            </div>
           </div>
 
           <!-- 検索パネル -->
@@ -4016,6 +4019,88 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     // 注：サンプル5名（M001〜M005）は完全削除済みのため、members 全体を保存対象とする
     function saveAddedMembersToStorage() {
       localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
+    }
+
+    // ========================================
+    // ===== 会員CSVエクスポート機能（ステップ6） =====
+    // ========================================
+    // localStorage の addedMembers_v2 を全件 CSV化してダウンロード
+    // - UTF-8 BOM 付き（Excel/Numbers/スプレッドシートで文字化けしない）
+    // - 列構成：登録モーダルの全項目 + 仮パスワード + 認証関連フラグ
+    // - ファイル名：members_export_YYYYMMDD_HHmm.csv
+    function exportMembersCsv() {
+      if (!members || members.length === 0) {
+        alert('エクスポート対象の会員がいません。');
+        return;
+      }
+
+      // CSV列定義（順序＝登録モーダルと一致 + システムフィールド末尾）
+      const cols = [
+        { key: 'id',                  label: '会員ID' },
+        { key: 'lastNameKanji',       label: '姓(漢字)' },
+        { key: 'firstNameKanji',      label: '名(漢字)' },
+        { key: 'lastNameKana',        label: '姓(カタカナ)' },
+        { key: 'firstNameKana',       label: '名(カタカナ)' },
+        { key: 'lastNameAlpha',       label: '姓(アルファベット)' },
+        { key: 'firstNameAlpha',      label: '名(アルファベット)' },
+        { key: 'nickname',            label: 'ニックネーム' },
+        { key: 'gender',              label: '性別' },
+        { key: 'birthDate',           label: '生年月日' },
+        { key: 'email',               label: 'メールアドレス' },
+        { key: 'phone',               label: '電話番号' },
+        { key: 'plan',                label: '入会プラン' },
+        { key: 'status',              label: 'ステータス' },
+        { key: 'enrollmentDate',      label: '入学日(オリエンテーション実施日)' },
+        { key: 'startDate',           label: '受講開始日' },
+        { key: 'graduateDate',        label: '卒業予定日' },
+        { key: 'currentClass',        label: '現在のクラス' },
+        { key: 'initialClass',        label: '入学時クラス' },
+        { key: 'nativecamp',          label: 'ネイティブキャンプ' },
+        { key: 'dailyTargetMinutes',  label: '1日の目標学習時間(分)' },
+        { key: 'consultant',          label: '担当コンサルタント' },
+        { key: 'cs',                  label: '担当CS' },
+        { key: 'coachLearningGoal',   label: '学習目標・目的' },
+        { key: 'note',                label: '備考' },
+        { key: 'password',            label: '仮パスワード' },
+        { key: 'requirePasswordChange', label: '初回パスワード変更フラグ' }
+      ];
+
+      // CSVのセル値をエスケープ（カンマ・改行・ダブルクォートを含む場合）
+      const escapeCsv = (v) => {
+        if (v == null) return '';
+        const s = String(v);
+        if (/[",\r\n]/.test(s)) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      };
+
+      // ヘッダー行 + データ行
+      const headerLine = cols.map(c => escapeCsv(c.label)).join(',');
+      const dataLines = members.map(m =>
+        cols.map(c => escapeCsv(m[c.key])).join(',')
+      );
+      const csvBody = [headerLine, ...dataLines].join('\r\n');
+      // UTF-8 BOM 付与（Excel等での文字化け対策）
+      const csv = '﻿' + csvBody;
+
+      // ファイル名生成
+      const t = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const fname = `members_export_${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}_${pad(t.getHours())}${pad(t.getMinutes())}.csv`;
+
+      // Blob → ダウンロード
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert(`✅ ${members.length}件の会員データを CSV出力しました。\n\nファイル名：${fname}\n\n※ ファイルには「仮パスワード」も含まれます。取り扱いにご注意ください。`);
     }
 
     // モーダルを開く
