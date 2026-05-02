@@ -1782,6 +1782,8 @@
                   <th>会員ID</th>
                   <th>氏名 / ニックネーム</th>
                   <th></th>
+                  <th>ステータス</th>
+                  <th>入会プラン</th>
                   <th>受講期間</th>
                   <th>入学日</th>
                   <th>現在のクラス</th>
@@ -3215,9 +3217,21 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const data = list || members;
       const tbody = document.getElementById('members-tbody');
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#999;">該当する会員が見つかりません</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:32px; color:#999;">該当する会員が見つかりません</td></tr>`;
         return;
       }
+      // ステータス色（受講中=緑、入学手続き中=青、休会中=黄、卒業=グレー、途中退会=赤）
+      const statusBadge = (st) => {
+        const colorMap = {
+          '受講中':       { bg: '#E8F8F0', fg: '#27AE60' },
+          '入学手続き中': { bg: '#EAF2F8', fg: '#2E86C1' },
+          '休会中':       { bg: '#FEF5E7', fg: '#B7791F' },
+          '卒業':         { bg: '#ECEFF1', fg: '#7F8C8D' },
+          '途中退会':     { bg: '#FDEDEC', fg: '#E74C3C' }
+        };
+        const c = colorMap[st] || { bg: '#F4F6F8', fg: '#999' };
+        return `<span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px; white-space:nowrap;">${st || '未設定'}</span>`;
+      };
       tbody.innerHTML = data.map(m => {
         // 卒業までの残日数を今日基準で計算
         let remainHtml = '';
@@ -3247,12 +3261,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             <button class="action-btn" onclick="openShareMode('${m.id}')" title="別タブで開き、他会員の情報を隠した状態でカルテを表示します">🔗 共有モード</button>
             ${(typeof isCoach === 'function' && isCoach()) ? `<button class="action-btn" onclick="openProgosEntryModal('${m.id}')" title="この会員のPROGOSスコアを登録" style="margin-top:4px;">📊 PROGOS登録</button>` : ''}
           </td>
+          <td>${statusBadge(m.status)}</td>
+          <td style="font-size:12px;">${m.plan || '<span style="color:#999;">未設定</span>'}</td>
           <td>
             ${m.startDate || '-'}<br>
             <span style="color:#999; font-size:11px;">〜 ${m.graduateDate || '-'}</span><br>
             ${remainHtml}
           </td>
-          <td style="font-size:12px;">${m.startDate || '-'}</td>
+          <td style="font-size:12px;">${m.enrollmentDate || m.startDate || '-'}</td>
           <td style="font-size:12px;">${m.currentClass || '-'}</td>
           <td style="font-size:12px; color:var(--color-text-secondary);">${m.initialClass || '-'}</td>
           <td><span class="rate-badge ${getRateClass(m.rate)}">${m.rate}%</span></td>
