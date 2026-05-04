@@ -2352,32 +2352,15 @@
             </select>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div class="form-group">
-              <label class="form-label">開始ページ <span style="color:var(--color-error);">*</span></label>
-              <input type="number" class="form-input" id="le-startPage" min="1" step="1" placeholder="例：12" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">終了ページ <span style="color:var(--color-error);">*</span></label>
-              <input type="number" class="form-input" id="le-endPage" min="1" step="1" placeholder="例：18" required>
-            </div>
-          </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <div class="form-group">
-              <label class="form-label">開始時刻 <span style="color:var(--color-error);">*</span></label>
-              <input type="time" class="form-input" id="le-startTime" required oninput="updateLogEntryMinutesPreview()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">終了時刻 <span style="color:var(--color-error);">*</span></label>
-              <input type="time" class="form-input" id="le-endTime" required oninput="updateLogEntryMinutesPreview()">
-            </div>
-          </div>
-
           <div class="form-group">
-            <div style="background:#EAF2F8; border-radius:6px; padding:10px 12px; font-size:13px; color:var(--color-primary-dark);">
-              📊 学習時間（自動計算）：<strong id="le-minutes-preview">―</strong>
+            <label class="form-label">学習時間 <span style="color:var(--color-error);">*</span></label>
+            <div style="display:grid; grid-template-columns:1fr auto 1fr auto; gap:8px; align-items:center;">
+              <select class="form-input" id="le-hours" required></select>
+              <span style="color:var(--color-text-secondary); font-size:13px;">時間</span>
+              <select class="form-input" id="le-minutes" required></select>
+              <span style="color:var(--color-text-secondary); font-size:13px;">分</span>
             </div>
+            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">時間：1時間単位／分：5分単位で選択</div>
           </div>
 
           <div class="form-group">
@@ -3933,7 +3916,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     // ===== 学習記録（learningLogs_v1）保存・読込ヘルパー =====
     // ========================================
     // ステップ5：会員ごとの学習記録を localStorage に保存。グローバル配列＋members[].recentLogs の二重持ち
-    // 構造例：{ id, memberId, date, textbookId, startPage, endPage, startTime, endTime, minutes, comment, createdAt }
+    // 構造例：{ id, memberId, date, textbookId, minutes, comment, createdAt }
+    // ★ createdAt は「送信時刻」として自動記録される（簡素化後の必須フィールド）
+    // ※ 旧データに含まれる startPage/endPage/startTime/endTime は内部に残るが新規入力では使わない
     const LEARNING_LOGS_STORAGE_KEY = 'learningLogs_v1';
 
     function loadLearningLogs() {
@@ -4066,7 +4051,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
     // 全会員の集計値を再計算（ダッシュボードや会員一覧表示前に呼ぶ）
     function computeAllMemberStats() {
-      members.forEach(m => computeMemberStats(m.id));
+      // 全会員の recentLogs を learningLogs_v1 から再構築（会員側 index.html からの記録も拾う）
+      // → その上で集計値を再計算
+      members.forEach(m => {
+        if (typeof syncMemberRecentLogs === 'function') {
+          try { syncMemberRecentLogs(m.id); } catch (e) {}
+        }
+        computeMemberStats(m.id);
+      });
     }
 
     // members[].recentLogs を learningLogs_v1 から再構築（直近10件、日付降順）
@@ -4089,11 +4081,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           textbook: tb ? tb.name : '(教材不明)',
           minutes: l.minutes,
           rate: computeDayAchievementRate(memberId, l.date),
-          startPage: l.startPage,
-          endPage: l.endPage,
-          startTime: l.startTime,
-          endTime: l.endTime,
-          comment: l.comment || ''
+          comment: l.comment || '',
+          createdAt: l.createdAt || null
         };
       });
       saveAddedMembersToStorage();
@@ -4120,19 +4109,26 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       });
     }
 
-    // 学習時間プレビュー更新（開始/終了時刻 入力時に呼ばれる）
-    function updateLogEntryMinutesPreview() {
-      const st = document.getElementById('le-startTime').value;
-      const et = document.getElementById('le-endTime').value;
-      const min = computeMinutesFromTimes(st, et);
-      const el = document.getElementById('le-minutes-preview');
-      if (!el) return;
-      if (!st || !et) {
-        el.textContent = '―';
-      } else if (min <= 0) {
-        el.textContent = '⚠️ 開始時刻より後の終了時刻を指定してください';
-      } else {
-        el.textContent = `${min} 分（${Math.floor(min / 60)}時間 ${min % 60}分）`;
+    // 学習時間プルダウン（時間：0〜12時間／分：0〜55分 5分刻み）を生成
+    function populateLogEntryTimeSelects() {
+      const hSel = document.getElementById('le-hours');
+      const mSel = document.getElementById('le-minutes');
+      if (!hSel || !mSel) return;
+      // 時間：0〜12（12時間あれば実用上十分）
+      hSel.innerHTML = '';
+      for (let h = 0; h <= 12; h++) {
+        const opt = document.createElement('option');
+        opt.value = String(h);
+        opt.textContent = String(h);
+        hSel.appendChild(opt);
+      }
+      // 分：0, 5, 10, ..., 55
+      mSel.innerHTML = '';
+      for (let m = 0; m < 60; m += 5) {
+        const opt = document.createElement('option');
+        opt.value = String(m);
+        opt.textContent = String(m);
+        mSel.appendChild(opt);
       }
     }
 
@@ -4142,8 +4138,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       if (!m) { alert('会員情報が見つかりません。'); return; }
       logEntryTargetMemberId = memberId;
 
-      // 教材プルダウンを最新化
+      // 教材プルダウン・時間プルダウンを最新化
       populateLogEntryTextbookOptions();
+      populateLogEntryTimeSelects();
 
       // フォーム初期化
       document.getElementById('log-entry-form').reset();
@@ -4156,8 +4153,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const dateInput = document.getElementById('le-date');
       dateInput.value = todayStr;
       dateInput.max = todayStr;  // 未来日入力を抑止
-      // プレビュー初期化
-      document.getElementById('le-minutes-preview').textContent = '―';
+      // 時間プルダウンの初期値（時間=0、分=30 をデフォルト）
+      document.getElementById('le-hours').value = '0';
+      document.getElementById('le-minutes').value = '30';
 
       // 会員情報の表示
       const targetMin = m.dailyTargetMinutes || 0;
@@ -4180,21 +4178,21 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
       const date = (document.getElementById('le-date').value || '').trim();
       const textbookId = (document.getElementById('le-textbookId').value || '').trim();
-      const startPageStr = (document.getElementById('le-startPage').value || '').trim();
-      const endPageStr = (document.getElementById('le-endPage').value || '').trim();
-      const startTime = (document.getElementById('le-startTime').value || '').trim();
-      const endTime = (document.getElementById('le-endTime').value || '').trim();
+      const hoursStr = (document.getElementById('le-hours').value || '').trim();
+      const minutesStr = (document.getElementById('le-minutes').value || '').trim();
       const comment = (document.getElementById('le-comment').value || '').trim();
 
       if (!date) { alert('日付を入力してください。'); return; }
       if (!textbookId) { alert('教材を選択してください。'); return; }
-      if (!startPageStr || !endPageStr) { alert('開始ページ・終了ページを入力してください。'); return; }
-      if (!startTime || !endTime) { alert('開始時刻・終了時刻を入力してください。'); return; }
+      if (hoursStr === '' || minutesStr === '') { alert('学習時間を選択してください。'); return; }
 
-      const startPage = parseInt(startPageStr, 10);
-      const endPage = parseInt(endPageStr, 10);
-      if (!Number.isFinite(startPage) || startPage < 1) { alert('開始ページは1以上の整数を入力してください。'); return; }
-      if (!Number.isFinite(endPage) || endPage < startPage) { alert('終了ページは開始ページ以上の整数を入力してください。'); return; }
+      const hours = parseInt(hoursStr, 10);
+      const mm = parseInt(minutesStr, 10);
+      if (!Number.isFinite(hours) || hours < 0) { alert('時間が不正です。'); return; }
+      if (!Number.isFinite(mm) || mm < 0 || mm > 59) { alert('分が不正です。'); return; }
+
+      const minutes = hours * 60 + mm;
+      if (minutes <= 0) { alert('学習時間は0分より大きく入力してください。'); return; }
 
       // 未来日チェック
       const todayStr = (() => {
@@ -4203,21 +4201,16 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       })();
       if (date > todayStr) { alert('未来日は登録できません。'); return; }
 
-      // 学習時間計算
-      const minutes = computeMinutesFromTimes(startTime, endTime);
-      if (minutes <= 0) { alert('終了時刻は開始時刻より後にしてください（深夜またぎは不可）。'); return; }
-
       // 保存（learningLogs_v1 にプッシュ）
+      // ★ createdAt は「送信時刻」として自動記録される
       const logs = loadLearningLogs();
       const newLog = {
         id: 'L' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
         memberId: logEntryTargetMemberId,
         date, textbookId,
-        startPage, endPage,
-        startTime, endTime,
         minutes,
         comment,
-        createdAt: Date.now()
+        createdAt: Date.now()  // 送信時刻（自動記録）
       };
       logs.push(newLog);
       saveLearningLogs(logs);
@@ -5432,6 +5425,10 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     function buildKarteHtml(memberId) {
       const m = members.find(x => x.id === memberId);
       if (!m) return null;
+      // ★ 会員側 index.html から保存された学習記録も拾うため、表示直前に recentLogs を再構築
+      if (typeof syncMemberRecentLogs === 'function') {
+        try { syncMemberRecentLogs(memberId); } catch (e) {}
+      }
       // 表示直前に学習記録から集計値を最新化
       computeMemberStats(memberId);
       const remainDays = daysUntil(m.departureDate);
