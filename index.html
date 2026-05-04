@@ -1091,14 +1091,34 @@
     ⚠️ これはサンプル画面です。実際のデータは表示されません。
   </div>
 
-  <!-- 出国カウントダウン -->
-  <div class="card">
-    <div class="card-label">出国まで</div>
-    <div>
-      <span class="countdown-num">127</span>
-      <span class="countdown-unit">日</span>
+  <!-- ===== 上段：ストリーク + 出国カウントダウン（2カラム並列） ===== -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+    <!-- ストリーク（連続学習日数）カード -->
+    <div id="streak-card" style="background:linear-gradient(135deg, #FF6B35 0%, #F39C12 100%); color:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 4px 12px rgba(243,156,18,0.25); display:flex; align-items:center; justify-content:space-between; gap:14px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div id="streak-icon" style="font-size:42px; line-height:1;">🔥</div>
+        <div>
+          <div style="font-size:11px; opacity:0.9; letter-spacing:0.05em; margin-bottom:2px;">連続学習日数</div>
+          <div style="display:flex; align-items:baseline; gap:6px;">
+            <span id="streak-count" style="font-size:34px; font-weight:800; line-height:1;">0</span>
+            <span style="font-size:14px; opacity:0.9;">日</span>
+          </div>
+        </div>
+      </div>
+      <div id="streak-status" style="text-align:right; font-size:12px; line-height:1.5;"></div>
     </div>
-    <div class="countdown-dest">オーストラリア・シドニー　2026年8月19日出発</div>
+
+    <!-- 出国カウントダウン -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-label">出国まで</div>
+      <div>
+        <span class="countdown-num">127</span>
+        <span class="countdown-unit">日</span>
+      </div>
+      <div class="countdown-dest">オーストラリア・シドニー　2026年8月19日出発</div>
+    </div>
+
   </div>
 
   <!-- 統計グリッド -->
@@ -1150,75 +1170,14 @@
     <div id="home-textbook-progress"></div>
   </div>
 
-  <!-- 記録ボタン -->
-  <button class="record-btn" onclick="showTab('record')">
-    + 今日の学習を記録する
-  </button>
+  <!-- ※ 旧「+ 今日の学習を記録する」ボタンは削除済み。
+       学習記録は右上ナビバーの「＋ 学習記録」ボタンに一本化。 -->
 
 </div>
 
 <!-- ===== 記録画面 ===== -->
-<div class="main screen" id="screen-record">
-
-  <div class="sample-note">⚠️ サンプル画面です。保存は実行されません。</div>
-
-  <!-- 日付選択 -->
-  <div class="card">
-    <div class="card-label">対象日</div>
-    <div class="date-selector">
-      <button class="date-nav-btn" onclick="changeDate(-1)">‹</button>
-      <div>
-        <div class="date-display" id="record-date">2026年4月14日</div>
-        <div class="date-display-sub" id="record-date-sub">火曜日</div>
-      </div>
-      <button class="date-nav-btn" onclick="changeDate(1)">›</button>
-    </div>
-  </div>
-
-  <!-- 教材選択（CSVから動的生成） -->
-  <div class="card">
-    <div class="card-label">教材を選択</div>
-    <div class="radio-list" id="record-textbook-list"></div>
-  </div>
-
-  <!-- 学習時間入力 -->
-  <div class="card">
-    <div class="card-label">学習時間</div>
-    <div class="mode-toggle">
-      <button class="mode-toggle-item active" onclick="switchMode('manual', this)">手入力</button>
-      <button class="mode-toggle-item" onclick="switchMode('stopwatch', this)">ストップウォッチ</button>
-    </div>
-
-    <div id="mode-manual">
-      <div class="time-input-row">
-        <input class="time-input" type="number" min="0" value="1" id="input-hour">
-        <span class="time-unit">時間</span>
-        <input class="time-input" type="number" min="0" max="59" value="20" id="input-min">
-        <span class="time-unit">分</span>
-      </div>
-    </div>
-
-    <div id="mode-stopwatch" style="display:none">
-      <div class="stopwatch-display" id="sw-display">00:00:00</div>
-      <div class="stopwatch-btns">
-        <button class="sw-btn primary" id="sw-toggle" onclick="toggleStopwatch()">開始</button>
-        <button class="sw-btn danger" onclick="resetStopwatch()">リセット</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 進捗入力 -->
-  <div class="card">
-    <div class="card-label">進捗（任意）</div>
-    <div class="field-label">今日進んだ量</div>
-    <input class="text-input" type="text" placeholder="例：50" id="input-progress">
-    <div class="field-sub" id="progress-unit-hint">単位：単語（英単語ターゲット1900）</div>
-  </div>
-
-  <!-- 保存ボタン -->
-  <button class="record-btn" onclick="saveRecord()">保存する</button>
-
-</div>
+<!-- ※ 旧「記録」セクション（screen-record）は削除済み。
+     学習記録は右上の「＋ 学習記録」ボタンからモーダルで入力する仕様に統一。 -->
 
 <!-- ===== 教材画面 ===== -->
 <div class="main screen" id="screen-textbook">
@@ -1647,10 +1606,6 @@
     <div class="tab-icon"></div>
     <span class="tab-text">ホーム</span>
   </button>
-  <button class="tab-item" onclick="showTab('record')">
-    <div class="tab-icon"></div>
-    <span class="tab-text">記録</span>
-  </button>
   <button class="tab-item" onclick="showTab('textbook')">
     <div class="tab-icon"></div>
     <span class="tab-text">教材</span>
@@ -1855,24 +1810,6 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }).join('');
   }
 
-  // ===== レンダリング：記録画面の教材選択ラジオ =====
-  function renderRecordTextbookList() {
-    const container = document.getElementById('record-textbook-list');
-    if (!container) return;
-    container.innerHTML = textbooks.map((tb, i) => `
-      <div class="radio-item ${i === 0 ? 'selected' : ''}" onclick="selectTextbook(this)" data-tb-id="${tb.id}">
-        <div class="radio-circle"></div>
-        <span class="radio-label">${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</span>
-      </div>
-    `).join('');
-    // 初期選択ヒント
-    const first = textbooks[0];
-    if (first) {
-      const hint = document.getElementById('progress-unit-hint');
-      if (hint) hint.textContent = `単位：${first.unit}（${first.name}）`;
-    }
-  }
-
   // ===== レンダリング：教材タブのカード =====
   function renderTextbookCards() {
     const container = document.getElementById('textbook-card-list');
@@ -1937,10 +1874,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }).join('');
   }
 
-  // ===== タブ切替 =====
+  // ===== タブ切替（旧「記録」タブは削除済み、4タブ構成） =====
   const tabTitles = {
     home: 'マイダッシュボード',
-    record: '学習を記録',
     textbook: '教材',
     rank: '成果順位',
     settings: '設定',
@@ -1950,7 +1886,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     document.getElementById('screen-' + name).classList.add('active');
 
     const tabs = document.querySelectorAll('.tab-item');
-    const order = ['home', 'record', 'textbook', 'rank', 'settings'];
+    const order = ['home', 'textbook', 'rank', 'settings'];
     tabs.forEach((tab, i) => {
       tab.classList.toggle('active', order[i] === name);
     });
@@ -1973,78 +1909,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     el.classList.add('active');
   }
 
-  // ===== 記録：日付変更 =====
-  let recordDate = new Date(2026, 3, 14);
-  const dayNames = ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
-  function changeDate(delta) {
-    recordDate.setDate(recordDate.getDate() + delta);
-    updateRecordDateUI();
-  }
-  function updateRecordDateUI() {
-    const y = recordDate.getFullYear();
-    const m = recordDate.getMonth() + 1;
-    const d = recordDate.getDate();
-    document.getElementById('record-date').textContent = `${y}年${m}月${d}日`;
-    document.getElementById('record-date-sub').textContent = dayNames[recordDate.getDay()];
-  }
-
-  // ===== 記録：教材選択 =====
-  // 教材マスター（textbooks 配列）の unit を参照するようになり、
-  // 新しい教材が追加されても自動的に対応
-  function selectTextbook(el) {
-    document.querySelectorAll('#screen-record .radio-item').forEach(b => b.classList.remove('selected'));
-    el.classList.add('selected');
-    const tbId = el.dataset.tbId;
-    const tb = textbooks.find(t => t.id === tbId);
-    if (tb) {
-      document.getElementById('progress-unit-hint').textContent = `単位：${tb.unit}（${tb.name}）`;
-    }
-  }
-
-  // ===== 記録：モード切替（手入力・ストップウォッチ） =====
-  function switchMode(mode, el) {
-    document.querySelectorAll('.mode-toggle-item').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('mode-manual').style.display = (mode === 'manual') ? '' : 'none';
-    document.getElementById('mode-stopwatch').style.display = (mode === 'stopwatch') ? '' : 'none';
-  }
-
-  // ===== ストップウォッチ =====
-  let swElapsed = 0; // ミリ秒
-  let swStart = 0;
-  let swTimer = null;
-  function toggleStopwatch() {
-    const btn = document.getElementById('sw-toggle');
-    if (swTimer) {
-      clearInterval(swTimer);
-      swTimer = null;
-      swElapsed += Date.now() - swStart;
-      btn.textContent = '再開';
-    } else {
-      swStart = Date.now();
-      swTimer = setInterval(updateStopwatch, 100);
-      btn.textContent = '停止';
-    }
-  }
-  function resetStopwatch() {
-    if (swTimer) { clearInterval(swTimer); swTimer = null; }
-    swElapsed = 0;
-    document.getElementById('sw-toggle').textContent = '開始';
-    document.getElementById('sw-display').textContent = '00:00:00';
-  }
-  function updateStopwatch() {
-    const total = swElapsed + (swTimer ? (Date.now() - swStart) : 0);
-    const s = Math.floor(total / 1000);
-    const hh = String(Math.floor(s / 3600)).padStart(2, '0');
-    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-    const ss = String(s % 60).padStart(2, '0');
-    document.getElementById('sw-display').textContent = `${hh}:${mm}:${ss}`;
-  }
-
-  // ===== 記録：保存 =====
-  function saveRecord() {
-    alert('【サンプル】学習記録を保存しました。\n（実際のデータは保存されません）');
-  }
+  // ※ 旧「記録」セクションのJS関数群（changeDate / switchMode / toggleStopwatch / resetStopwatch /
+  //    updateStopwatch / saveRecord / selectTextbook）はセクション削除に伴い不要となったため削除済み。
+  //    新しい学習記録入力は右上の「＋ 学習記録」ボタンから openMemberLogModal() を介して行う。
 
   // ===== アバターメニュー：表示切替 =====
   function toggleAvatarMenu(event) {
@@ -2095,9 +1962,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
   })();
 
   // ===== 初期化（CSVロード後にレンダリング） =====
+  // ※ 旧 renderRecordTextbookList は「記録」セクション削除に伴い不要となったため呼び出さない
   loadTextbooks().then(() => {
     renderHomeTextbookProgress();
-    renderRecordTextbookList();
     renderTextbookCards();
     renderAnalysisTextbookRates();
   });
@@ -2244,7 +2111,134 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
     closeMemberLogModal();
     alert(`学習記録を保存しました。\n\n日付：${date}\n学習時間：${minutes}分（${hours}時間${mm2}分）\nコメント：${comment || '(なし)'}`);
+
+    // 保存後にストリーク表示を更新
+    if (typeof renderStreakCard === 'function') renderStreakCard();
   }
+
+  // ========================================
+  // ===== S-1：ストリーク（連続学習日数）表示 =====
+  // ========================================
+  // ロジック：
+  //   - 自分の learningLogs_v1 から学習した日付を取得
+  //   - 今日から遡って連続日数をカウント（current streak）
+  //   - 「今日達成済み」「今日まだ」「途切れ（過去最長表示）」の3パターンで表示
+  function computeMyStreak() {
+    // ログイン中会員IDを取得
+    let cm = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) cm = JSON.parse(stored);
+    } catch (e) {}
+    if (!cm || !cm.id) return null;
+
+    // 自分の学習記録の日付セット
+    const allLogs = mlLoadLogs().filter(l => l.memberId === cm.id);
+    const dateSet = new Set(allLogs.map(l => l.date));
+
+    if (allLogs.length === 0) {
+      // 初回（記録なし）
+      return { state: 'first', current: 0, max: 0, todayDone: false };
+    }
+
+    // 日付ヘルパー
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const ymdStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const todayStr = ymdStr(today);
+    const todayDone = dateSet.has(todayStr);
+
+    // 現在のストリーク：今日 or 昨日から遡って連続している日数
+    // - 今日達成済み：今日から遡る
+    // - 今日まだ：昨日から遡る（昨日まで連続なら継続中とみなす）
+    let current = 0;
+    let cursor = new Date(today);
+    if (!todayDone) {
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    while (dateSet.has(ymdStr(cursor))) {
+      current++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    // 過去最長ストリーク：全期間の最大連続日数
+    const sortedDates = Array.from(dateSet).sort();
+    let max = 0, run = 0, prev = null;
+    sortedDates.forEach(ds => {
+      if (prev) {
+        const pd = new Date(prev); pd.setDate(pd.getDate() + 1);
+        if (ymdStr(pd) === ds) { run++; }
+        else { run = 1; }
+      } else { run = 1; }
+      if (run > max) max = run;
+      prev = ds;
+    });
+
+    // ストリーク途切れ判定：current=0 = 昨日も今日も学習なし
+    if (current === 0) {
+      return { state: 'broken', current: 0, max, todayDone: false };
+    }
+    // 連続中・今日達成
+    if (todayDone) {
+      return { state: 'active', current, max: Math.max(max, current), todayDone: true };
+    }
+    // 連続中・今日まだ
+    return { state: 'pending', current, max: Math.max(max, current), todayDone: false };
+  }
+
+  // ストリークカード描画
+  function renderStreakCard() {
+    const card = document.getElementById('streak-card');
+    if (!card) return;
+    const data = computeMyStreak();
+    if (!data) return;
+    const iconEl = document.getElementById('streak-icon');
+    const countEl = document.getElementById('streak-count');
+    const statusEl = document.getElementById('streak-status');
+
+    switch (data.state) {
+      case 'first':
+        // 初回（記録なし）：グレー基調
+        card.style.background = 'linear-gradient(135deg, #95A5A6 0%, #7F8C8D 100%)';
+        card.style.boxShadow = '0 4px 12px rgba(127,140,141,0.25)';
+        iconEl.textContent = '🔥';
+        iconEl.style.opacity = '0.4';
+        countEl.textContent = '0';
+        statusEl.innerHTML = `<div style="font-weight:700;">はじめての記録を残しましょう</div><div style="font-size:11px; opacity:0.85; margin-top:2px;">右上の「＋ 学習記録」から</div>`;
+        break;
+      case 'broken':
+        // 途切れ：グレー、最高記録を表示
+        card.style.background = 'linear-gradient(135deg, #95A5A6 0%, #7F8C8D 100%)';
+        card.style.boxShadow = '0 4px 12px rgba(127,140,141,0.25)';
+        iconEl.textContent = '🔥';
+        iconEl.style.opacity = '0.4';
+        countEl.textContent = '0';
+        statusEl.innerHTML = `<div style="font-weight:700;">⚠️ 連続記録が途切れています</div><div style="font-size:11px; opacity:0.85; margin-top:2px;">最高記録：${data.max}日</div>`;
+        break;
+      case 'pending':
+        // 連続中・今日まだ：オレンジ、警告
+        card.style.background = 'linear-gradient(135deg, #FF6B35 0%, #F39C12 100%)';
+        card.style.boxShadow = '0 4px 12px rgba(243,156,18,0.25)';
+        iconEl.textContent = '🔥';
+        iconEl.style.opacity = '1';
+        countEl.textContent = String(data.current);
+        statusEl.innerHTML = `<div style="font-weight:700;">⚠️ 今日まだ記録なし</div><div style="font-size:11px; opacity:0.9; margin-top:2px;">今日の記録で継続しよう！</div>`;
+        break;
+      case 'active':
+      default:
+        // 連続中・今日達成：燃える炎、最高記録のみ表示
+        card.style.background = 'linear-gradient(135deg, #FF6B35 0%, #F39C12 100%)';
+        card.style.boxShadow = '0 4px 12px rgba(243,156,18,0.25)';
+        iconEl.textContent = '🔥';
+        iconEl.style.opacity = '1';
+        countEl.textContent = String(data.current);
+        statusEl.innerHTML = `<div style="font-size:11px; opacity:0.9;">最高記録：${data.max}日</div>`;
+        break;
+    }
+  }
+
+  // 初期描画（認証チェック後にも呼ばれるが、念のため二重実行）
+  // ※ checkMemberAuth が先に走ってログイン情報を確定させているため、それ以降に呼ぶ
+  renderStreakCard();
 </script>
 
 </body>
