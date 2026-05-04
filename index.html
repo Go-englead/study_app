@@ -1038,6 +1038,34 @@
   </div>
 </div>
 
+<!-- ===== 日付選択モーダル（カレンダーから） ===== -->
+<div id="cal-day-overlay" onclick="closeCalDayModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:20px;">
+  <div onclick="event.stopPropagation()" style="background:#fff; border-radius:12px; max-width:380px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+    <div style="padding:18px 24px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
+      <div id="cal-day-modal-title" style="font-size:16px; font-weight:700; color:#1A5276;">— 月 — 日</div>
+      <button onclick="closeCalDayModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#999; line-height:1;">×</button>
+    </div>
+    <div style="padding:20px 24px; display:flex; flex-direction:column; gap:10px;">
+      <button onclick="calDayChooseRecord()" style="background:#27AE60; color:#fff; border:none; border-radius:8px; padding:14px; font-size:14px; font-weight:700; cursor:pointer;">📝 学習を記録する</button>
+      <button onclick="calDayChooseConfirm()" style="background:#1A5276; color:#fff; border:none; border-radius:8px; padding:14px; font-size:14px; font-weight:700; cursor:pointer;">📊 記録を確認する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 記録確認モーダル（その日の記録一覧） ===== -->
+<div id="cal-confirm-overlay" onclick="closeCalConfirmModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:20px;">
+  <div onclick="event.stopPropagation()" style="background:#fff; border-radius:12px; max-width:520px; width:100%; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+    <div style="padding:18px 24px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
+      <div id="cal-confirm-modal-title" style="font-size:16px; font-weight:700; color:#1A5276;">— 月 — 日 の記録</div>
+      <button onclick="closeCalConfirmModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#999; line-height:1;">×</button>
+    </div>
+    <div id="cal-confirm-body" style="padding:18px 24px; overflow-y:auto; flex:1;"></div>
+    <div style="padding:14px 24px; border-top:1px solid #E5E7EB; display:flex; justify-content:flex-end;">
+      <button onclick="closeCalConfirmModal()" style="background:#fff; color:#566573; border:1.5px solid #D5D8DC; border-radius:6px; padding:8px 18px; font-size:13px; cursor:pointer;">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 学習記録 入力モーダル（会員用） ===== -->
 <div id="member-log-overlay" onclick="closeMemberLogModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;">
   <div onclick="event.stopPropagation()" style="background:#fff; border-radius:12px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
@@ -2067,8 +2095,12 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }
   }
 
-  // モーダルを開く
-  function openMemberLogModal() {
+  // 編集中の学習記録ID（null=新規）／日付指定での起動用
+  let mlEditingLogId = null;
+  let mlPresetDate = null;
+
+  // モーダルを開く（オプション：日付プリセット、編集対象logId）
+  function openMemberLogModal(presetDate = null, editLogId = null) {
     // ログイン中の会員ID（sessionStorage）を確認
     let cm = null;
     try {
@@ -2080,6 +2112,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       window.location.href = 'login.html';
       return;
     }
+
+    mlEditingLogId = editLogId;
+    mlPresetDate = presetDate;
 
     // プルダウン生成
     mlPopulateTextbookOptions();
@@ -2093,10 +2128,39 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
     const dateInput = document.getElementById('ml-date');
-    dateInput.value = todayStr;
     dateInput.max = todayStr;
-    document.getElementById('ml-hours').value = '0';
-    document.getElementById('ml-minutes').value = '30';
+
+    // 編集モード：既存データをフォームに読み込む
+    const tbSelect = document.getElementById('ml-textbookId');
+    if (editLogId) {
+      const target = mlLoadLogs().find(l => l.id === editLogId);
+      if (target) {
+        dateInput.value = target.date;
+        tbSelect.value = target.textbookId;
+        const hours = Math.floor((target.minutes || 0) / 60);
+        const mins = (target.minutes || 0) % 60;
+        // 5分刻みに丸め（既存データが5分刻みでない場合の保険）
+        const minsRounded = Math.round(mins / 5) * 5;
+        document.getElementById('ml-hours').value = String(Math.min(12, hours));
+        document.getElementById('ml-minutes').value = String(Math.min(55, minsRounded));
+        document.getElementById('ml-comment').value = target.comment || '';
+      }
+      // ★ 編集モード：教材プルダウンを変更不可に（教材ごとの編集なので確定値）
+      tbSelect.disabled = true;
+      tbSelect.style.background = '#F4F6F8';
+      tbSelect.style.color = '#566573';
+      tbSelect.style.cursor = 'not-allowed';
+    } else {
+      // 新規モード：日付プリセット or 本日
+      dateInput.value = presetDate || todayStr;
+      document.getElementById('ml-hours').value = '0';
+      document.getElementById('ml-minutes').value = '30';
+      // 教材プルダウンを編集可能に戻す
+      tbSelect.disabled = false;
+      tbSelect.style.background = '';
+      tbSelect.style.color = '';
+      tbSelect.style.cursor = '';
+    }
 
     // モーダル表示（flex で中央配置）
     document.getElementById('member-log-overlay').style.display = 'flex';
@@ -2104,6 +2168,167 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
   function closeMemberLogModal() {
     document.getElementById('member-log-overlay').style.display = 'none';
+    // 教材プルダウンの disabled 状態をリセット
+    const tbSelect = document.getElementById('ml-textbookId');
+    if (tbSelect) {
+      tbSelect.disabled = false;
+      tbSelect.style.background = '';
+      tbSelect.style.color = '';
+      tbSelect.style.cursor = '';
+    }
+    mlEditingLogId = null;
+    mlPresetDate = null;
+  }
+
+  // ========================================
+  // ===== 日付選択モーダル（カレンダーから） =====
+  // ========================================
+  let calDaySelectedDate = null;
+
+  function openCalDayModal(dateStr) {
+    calDaySelectedDate = dateStr;
+    // 日付ラベル整形（YYYY-MM-DD → YYYY年M月D日(曜日)）
+    const d = new Date(dateStr);
+    const dayNames = ['日','月','火','水','木','金','土'];
+    const titleStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${dayNames[d.getDay()]})`;
+    document.getElementById('cal-day-modal-title').textContent = titleStr;
+    document.getElementById('cal-day-overlay').style.display = 'flex';
+  }
+  function closeCalDayModal() {
+    document.getElementById('cal-day-overlay').style.display = 'none';
+  }
+
+  // 「学習を記録する」ボタン
+  function calDayChooseRecord() {
+    const date = calDaySelectedDate;
+    closeCalDayModal();
+    openMemberLogModal(date);
+  }
+
+  // 「記録を確認する」ボタン
+  function calDayChooseConfirm() {
+    const date = calDaySelectedDate;
+    closeCalDayModal();
+    openCalConfirmModal(date);
+  }
+
+  // ========================================
+  // ===== 記録確認モーダル（その日の記録一覧） =====
+  // ========================================
+  function openCalConfirmModal(dateStr) {
+    // ログイン中会員ID
+    let cm = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) cm = JSON.parse(stored);
+    } catch (e) {}
+    if (!cm || !cm.id) return;
+
+    const d = new Date(dateStr);
+    const dayNames = ['日','月','火','水','木','金','土'];
+    document.getElementById('cal-confirm-modal-title').textContent =
+      `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${dayNames[d.getDay()]}) の記録`;
+
+    // その日の記録を取得
+    const myLogs = mlLoadLogs().filter(l => l.memberId === cm.id && l.date === dateStr);
+    // 自分の dailyTargetMinutes 取得
+    const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+    const me = allMembers.find(m => m.id === cm.id);
+    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+
+    const body = document.getElementById('cal-confirm-body');
+
+    if (myLogs.length === 0) {
+      body.innerHTML = `
+        <div style="text-align:center; padding:32px 0; color:#999;">
+          <div style="font-size:36px; margin-bottom:8px;">📭</div>
+          <div style="font-size:14px;">学習記録がありません</div>
+        </div>
+      `;
+      document.getElementById('cal-confirm-overlay').style.display = 'flex';
+      return;
+    }
+
+    // 教材名取得ヘルパー
+    const tbName = (id) => {
+      const tb = (typeof textbooks !== 'undefined') ? textbooks.find(t => t.id === id) : null;
+      return tb ? tb.name : '(教材不明)';
+    };
+
+    // 合計と達成率
+    const totalMin = myLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+    const rate = target > 0 ? Math.round((totalMin / target) * 100) : 0;
+    const rateColor = rate >= 100 ? '#27AE60' : (rate >= 1 ? '#F39C12' : '#999');
+
+    // 各記録カード
+    const records = myLogs.map(l => {
+      const h = Math.floor((l.minutes || 0) / 60);
+      const m = (l.minutes || 0) % 60;
+      const timeStr = h > 0 ? `${h}時間${m}分` : `${m}分`;
+      return `
+        <div style="border:1px solid #E5E7EB; border-radius:8px; padding:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:start; gap:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:#1A5276;">📕 ${tbName(l.textbookId)}</div>
+              <div style="font-size:12px; color:#566573; margin-top:4px;">⏱ ${timeStr}（${l.minutes}分）</div>
+              ${l.comment ? `<div style="font-size:11px; color:#7F8C8D; margin-top:6px; padding:6px 8px; background:#F8F9FA; border-radius:4px; word-wrap:break-word;">💬 ${l.comment}</div>` : ''}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0;">
+              <button onclick="calConfirmEdit('${l.id}')" style="background:#fff; color:#1A5276; border:1px solid #1A5276; border-radius:4px; padding:4px 10px; font-size:11px; cursor:pointer;">編集</button>
+              <button onclick="calConfirmDelete('${l.id}')" style="background:#fff; color:#E74C3C; border:1px solid #E74C3C; border-radius:4px; padding:4px 10px; font-size:11px; cursor:pointer;">削除</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // サマリー
+    const summary = `
+      <div style="background:#F8F9FA; border-left:4px solid ${rateColor}; padding:10px 14px; border-radius:6px; margin-bottom:14px;">
+        <div style="font-size:12px; color:#566573; margin-bottom:4px;">合計学習時間</div>
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <span style="font-size:20px; font-weight:800; color:#1A5276;">${totalMin}</span>
+          <span style="font-size:12px; color:#566573;">分</span>
+          ${target > 0 ? `<span style="font-size:12px; color:#999; margin-left:auto;">/ 目標 ${target}分</span>` : ''}
+        </div>
+        ${target > 0 ? `<div style="font-size:13px; font-weight:700; color:${rateColor}; margin-top:4px;">達成率 ${rate}%</div>` : ''}
+      </div>
+    `;
+
+    body.innerHTML = summary + records;
+    document.getElementById('cal-confirm-overlay').style.display = 'flex';
+  }
+
+  function closeCalConfirmModal() {
+    document.getElementById('cal-confirm-overlay').style.display = 'none';
+  }
+
+  // 編集ボタン
+  function calConfirmEdit(logId) {
+    closeCalConfirmModal();
+    openMemberLogModal(null, logId);
+  }
+
+  // 削除ボタン（1段階確認）
+  function calConfirmDelete(logId) {
+    if (!confirm('この学習記録を削除しますか？')) return;
+    const logs = mlLoadLogs();
+    const idx = logs.findIndex(l => l.id === logId);
+    if (idx === -1) {
+      alert('記録が見つかりません。');
+      return;
+    }
+    const removed = logs.splice(idx, 1)[0];
+    mlSaveLogs(logs);
+
+    // 関連画面を再描画
+    if (typeof renderStreakCard === 'function') renderStreakCard();
+    if (typeof renderDailyGoalCard === 'function') renderDailyGoalCard();
+    if (typeof renderGoalTrendCard === 'function') renderGoalTrendCard();
+    if (typeof renderStudyCalendar === 'function') renderStudyCalendar();
+
+    // 確認モーダルを開き直して反映
+    if (removed && removed.date) openCalConfirmModal(removed.date);
   }
 
   // 学習記録を保存
@@ -2142,22 +2367,36 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     })();
     if (date > todayStr) { alert('未来日は登録できません。'); return; }
 
-    // 保存
+    // 保存（新規 or 編集）
     const logs = mlLoadLogs();
-    const newLog = {
-      id: 'L' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-      memberId: cm.id,         // ログイン中会員IDで自動紐付け
-      date,
-      textbookId,
-      minutes,
-      comment,
-      createdAt: Date.now()    // 送信時刻（自動記録）
-    };
-    logs.push(newLog);
+    let actionLabel = '保存';
+    if (mlEditingLogId) {
+      // 編集モード：該当レコードを上書き
+      const idx = logs.findIndex(l => l.id === mlEditingLogId);
+      if (idx === -1) { alert('編集対象の記録が見つかりません。'); return; }
+      logs[idx] = {
+        ...logs[idx],
+        date, textbookId, minutes, comment
+        // createdAt は元の値を維持（送信時刻は履歴として残す）
+      };
+      actionLabel = '更新';
+    } else {
+      // 新規モード
+      const newLog = {
+        id: 'L' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        memberId: cm.id,         // ログイン中会員IDで自動紐付け
+        date,
+        textbookId,
+        minutes,
+        comment,
+        createdAt: Date.now()    // 送信時刻（自動記録）
+      };
+      logs.push(newLog);
+    }
     mlSaveLogs(logs);
 
     closeMemberLogModal();
-    alert(`学習記録を保存しました。\n\n日付：${date}\n学習時間：${minutes}分（${hours}時間${mm2}分）\nコメント：${comment || '(なし)'}`);
+    alert(`学習記録を${actionLabel}しました。\n\n日付：${date}\n学習時間：${minutes}分（${hours}時間${mm2}分）\nコメント：${comment || '(なし)'}`);
 
     // 保存後にストリーク・デイリーゴール・達成率推移・学習履歴カレンダーを更新
     if (typeof renderStreakCard === 'function') renderStreakCard();
@@ -2385,8 +2624,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const border = isToday ? '2px solid var(--color-primary)' : '1px solid transparent';
       const todayBoost = isToday ? 'font-weight:800;' : '';
 
+      // 未来日はクリック不可（反応なし）
+      const isFuture = (dStr > todayStr);
+      const cursor = isFuture ? 'default' : 'pointer';
+      const onclickAttr = isFuture ? '' : `onclick="openCalDayModal('${dStr}')"`;
+      const futureOpacity = isFuture ? 'opacity:0.4;' : '';
+
       html += `
-        <div title="${dStr}：${totalMin}分${target > 0 ? ` / 目標${target}分（達成率 ${Math.round(rate)}%）` : ''}" style="aspect-ratio:1; background:${bg}; color:${fg}; border:${border}; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; ${todayBoost}">${day}</div>
+        <div ${onclickAttr} title="${dStr}：${totalMin}分${target > 0 ? ` / 目標${target}分（達成率 ${Math.round(rate)}%）` : ''}" style="aspect-ratio:1; background:${bg}; color:${fg}; border:${border}; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:${cursor}; ${todayBoost} ${futureOpacity}">${day}</div>
       `;
     }
 
