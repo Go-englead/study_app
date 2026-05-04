@@ -1790,15 +1790,13 @@
                 <tr>
                   <th>会員ID</th>
                   <th>氏名 / ニックネーム</th>
-                  <th></th>
                   <th>ステータス</th>
                   <th>入会プラン</th>
                   <th>受講期間</th>
-                  <th>オリエンテーション実施日</th>
                   <th>現在のクラス</th>
-                  <th>入学時のクラス</th>
                   <th>今月達成率</th>
                   <th>最終ログイン</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody id="members-tbody"></tbody>
@@ -3487,7 +3485,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const data = list || members;
       const tbody = document.getElementById('members-tbody');
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:32px; color:#999;">該当する会員が見つかりません</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#999;">該当する会員が見つかりません</td></tr>`;
         return;
       }
       // ステータス色（受講中=緑、入学手続き中=青、休会中=黄、卒業=グレー、途中退会=赤）
@@ -3503,46 +3501,46 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         return `<span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px; white-space:nowrap;">${st || '未設定'}</span>`;
       };
       tbody.innerHTML = data.map(m => {
-        // 卒業までの残日数を今日基準で計算
-        let remainHtml = '';
-        if (m.graduateDate) {
-          const remain = daysUntil(m.graduateDate);
-          if (remain > 0) {
-            remainHtml = `<span style="color:var(--color-primary); font-size:11px; font-weight:700;">卒業まで残${remain}日</span>`;
-          } else if (remain === 0) {
-            remainHtml = `<span style="color:var(--color-warning); font-size:11px; font-weight:700;">本日卒業</span>`;
-          } else {
-            remainHtml = `<span style="color:var(--color-text-muted); font-size:11px;">卒業済（${Math.abs(remain)}日経過）</span>`;
+        // 受講期間を1行で表記：受講開始日〜卒業予定日 (残N日)
+        let periodHtml = '<span style="color:#999;">未設定</span>';
+        if (m.startDate || m.graduateDate) {
+          const start = m.startDate || '-';
+          const grad = m.graduateDate || '-';
+          let remainSuffix = '';
+          if (m.graduateDate) {
+            const remain = daysUntil(m.graduateDate);
+            if (remain > 0) {
+              remainSuffix = ` <span style="color:var(--color-primary); font-weight:700;">(残${remain}日)</span>`;
+            } else if (remain === 0) {
+              remainSuffix = ` <span style="color:var(--color-warning); font-weight:700;">(本日卒業)</span>`;
+            } else {
+              remainSuffix = ` <span style="color:var(--color-text-muted);">(卒業済)</span>`;
+            }
           }
+          periodHtml = `<span style="font-size:11px; white-space:nowrap;">${start} 〜 ${grad}${remainSuffix}</span>`;
         }
         return `
         <tr class="clickable" onclick="openMemberPanel('${m.id}')">
-          <td><span class="member-id" style="font-size:12px; color:#333;">${m.id}</span></td>
-          <td>
-            <div class="member-cell">
+          <td style="white-space:nowrap;"><span class="member-id" style="font-size:12px; color:#333;">${m.id}</span></td>
+          <td style="white-space:nowrap;">
+            <div class="member-cell" style="display:flex; align-items:center; gap:8px;">
               <div class="member-avatar">${m.initial}</div>
-              <div>
-                <div class="member-name">${m.name}</div>
-                <div class="member-nickname">@${m.nickname || '-'}</div>
+              <div style="display:flex; align-items:baseline; gap:8px; white-space:nowrap;">
+                <span class="member-name">${m.name}</span>
+                <span class="member-nickname" style="font-size:11px; color:#999;">@${m.nickname || '-'}</span>
               </div>
             </div>
           </td>
-          <td onclick="event.stopPropagation()">
-            <button class="action-btn" onclick="openShareMode('${m.id}')" title="別タブで開き、他会員の情報を隠した状態でカルテを表示します">🔗 共有モード</button>
-            ${(typeof isCoach === 'function' && isCoach()) ? `<button class="action-btn" onclick="openProgosEntryModal('${m.id}')" title="この会員のPROGOSスコアを登録" style="margin-top:4px;">📊 PROGOS登録</button>` : ''}
+          <td style="white-space:nowrap;">${statusBadge(m.status)}</td>
+          <td style="font-size:12px; white-space:nowrap;">${m.plan || '<span style="color:#999;">未設定</span>'}</td>
+          <td>${periodHtml}</td>
+          <td style="font-size:12px; white-space:nowrap;">${m.currentClass || '-'}</td>
+          <td style="white-space:nowrap;"><span class="rate-badge ${getRateClass(m.rate)}">${m.rate}%</span></td>
+          <td style="white-space:nowrap;">${formatLastLogin(m.lastLoginDaysAgo)}</td>
+          <td onclick="event.stopPropagation()" style="white-space:nowrap;">
+            <button class="action-btn" onclick="openShareMode('${m.id}')" title="別タブで開き、他会員の情報を隠した状態でカルテを表示します">🔗 共有</button>
+            ${(typeof isCoach === 'function' && isCoach()) ? `<button class="action-btn" onclick="openProgosEntryModal('${m.id}')" title="この会員のPROGOSスコアを登録" style="margin-left:4px;">📊 PROGOS</button>` : ''}
           </td>
-          <td>${statusBadge(m.status)}</td>
-          <td style="font-size:12px;">${m.plan || '<span style="color:#999;">未設定</span>'}</td>
-          <td>
-            ${m.startDate || '-'}<br>
-            <span style="color:#999; font-size:11px;">〜 ${m.graduateDate || '-'}</span><br>
-            ${remainHtml}
-          </td>
-          <td style="font-size:12px;">${m.enrollmentDate || m.startDate || '-'}</td>
-          <td style="font-size:12px;">${m.currentClass || '-'}</td>
-          <td style="font-size:12px; color:var(--color-text-secondary);">${m.initialClass || '-'}</td>
-          <td><span class="rate-badge ${getRateClass(m.rate)}">${m.rate}%</span></td>
-          <td>${formatLastLogin(m.lastLoginDaysAgo)}</td>
         </tr>
       `;
       }).join('');
@@ -4544,7 +4542,49 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       } catch (e) {
         console.warn('追加会員データの読み込みに失敗', e);
       }
+      // ★ 復元直後に日付ベースでステータスを自動更新
+      autoUpdateMemberStatuses();
     })();
+
+    // ===== ステータス自動遷移（日付ベース） =====
+    // ルール（手動保護対象は更新しない）：
+    //   - 受講開始日が未来 or 未設定 → 「入学手続き中」
+    //   - 受講開始日 ≦ 今日 < 卒業予定日 → 「受講中」
+    //   - 卒業予定日 ≦ 今日 → 「卒業」
+    //   - 「休会中」「途中退会」は手動値を保護（自動更新しない）
+    function autoUpdateMemberStatuses() {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const PROTECTED = ['休会中', '途中退会'];
+      let changed = false;
+
+      members.forEach(m => {
+        // 手動保護対象はスキップ
+        if (PROTECTED.includes(m.status)) return;
+
+        // 期待ステータスを判定
+        let expected;
+        if (!m.startDate || m.startDate > todayStr) {
+          expected = '入学手続き中';
+        } else if (!m.graduateDate || m.startDate <= todayStr && todayStr < m.graduateDate) {
+          expected = '受講中';
+        } else if (m.graduateDate <= todayStr) {
+          expected = '卒業';
+        }
+
+        if (expected && m.status !== expected) {
+          m.status = expected;
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        try {
+          localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
+          console.log('🔄 ステータス自動更新：', members.filter(m => !PROTECTED.includes(m.status)).length, '名チェック完了');
+        } catch (e) { console.warn('ステータス自動更新の保存失敗', e); }
+      }
+    }
 
     // localStorage に全会員を保存
     // 注：サンプル5名（M001〜M005）は完全削除済みのため、members 全体を保存対象とする
