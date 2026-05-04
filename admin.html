@@ -2773,7 +2773,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     // CSVロード処理（非同期）
     async function loadTextbooks() {
       try {
-        const res = await fetch('./data/textbooks.csv');
+        // キャッシュバスター付き：ブラウザがCSV古い版をキャッシュする問題を回避
+        const res = await fetch('./data/textbooks.csv?_=' + Date.now());
         if (!res.ok) throw new Error('CSV fetch failed: ' + res.status);
         const text = await res.text();
         textbooks = enrichTextbooks(parseCSV(text));
@@ -6644,7 +6645,19 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
     // staff.csv のフォールバック（file:// で fetch 失敗時）
     const fallbackStaffCSVAdmin = `id,name,role,iconUrl,meetUrl,groupContent,email,password
-MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
+MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1
+MW055,Rena Yabe,Consultant,,,,rena.yabe@example.com,pass1234
+MW067,Yuto Aso,Consultant,,,,yuto.aso@example.com,pass1234
+MW118,Kyuga Kishi,Consultant,,,,kyuga.kishi@example.com,pass1234
+MW153,Mitsuko Fujita,Consultant,,,,mitsuko.fujita@example.com,pass1234
+MW180,Eno Yoshizumi,Consultant,,,,eno.yoshizumi@example.com,pass1234
+MW196,Kosuke Ishimaru,Consultant,,,,kosuke.ishimaru@example.com,pass1234
+MW208,Yuka Soejima,Consultant,,,,yuka.soejima@example.com,pass1234
+MW009,Nana Tsukada,CS,,,,nana.tsukada@example.com,pass1234
+MW046,Yuichi Tokunaga,CS,,,,yuichi.tokunaga@example.com,pass1234
+MW077,Riho Yoshidome,CS,,,,riho.yoshidome@example.com,pass1234
+MW101,Haruka Uchiyama,CS,,,,haruka.uchiyama@example.com,pass1234
+MW152,Moeka Nakashima,CS,,,,moeka.nakashima@example.com,pass1234`;
 
     // 初期化：localStorage にデータがあればそれを使用、なければ CSV から取得
     async function initStaffData() {
@@ -6664,7 +6677,8 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
     // CSV から読み込んで localStorage に保存
     async function loadStaffFromCSV() {
       try {
-        const res = await fetch('./data/staff.csv');
+        // キャッシュバスター付き：ブラウザがCSV古い版をキャッシュする問題を回避
+        const res = await fetch('./data/staff.csv?_=' + Date.now());
         if (!res.ok) throw new Error('CSV fetch failed: ' + res.status);
         const text = await res.text();
         staffData = parseCSV(text);
@@ -6774,18 +6788,6 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
           <div style="font-size:11px; color:#999; margin-top:4px;">※ Coach / Teacher の場合のみadmin画面にログインできます</div>
         </div>
         <div class="form-group">
-          <label class="form-label">顔写真URL</label>
-          <input type="text" class="form-input" id="staff-input-iconUrl" value="${s.iconUrl || ''}" placeholder="https://...（任意）">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Google Meet リンク</label>
-          <input type="text" class="form-input" id="staff-input-meetUrl" value="${s.meetUrl || ''}" placeholder="https://meet.google.com/...（任意）">
-        </div>
-        <div class="form-group">
-          <label class="form-label">担当グループコーチング内容</label>
-          <input type="text" class="form-input" id="staff-input-groupContent" value="${s.groupContent || ''}" placeholder="例：英検対策クラス（任意）">
-        </div>
-        <div class="form-group">
           <label class="form-label">ログイン用メールアドレス <span style="color:#E74C3C;">*必須</span></label>
           <input type="email" class="form-input" id="staff-input-email" value="${s.email || ''}" placeholder="example@example.com">
         </div>
@@ -6870,9 +6872,6 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       const id = document.getElementById('staff-input-id').value.trim();
       const name = document.getElementById('staff-input-name').value.trim();
       const role = document.getElementById('staff-input-role').value;
-      const iconUrl = document.getElementById('staff-input-iconUrl').value.trim();
-      const meetUrl = document.getElementById('staff-input-meetUrl').value.trim();
-      const groupContent = document.getElementById('staff-input-groupContent').value.trim();
       const email = document.getElementById('staff-input-email').value.trim();
       const pwInput = document.getElementById('staff-input-password');
       const password = pwInput ? pwInput.value : '';
@@ -6903,8 +6902,8 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       }
 
       if (isNew) {
-        // 新規追加
-        staffData.push({ id, name, role, iconUrl, meetUrl, groupContent, email, password });
+        // 新規追加（iconUrl/meetUrl/groupContent はUIから削除されたが、CSV互換のため空文字で保持）
+        staffData.push({ id, name, role, iconUrl: '', meetUrl: '', groupContent: '', email, password });
       } else {
         // 編集
         const idx = staffData.findIndex(s => s.id === editingStaffId);
@@ -6917,9 +6916,6 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
           ...existing,
           name,
           role,
-          iconUrl,
-          meetUrl,
-          groupContent,
           email,
           // パスワードは入力がある場合のみ更新（他人の編集時に空なら変更なし）
           password: password ? password : existing.password
