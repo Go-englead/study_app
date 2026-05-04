@@ -3522,7 +3522,6 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           <td style="white-space:nowrap;">${formatLastLogin(m.lastLoginDaysAgo)}</td>
           <td onclick="event.stopPropagation()" style="white-space:nowrap;">
             <button class="action-btn" onclick="openShareMode('${m.id}')" title="別タブで開き、他会員の情報を隠した状態でカルテを表示します">🔗 共有</button>
-            ${(typeof isCoach === 'function' && isCoach()) ? `<button class="action-btn" onclick="openProgosEntryModal('${m.id}')" title="この会員のPROGOSスコアを登録" style="margin-left:4px;">📊 PROGOS</button>` : ''}
           </td>
         </tr>
       `;
