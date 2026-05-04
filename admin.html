@@ -3721,8 +3721,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         <!-- パスワード再発行 -->
         <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:2px solid var(--color-border);">
           <label class="form-label">パスワード管理</label>
-          <button type="button" class="secondary-btn" style="width:100%;" onclick="alert('【サンプル】新しいパスワードをメールで送信しました')">🔑 パスワード再発行</button>
-          <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">※ パスワード再発行機能は別途実装予定</div>
+          <button type="button" class="secondary-btn" style="width:100%;" onclick="reissueMemberPassword()">🔑 パスワード再発行</button>
+          <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">※ 再発行すると旧パスワードでログインできなくなります。学習記録・PROGOSスコア等の過去データは引き継がれます。</div>
         </div>
       `;
       document.getElementById('overlay').classList.add('show');
@@ -3844,6 +3844,40 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
       closeMemberPanel();
       alert(`会員「${displayName}」さんの情報を更新しました。`);
+    }
+
+    // ===== 仮パスワード再発行（2段階確認＋新パスワード表示モーダル） =====
+    function reissueMemberPassword() {
+      if (!editingMemberId) return;
+      const m = members.find(x => x.id === editingMemberId);
+      if (!m) { alert('対象の会員が見つかりません。'); return; }
+
+      // 第1段階確認：基本確認
+      if (!confirm(`会員「${m.name}」さん(ID: ${m.id})のパスワードを再発行します。\n\nよろしいですか？`)) return;
+
+      // 第2段階確認：影響範囲の警告
+      if (!confirm(`⚠️ 再発行すると旧パスワードでログインできなくなります。\n\n会員様には新パスワードを別途お伝えする必要があります。\n（学習記録・PROGOSスコア等の過去データは引き継がれます）\n\n続行しますか？`)) return;
+
+      // ===== 再発行処理 =====
+      // 新仮パスワード生成（既存の generateRandomPassword を流用）
+      const newPassword = generateRandomPassword(8);
+      // 該当会員の password を上書き、初回パスワード変更フラグをtrueに
+      m.password = newPassword;
+      m.requirePasswordChange = true;
+      saveAddedMembersToStorage();
+
+      // 編集パネルを閉じてから新パスワード表示モーダルを開く
+      // （パネルが残っているとモーダルが背面になる可能性があるため念のため）
+      closeMemberPanel();
+
+      // 既存の認証情報表示モーダルを「再発行モード」で呼び出し
+      openMemberCredentialsModal({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        password: newPassword,
+        mode: 'reissue'
+      });
     }
 
     // ===== 会員削除（3段階確認） =====
@@ -5347,8 +5381,16 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       });
     }
 
-    // ===== 登録完了モーダル：仮パスワード表示 =====
-    function openMemberCredentialsModal({ id, name, email, password }) {
+    // ===== 登録完了/再発行モーダル：仮パスワード表示 =====
+    // mode: 'register'（新規登録完了、デフォルト） or 'reissue'（パスワード再発行完了）
+    function openMemberCredentialsModal({ id, name, email, password, mode = 'register' }) {
+      // モードに応じてタイトルを切り替え
+      const titleEl = document.querySelector('#member-credentials-overlay .panel-title');
+      if (titleEl) {
+        titleEl.textContent = (mode === 'reissue')
+          ? '🔑 パスワードを再発行しました'
+          : '✅ 会員登録が完了しました';
+      }
       document.getElementById('mc-display-id').textContent = id;
       document.getElementById('mc-display-name').textContent = `${name} さん`;
       document.getElementById('mc-display-email').textContent = email;
