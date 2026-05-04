@@ -1650,8 +1650,11 @@
               <div class="page-title">会員管理</div>
               <div class="page-sub">会員情報の確認・編集</div>
             </div>
-            <div style="display:flex; gap:8px;">
-              <button class="secondary-btn" onclick="exportMembersCsv()" title="登録会員全件をCSVファイルとしてダウンロードします">📥 会員CSVエクスポート</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="secondary-btn" onclick="downloadMembersCsvTemplate()" title="CSV一括登録用のテンプレートをダウンロードします">📋 テンプレート</button>
+              <input type="file" id="mi-csv-file-input" accept=".csv,text/csv" style="display:none;" onchange="miOnCsvFileSelected(event)">
+              <button class="secondary-btn" onclick="document.getElementById('mi-csv-file-input').click()" title="CSVから会員を一括登録します">📥 会員CSV一括取込</button>
+              <button class="secondary-btn" onclick="exportMembersCsv()" title="登録会員全件をCSVファイルとしてダウンロードします">📤 会員CSVエクスポート</button>
               <button class="primary-btn" onclick="openNewMemberModal()">＋ 新規会員を登録</button>
             </div>
           </div>
@@ -2439,6 +2442,88 @@
       </div>
       <div class="center-modal-footer" style="display:flex; justify-content:flex-end; padding:16px 24px; border-top:1px solid var(--color-border);">
         <button class="primary-btn" onclick="paCloseCsvResult()">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 会員CSV一括取込：プレビューモーダル ===== -->
+  <div class="center-modal-overlay" id="mi-csv-preview-overlay" onclick="miCloseCsvPreview()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 1200px;">
+      <div class="center-modal-header">
+        <div class="panel-title">📥 会員CSV 取込プレビュー</div>
+        <button class="panel-close" onclick="miCloseCsvPreview()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="mi-csv-summary" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:12px 14px; border-radius:6px; margin-bottom:14px; font-size:13px;"></div>
+        <div style="overflow-x:auto;">
+          <table id="mi-csv-preview-table" style="width:100%; font-size:12px;">
+            <thead>
+              <tr style="background:#ECF0F1;">
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">行</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">状態</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">会員ID</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">氏名</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">メール</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">入会プラン</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">担当コンサル</th>
+                <th style="padding:6px 8px; text-align:left; white-space:nowrap;">担当CS</th>
+                <th style="padding:6px 8px; text-align:left;">エラー理由</th>
+              </tr>
+            </thead>
+            <tbody id="mi-csv-preview-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" onclick="miCloseCsvPreview()">キャンセル</button>
+        <button class="primary-btn" id="mi-csv-import-btn" onclick="miExecuteCsvImport()">取込実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 会員CSV一括取込：完了モーダル（仮パスワード一覧） ===== -->
+  <div class="center-modal-overlay" id="mi-csv-result-overlay" onclick="miCloseCsvResult()">
+    <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 880px;">
+      <div class="center-modal-header">
+        <div class="panel-title">✅ 会員CSV取込が完了しました</div>
+        <button class="panel-close" onclick="miCloseCsvResult()">×</button>
+      </div>
+      <div class="center-modal-body" style="padding:20px 24px; max-height:70vh; overflow-y:auto;">
+        <div id="mi-csv-result-summary" style="background:#E8F8F0; border-left:4px solid #27AE60; padding:12px 14px; border-radius:6px; font-size:13px; margin-bottom:14px;"></div>
+
+        <div id="mi-csv-result-passbox" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <strong style="color:#1B4F72;">🔑 自動生成された仮パスワード一覧（会員様への通知用）</strong>
+            <button class="secondary-btn" style="padding:6px 12px; font-size:12px;" onclick="miCopyCsvPasswords(this)">一覧をコピー</button>
+          </div>
+          <div style="background:#FFF8E1; border:1px solid #F5B041; border-radius:6px; padding:10px 12px; font-size:11px; color:#7E5109; margin-bottom:8px;">
+            ⚠️ この仮パスワードは取込時にのみ表示されます。控えを取り忘れた場合は、各会員ごとに管理画面から再発行してください。
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; font-size:12px;">
+              <thead>
+                <tr style="background:#ECF0F1;">
+                  <th style="padding:6px 10px; text-align:left;">会員ID</th>
+                  <th style="padding:6px 10px; text-align:left;">氏名</th>
+                  <th style="padding:6px 10px; text-align:left;">メール</th>
+                  <th style="padding:6px 10px; text-align:left;">仮パスワード</th>
+                </tr>
+              </thead>
+              <tbody id="mi-csv-result-passtable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="mi-csv-result-errorbox" style="display:none; margin-top:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <strong style="color:#E74C3C;">⚠️ 取込できなかった行（手動対応が必要）</strong>
+            <button class="secondary-btn" style="padding:6px 12px; font-size:12px;" onclick="miCopyCsvErrors(this)">エラー一覧をコピー</button>
+          </div>
+          <pre id="mi-csv-result-errors" style="background:#FDEDEC; border:1px solid #F5B7B1; border-radius:6px; padding:10px 12px; font-size:11px; white-space:pre-wrap; max-height:240px; overflow-y:auto; font-family:'Courier New', monospace;"></pre>
+        </div>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="primary-btn" onclick="miCloseCsvResult()">閉じる</button>
       </div>
     </div>
   </div>
@@ -4117,6 +4202,443 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       URL.revokeObjectURL(url);
 
       alert(`✅ ${members.length}件の会員データを CSV出力しました。\n\nファイル名：${fname}\n\n※ ファイルには「仮パスワード」も含まれます。取り扱いにご注意ください。`);
+    }
+
+    // ========================================
+    // ===== 会員CSV一括取込（M-1） =====
+    // ========================================
+    // 列定義（CSVヘッダー名 → 内部キー）
+    // 順序は会員登録モーダルと同じ
+    const MI_COLS = [
+      { csv: '会員ID',                          key: 'id',                  required: true,  type: 'idNumeric' },
+      { csv: '姓(漢字)',                        key: 'lastNameKanji',       required: true,  type: 'text' },
+      { csv: '名(漢字)',                        key: 'firstNameKanji',      required: true,  type: 'text' },
+      { csv: '姓(カタカナ)',                    key: 'lastNameKana',        required: true,  type: 'text' },
+      { csv: '名(カタカナ)',                    key: 'firstNameKana',       required: true,  type: 'text' },
+      { csv: '姓(アルファベット)',              key: 'lastNameAlpha',       required: true,  type: 'text' },
+      { csv: '名(アルファベット)',              key: 'firstNameAlpha',      required: true,  type: 'text' },
+      { csv: 'ニックネーム',                    key: 'nickname',            required: false, type: 'text' },
+      { csv: '性別',                            key: 'gender',              required: true,  type: 'enum',   options: ['男性','女性','その他'] },
+      { csv: '生年月日',                        key: 'birthDate',           required: true,  type: 'date' },
+      { csv: 'メールアドレス',                  key: 'email',               required: true,  type: 'email' },
+      { csv: '電話番号',                        key: 'phone',               required: true,  type: 'text' },
+      { csv: '入会プラン',                      key: 'plan',                required: true,  type: 'enum',   options: ['6ヶ月プラン','給付金6ヶ月プラン','給付金9ヶ月プラン','給付金12ヶ月プラン'] },
+      { csv: 'ステータス',                      key: 'status',              required: true,  type: 'enum',   options: ['入学手続き中','受講中','休会中','卒業','途中退会'] },
+      { csv: '入学日',                          key: 'enrollmentDate',      required: false, type: 'date' },
+      { csv: '受講開始日',                      key: 'startDate',           required: false, type: 'date' },
+      { csv: '卒業予定日',                      key: 'graduateDate',        required: false, type: 'date' },
+      { csv: '現在のクラス',                    key: 'currentClass',        required: true,  type: 'enum',   options: ['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'] },
+      { csv: '入学時クラス',                    key: 'initialClass',        required: true,  type: 'enum',   options: ['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'] },
+      { csv: 'ネイティブキャンプ',              key: 'nativecamp',          required: true,  type: 'enum',   options: ['未選択','未導入','導入済み'] },
+      { csv: '1日の目標学習時間(分)',           key: 'dailyTargetMinutes',  required: true,  type: 'minutes' },
+      { csv: '担当コンサルタント',              key: 'consultant',          required: true,  type: 'staffName', role: 'Consultant' },
+      { csv: '担当CS',                          key: 'cs',                  required: true,  type: 'staffName', role: 'CS' },
+      { csv: '学習目標・目的',                  key: 'coachLearningGoal',   required: false, type: 'text' },
+      { csv: '備考',                            key: 'note',                required: false, type: 'text' }
+    ];
+
+    // CSVテンプレートをダウンロード
+    function downloadMembersCsvTemplate() {
+      // ヘッダー行
+      const header = MI_COLS.map(c => c.csv).join(',');
+      // サンプルデータ行（1行のみ）
+      const sample = [
+        '12345','山田','太郎','ヤマダ','タロウ','Yamada','Taro','やまちゃん','男性','1995-04-15',
+        'yamada@example.com','090-1234-5678','6ヶ月プラン','入学手続き中',
+        '','','',  // 入学日／受講開始日／卒業予定日は空欄でOK
+        'Beginner','Beginner','未選択','60',
+        'その他','その他',  // 担当者は「その他」が無難（スタッフ管理に存在する氏名なら指定可）
+        '半年で日常会話レベルを目指す','特になし'
+      ].join(',');
+      // UTF-8 BOM 付与
+      const csv = '﻿' + header + '\r\n' + sample + '\r\n';
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'members_import_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 値の正規化＆検証
+    // 正常な場合：正規化された値を返す
+    // エラーの場合：{ error: 'メッセージ' } を返す
+    function miValidateValue(col, raw, allStaff) {
+      const v = (raw == null ? '' : String(raw)).trim();
+      // 必須チェック
+      if (!v) {
+        if (col.required) return { error: `必須項目「${col.csv}」が未入力` };
+        return { value: '' };
+      }
+      switch (col.type) {
+        case 'idNumeric': {
+          // 数値ID（先頭0を保持して文字列のまま保存）
+          // 「00004」入力 → 「00004」保存（個別登録と同じ挙動）
+          // Excel/Numbersで先頭0が落ちて「4」となった場合も許容（PROGOS照合時にpaNormalizeIdで数値正規化される）
+          // 小数点付き（「31277.0」等）が混入したらエラー
+          if (!/^\d+$/.test(v)) {
+            return { error: `「${col.csv}」が数値として不正：「${v}」（先頭0を含む数字のみ許容）` };
+          }
+          if (parseInt(v, 10) <= 0) {
+            return { error: `「${col.csv}」が0以下の値です：「${v}」` };
+          }
+          return { value: v };  // 先頭0を含む文字列をそのまま保持
+        }
+        case 'text':
+          return { value: v };
+        case 'email': {
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return { error: `「${col.csv}」のメール形式が不正：「${v}」` };
+          return { value: v };
+        }
+        case 'enum': {
+          if (!col.options.includes(v)) return { error: `「${col.csv}」の値が不正：「${v}」（許容：${col.options.join(' / ')}）` };
+          return { value: v };
+        }
+        case 'date': {
+          // YYYY-MM-DD or YYYY/MM/DD を許容、内部はYYYY-MM-DDに統一
+          const m1 = v.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+          if (!m1) return { error: `「${col.csv}」の日付形式が不正：「${v}」（YYYY-MM-DD形式で入力してください）` };
+          const yyyy = m1[1];
+          const mm = String(parseInt(m1[2], 10)).padStart(2, '0');
+          const dd = String(parseInt(m1[3], 10)).padStart(2, '0');
+          // 妥当性チェック
+          const d = new Date(`${yyyy}-${mm}-${dd}`);
+          if (Number.isNaN(d.getTime())) return { error: `「${col.csv}」の日付として無効：「${v}」` };
+          return { value: `${yyyy}-${mm}-${dd}` };
+        }
+        case 'minutes': {
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 1 || n > 1440) return { error: `「${col.csv}」は1〜1440(分)の範囲で入力してください：「${v}」` };
+          return { value: n };
+        }
+        case 'staffName': {
+          // 「その他」または該当ロールに登録されたスタッフ氏名と完全一致
+          if (v === 'その他') return { value: 'その他' };
+          const matched = allStaff.find(s => s.role === col.role && (s.name || '').trim() === v);
+          if (!matched) return { error: `「${col.csv}」がスタッフ管理に未登録：「${v}」（ロール：${col.role} のスタッフを登録するか「その他」を指定してください）` };
+          return { value: v };
+        }
+      }
+      return { value: v };
+    }
+
+    // CSVファイル選択ハンドラ
+    let miCsvParsedRows = null;  // プレビュー用に解析結果を保持
+    function miOnCsvFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target.result;
+          miShowCsvPreview(text);
+        } catch (err) {
+          alert('CSVの読み込みに失敗しました：' + (err.message || err));
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.onerror = () => alert('ファイルの読み込みに失敗しました');
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // CSV取込時のスタッフ一覧取得（メール重複チェックと担当者照合に使用）
+    function miGetAllStaff() {
+      let all = [];
+      try {
+        const stored = localStorage.getItem('staffList_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) all = parsed;
+        }
+      } catch (e) {}
+      if (typeof staffData !== 'undefined' && Array.isArray(staffData)) {
+        staffData.forEach(s => {
+          if (!all.find(x => (x.email || '').toLowerCase() === (s.email || '').toLowerCase())) all.push(s);
+        });
+      }
+      return all;
+    }
+
+    // CSVを解析してプレビューモーダルを表示
+    function miShowCsvPreview(text) {
+      // PROGOS CSV取込で実装した paParseCsv を再利用
+      const rows = paParseCsv(text);
+      if (rows.length < 2) { alert('CSVが空、またはヘッダーのみで取込対象がありません。'); return; }
+      const header = rows[0].map(h => String(h || '').replace(/^﻿/, '').trim());
+      // 各列のインデックスを取得
+      const colIdx = MI_COLS.map(c => ({ ...c, idx: header.findIndex(h => h === c.csv) }));
+      // 必須列の存在チェック
+      const missingCols = colIdx.filter(c => c.idx === -1).map(c => c.csv);
+      if (missingCols.length > 0) {
+        alert('CSVヘッダーに以下の列が見つかりません：\n' + missingCols.join('\n') + '\n\n「📋 テンプレート」ボタンから正しい形式のCSVをダウンロードしてください。');
+        return;
+      }
+
+      const allStaff = miGetAllStaff();
+      const parsed = [];
+      // 同一CSV内の重複検出用
+      const seenIds = new Set();
+      const seenEmails = new Set();
+
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        const errors = [];
+        const obj = {};
+
+        // 各列を検証
+        colIdx.forEach(c => {
+          const result = miValidateValue(c, r[c.idx], allStaff);
+          if (result.error) errors.push(result.error);
+          else obj[c.key] = result.value;
+        });
+
+        // 会員ID重複チェック（既存会員 + 同一CSV内）
+        if (obj.id) {
+          if (members.find(m => String(m.id) === String(obj.id))) {
+            errors.push(`会員ID「${obj.id}」は既に登録されています`);
+          } else if (seenIds.has(obj.id)) {
+            errors.push(`会員ID「${obj.id}」がCSV内で重複しています`);
+          } else {
+            seenIds.add(obj.id);
+          }
+        }
+        // メール重複チェック（既存会員 + スタッフ + 同一CSV内）
+        if (obj.email) {
+          const emailLower = obj.email.toLowerCase();
+          const dupMember = members.find(m => (m.email || '').toLowerCase() === emailLower);
+          if (dupMember) {
+            errors.push(`メール「${obj.email}」は既に会員「${dupMember.name}」が使用中`);
+          } else {
+            const dupStaff = allStaff.find(s => (s.email || '').toLowerCase() === emailLower);
+            if (dupStaff) {
+              errors.push(`メール「${obj.email}」は既にスタッフ「${dupStaff.name}」が使用中`);
+            } else if (seenEmails.has(emailLower)) {
+              errors.push(`メール「${obj.email}」がCSV内で重複しています`);
+            } else {
+              seenEmails.add(emailLower);
+            }
+          }
+        }
+
+        parsed.push({
+          rowNum: i,
+          obj,
+          errors,
+          state: errors.length === 0 ? 'ok' : 'error'
+        });
+      }
+
+      miCsvParsedRows = parsed;
+
+      // サマリー
+      const okCount = parsed.filter(p => p.state === 'ok').length;
+      const errCount = parsed.filter(p => p.state === 'error').length;
+      document.getElementById('mi-csv-summary').innerHTML =
+        `📊 <strong>合計 ${parsed.length} 行</strong>　／　` +
+        `<span style="color:#27AE60; font-weight:700;">✅ 取込可: ${okCount}</span>　` +
+        `<span style="color:#E74C3C; font-weight:700;">❌ エラー: ${errCount}</span>`;
+
+      // プレビューテーブル
+      const stateBadge = (s) => s === 'ok'
+        ? '<span style="background:#E8F8F0; color:#27AE60; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">✅ 取込可</span>'
+        : '<span style="background:#FDEDEC; color:#E74C3C; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px;">❌ エラー</span>';
+      const tbody = document.getElementById('mi-csv-preview-tbody');
+      tbody.innerHTML = parsed.map(p => {
+        const o = p.obj || {};
+        const fullName = `${o.lastNameKanji || ''} ${o.firstNameKanji || ''}`.trim() || '<span style="color:#999;">―</span>';
+        return `
+          <tr style="border-bottom:1px solid #ECEFF1;">
+            <td style="padding:6px 8px; color:#999;">${p.rowNum}</td>
+            <td style="padding:6px 8px;">${stateBadge(p.state)}</td>
+            <td style="padding:6px 8px;">${o.id || '<span style="color:#999;">―</span>'}</td>
+            <td style="padding:6px 8px;">${fullName}</td>
+            <td style="padding:6px 8px;">${o.email || '<span style="color:#999;">―</span>'}</td>
+            <td style="padding:6px 8px; font-size:11px;">${o.plan || '<span style="color:#999;">―</span>'}</td>
+            <td style="padding:6px 8px; font-size:11px;">${o.consultant || '<span style="color:#999;">―</span>'}</td>
+            <td style="padding:6px 8px; font-size:11px;">${o.cs || '<span style="color:#999;">―</span>'}</td>
+            <td style="padding:6px 8px; font-size:11px; color:#E74C3C;">${p.errors.join(' / ')}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const importBtn = document.getElementById('mi-csv-import-btn');
+      if (okCount === 0) {
+        importBtn.disabled = true;
+        importBtn.textContent = '取込可能な行がありません';
+        importBtn.style.opacity = '0.5';
+        importBtn.style.cursor = 'not-allowed';
+      } else {
+        importBtn.disabled = false;
+        importBtn.textContent = `✅ ${okCount}件を取込`;
+        importBtn.style.opacity = '';
+        importBtn.style.cursor = '';
+      }
+
+      document.getElementById('mi-csv-preview-overlay').classList.add('show');
+    }
+
+    function miCloseCsvPreview() {
+      document.getElementById('mi-csv-preview-overlay').classList.remove('show');
+      miCsvParsedRows = null;
+    }
+
+    // 取込実行
+    function miExecuteCsvImport() {
+      if (!miCsvParsedRows) return;
+      const imported = [];   // { id, name, email, password }
+      const errorLines = [];
+
+      miCsvParsedRows.forEach(p => {
+        if (p.state === 'error') {
+          errorLines.push(`行${p.rowNum} | ${p.errors.join(' / ')}`);
+          return;
+        }
+        const o = p.obj;
+        const displayName = `${o.lastNameKanji} ${o.firstNameKanji}`;
+        const tempPassword = generateRandomPassword(8);
+
+        // 卒業予定日が空欄かつ受講開始日と入会プランがあれば自動算出
+        let graduateDate = o.graduateDate || '';
+        if (!graduateDate && o.startDate && o.plan) {
+          const months = nmPlanToMonths(o.plan);
+          if (months > 0) {
+            const start = new Date(o.startDate);
+            if (!Number.isNaN(start.getTime())) {
+              const grad = new Date(start.getFullYear(), start.getMonth() + months, start.getDate());
+              grad.setDate(grad.getDate() - 1);
+              graduateDate = `${grad.getFullYear()}-${String(grad.getMonth() + 1).padStart(2, '0')}-${String(grad.getDate()).padStart(2, '0')}`;
+            }
+          }
+        }
+
+        const newMember = {
+          id: o.id, name: displayName, initial: o.lastNameKanji, nickname: o.nickname || '',
+          lastNameKanji: o.lastNameKanji, firstNameKanji: o.firstNameKanji,
+          lastNameKana: o.lastNameKana, firstNameKana: o.firstNameKana,
+          lastNameAlpha: o.lastNameAlpha, firstNameAlpha: o.firstNameAlpha,
+          gender: o.gender,
+          birthDate: o.birthDate, email: o.email,
+          phone: o.phone,
+          plan: o.plan, status: o.status,
+          enrollmentDate: o.enrollmentDate || '',
+          startDate: o.startDate || '',
+          graduateDate,
+          currentClass: o.currentClass, initialClass: o.initialClass,
+          nativecamp: o.nativecamp,
+          consultant: o.consultant, cs: o.cs,
+          dailyTargetMinutes: o.dailyTargetMinutes,
+          note: o.note || '',
+          coachLearningGoal: o.coachLearningGoal || '',
+          password: tempPassword,
+          requirePasswordChange: true,
+          // 既存構造との互換用
+          weeklyGoalHours: 10, course: o.currentClass,
+          rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
+          goalEnglish: '', departureDate: '',
+          monthlyHours: 0, monthlyHoursCompare: 0,
+          streak: 0, streakCompare: 0,
+          weeklyRates: [0,0,0,0],
+          textbookProgress: [], recentLogs: [], progos: []
+        };
+
+        members.push(newMember);
+        imported.push({ id: o.id, name: displayName, email: o.email, password: tempPassword });
+      });
+
+      saveAddedMembersToStorage();
+
+      // 関連画面を再描画
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+      if (typeof renderKarteList === 'function') renderKarteList();
+      if (typeof renderAssignList === 'function') renderAssignList();
+
+      miCloseCsvPreview();
+      miShowCsvResult(imported, errorLines);
+    }
+
+    // 結果モーダル表示
+    function miShowCsvResult(imported, errorLines) {
+      const summary = document.getElementById('mi-csv-result-summary');
+      summary.innerHTML =
+        `<div style="font-size:14px; font-weight:700; color:#1B4F72; margin-bottom:6px;">📊 取込結果</div>` +
+        `<div>✅ 新規取込: <strong>${imported.length}件</strong></div>` +
+        `<div>❌ エラー（手動対応必要）: <strong>${errorLines.length}件</strong></div>`;
+
+      const passBox = document.getElementById('mi-csv-result-passbox');
+      const passTable = document.getElementById('mi-csv-result-passtable');
+      if (imported.length > 0) {
+        passBox.style.display = 'block';
+        passTable.innerHTML = imported.map(m => `
+          <tr style="border-bottom:1px solid #ECEFF1;">
+            <td style="padding:6px 10px; font-family:monospace;">${m.id}</td>
+            <td style="padding:6px 10px;">${m.name}</td>
+            <td style="padding:6px 10px;">${m.email}</td>
+            <td style="padding:6px 10px; font-family:monospace; font-weight:700; color:var(--color-primary);">${m.password}</td>
+          </tr>
+        `).join('');
+      } else {
+        passBox.style.display = 'none';
+      }
+
+      const errBox = document.getElementById('mi-csv-result-errorbox');
+      const errEl = document.getElementById('mi-csv-result-errors');
+      if (errorLines.length > 0) {
+        errBox.style.display = 'block';
+        errEl.textContent = errorLines.join('\n');
+      } else {
+        errBox.style.display = 'none';
+        errEl.textContent = '';
+      }
+
+      document.getElementById('mi-csv-result-overlay').classList.add('show');
+    }
+
+    function miCloseCsvResult() {
+      document.getElementById('mi-csv-result-overlay').classList.remove('show');
+    }
+
+    // 仮パスワード一覧をクリップボードへコピー（タブ区切りのテキスト形式）
+    function miCopyCsvPasswords(btn) {
+      const rows = document.querySelectorAll('#mi-csv-result-passtable tr');
+      const lines = ['会員ID\t氏名\tメール\t仮パスワード'];
+      rows.forEach(tr => {
+        const cells = tr.querySelectorAll('td');
+        if (cells.length === 4) {
+          lines.push(Array.from(cells).map(td => td.textContent.trim()).join('\t'));
+        }
+      });
+      const text = lines.join('\n');
+      const original = btn.textContent;
+      const after = (label) => { btn.textContent = label; setTimeout(() => btn.textContent = original, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => after('✓ コピー済')).catch(() => after('失敗'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); after('✓ コピー済'); }
+        catch (e) { after('失敗'); }
+        document.body.removeChild(ta);
+      }
+    }
+
+    // エラー一覧をクリップボードへコピー
+    function miCopyCsvErrors(btn) {
+      const text = document.getElementById('mi-csv-result-errors').textContent;
+      const original = btn.textContent;
+      const after = (label) => { btn.textContent = label; setTimeout(() => btn.textContent = original, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => after('✓ コピー済')).catch(() => after('失敗'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); after('✓ コピー済'); }
+        catch (e) { after('失敗'); }
+        document.body.removeChild(ta);
+      }
     }
 
     // モーダルを開く
