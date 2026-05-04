@@ -1511,6 +1511,12 @@
             <div id="reminder-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;"></div>
           </div>
 
+          <!-- ⑥ 本日の予定（オリエン／卒業）— 2カラム -->
+          <div style="margin-top:24px;">
+            <div style="font-size:14px; font-weight:700; color:var(--color-primary-dark); margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">🗓 本日の予定</div>
+            <div id="today-event-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;"></div>
+          </div>
+
         </div>
 
         <!-- ========== 新ダッシュボード（プロトタイプ、URL ?dashboard=new で表示） ========== -->
@@ -3063,6 +3069,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       // ===== 未入力リマインドカード3枚（入学日／受講開始日／卒業予定日） =====
       // 受講継続中（入学手続き中／受講中／休会中）のみ対象、卒業／途中退会は除外
       renderReminderCards();
+      // ===== 本日の予定（オリエン／卒業）2枚 =====
+      renderTodayEventCards();
     }
 
     // ===== 未入力リマインドカード描画 =====
@@ -3104,6 +3112,64 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         buildReminder('オリエンテーション実施日 未確定', '📅', noEnrollment, '#E67E22') +
         buildReminder('受講開始日 未確定', '🎓', noStart, '#F39C12') +
         buildReminder('卒業予定日 未確定', '🏁', noGraduate, '#3498DB');
+    }
+
+    // ===== 本日の予定（オリエン／卒業）カード2枚 =====
+    // 当日が enrollmentDate or graduateDate に一致する会員を表示
+    // ステータスでフィルタしない（全ステータスを対象）。各行にステータスバッジを表示
+    function renderTodayEventCards() {
+      const grid = document.getElementById('today-event-grid');
+      if (!grid) return;
+
+      // 今日の日付を YYYY-MM-DD で取得
+      const t = new Date();
+      const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+
+      const todayOriens = members.filter(m => m.enrollmentDate === todayStr);
+      const todayGraduates = members.filter(m => m.graduateDate === todayStr);
+
+      // ステータスバッジ生成（既存テーブルと同じロジック）
+      const statusBadge = (st) => {
+        const colorMap = {
+          '受講中':       { bg: '#E8F8F0', fg: '#27AE60' },
+          '入学手続き中': { bg: '#EAF2F8', fg: '#2E86C1' },
+          '休会中':       { bg: '#FEF5E7', fg: '#B7791F' },
+          '卒業':         { bg: '#ECEFF1', fg: '#7F8C8D' },
+          '途中退会':     { bg: '#FDEDEC', fg: '#E74C3C' }
+        };
+        const c = colorMap[st] || { bg: '#F4F6F8', fg: '#999' };
+        return `<span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:10px; padding:2px 7px; border-radius:10px; white-space:nowrap;">${st || '未設定'}</span>`;
+      };
+
+      const buildEventCard = (title, emoji, list, color) => {
+        const count = list.length;
+        const memberHtml = count === 0
+          ? '<div style="padding:14px; color:#999; font-size:12px; text-align:center;">該当なし</div>'
+          : list.map(m => `
+            <div onclick="goToKarte('${m.id}')" style="padding:8px 12px; border-bottom:1px solid #F0F2F4; font-size:12px; cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background='#F8F9FA'" onmouseout="this.style.background=''">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <div style="font-weight:600; color:var(--color-text-primary);">${m.name}</div>
+                ${statusBadge(m.status)}
+              </div>
+              <div style="font-size:11px; color:var(--color-text-secondary); margin-top:2px;">
+                会員ID：${m.id} ／ ${m.plan || '-'}
+              </div>
+            </div>
+          `).join('');
+        return `
+          <div style="border:1px solid var(--color-border); border-radius:8px; overflow:hidden; background:#fff;">
+            <div style="background:${color}; color:#fff; padding:10px 14px; font-size:13px; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+              <span>${emoji} ${title}</span>
+              <span style="background:rgba(255,255,255,0.25); padding:2px 10px; border-radius:10px; font-size:12px;">${count}</span>
+            </div>
+            <div style="max-height:240px; overflow-y:auto;">${memberHtml}</div>
+          </div>
+        `;
+      };
+
+      grid.innerHTML =
+        buildEventCard('オリエンテーション実施', '🎓', todayOriens, '#27AE60') +
+        buildEventCard('卒業', '🏁', todayGraduates, '#1A5276');
     }
 
     // ===== 会員管理テーブル =====
