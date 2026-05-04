@@ -1121,6 +1121,29 @@
 
   </div>
 
+  <!-- ===== 中段：デイリーゴール円リング（S-2） ===== -->
+  <div id="daily-goal-card" style="background:#fff; border:1px solid var(--color-border); border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; align-items:center; gap:24px;">
+    <!-- 円リング SVG -->
+    <div style="flex-shrink:0;">
+      <svg id="dg-ring-svg" width="120" height="120" viewBox="0 0 120 120" style="display:block;">
+        <!-- 背景リング（グレー） -->
+        <circle cx="60" cy="60" r="48" fill="none" stroke="#ECEFF1" stroke-width="14"/>
+        <!-- 進捗リング（動的に更新） -->
+        <circle id="dg-ring-progress" cx="60" cy="60" r="48" fill="none" stroke="#F39C12" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 301.6" transform="rotate(-90 60 60)" style="transition:stroke-dasharray 0.5s ease, stroke 0.3s ease;"/>
+        <!-- 中央テキスト -->
+        <text id="dg-ring-percent" x="60" y="58" text-anchor="middle" font-size="22" font-weight="800" fill="var(--color-primary-dark)">0%</text>
+        <text id="dg-ring-sub" x="60" y="78" text-anchor="middle" font-size="11" fill="var(--color-text-secondary)">残り0分</text>
+      </svg>
+    </div>
+    <!-- 右側テキスト情報 -->
+    <div style="flex:1;">
+      <div style="font-size:11px; color:var(--color-text-secondary); letter-spacing:0.05em; margin-bottom:4px;">本日のデイリーゴール</div>
+      <div id="dg-status-title" style="font-size:18px; font-weight:800; color:var(--color-primary-dark); margin-bottom:6px;">記録なし</div>
+      <div id="dg-time-line" style="font-size:13px; color:var(--color-text-secondary);">学習時間：0 / 0 分</div>
+      <div id="dg-help-text" style="font-size:11px; color:var(--color-text-muted); margin-top:6px;"></div>
+    </div>
+  </div>
+
   <!-- 統計グリッド -->
   <div class="stats-grid">
     <div class="stat-cell">
@@ -1141,26 +1164,30 @@
     </div>
   </div>
 
-  <!-- 週次目標 -->
-  <div class="card">
-    <div class="card-label">今週の目標達成率</div>
+  <!-- 達成率の推移（期間切替：日別/週別/月別） -->
+  <div class="card" id="goal-trend-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="card-label" style="margin:0;" id="gt-card-label">日別の目標達成率</div>
+      <!-- 期間タブ -->
+      <div style="display:inline-flex; background:#ECEFF1; border-radius:6px; padding:2px;">
+        <button class="gt-tab active" data-period="today" onclick="gtSwitchPeriod('today')" style="border:none; background:#fff; padding:4px 12px; font-size:12px; border-radius:4px; cursor:pointer; color:var(--color-primary-dark); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,0.08);">日別</button>
+        <button class="gt-tab" data-period="week" onclick="gtSwitchPeriod('week')" style="border:none; background:transparent; padding:4px 12px; font-size:12px; border-radius:4px; cursor:pointer; color:var(--color-text-secondary);">週別</button>
+        <button class="gt-tab" data-period="month" onclick="gtSwitchPeriod('month')" style="border:none; background:transparent; padding:4px 12px; font-size:12px; border-radius:4px; cursor:pointer; color:var(--color-text-secondary);">月別</button>
+      </div>
+    </div>
+
     <div class="goal-row">
-      <span class="goal-label">目標：10時間</span>
-      <span class="goal-val">6h 50m / 10h</span>
+      <span class="goal-label" id="gt-goal-label">目標：—</span>
+      <span class="goal-val" id="gt-goal-val">— / —</span>
     </div>
     <div class="progress-track">
-      <div class="progress-fill" style="width: 68%"></div>
+      <div class="progress-fill" id="gt-progress-fill" style="width:0%"></div>
     </div>
-    <div class="progress-caption">68% 達成</div>
+    <div class="progress-caption" id="gt-progress-caption">— 達成</div>
 
-    <div class="bar-chart">
-      <div class="bar-wrap"><div class="bar" style="height:30px"></div><span class="bar-day">月</span></div>
-      <div class="bar-wrap"><div class="bar" style="height:45px"></div><span class="bar-day">火</span></div>
-      <div class="bar-wrap"><div class="bar" style="height:20px"></div><span class="bar-day">水</span></div>
-      <div class="bar-wrap"><div class="bar today" style="height:38px"></div><span class="bar-day">今日</span></div>
-      <div class="bar-wrap"><div class="bar empty" style="height:4px"></div><span class="bar-day">金</span></div>
-      <div class="bar-wrap"><div class="bar empty" style="height:4px"></div><span class="bar-day">土</span></div>
-      <div class="bar-wrap"><div class="bar empty" style="height:4px"></div><span class="bar-day">日</span></div>
+    <!-- 直近7期間の棒グラフ -->
+    <div class="bar-chart" id="gt-bar-chart">
+      <!-- JS で動的描画 -->
     </div>
   </div>
 
@@ -2112,8 +2139,10 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     closeMemberLogModal();
     alert(`学習記録を保存しました。\n\n日付：${date}\n学習時間：${minutes}分（${hours}時間${mm2}分）\nコメント：${comment || '(なし)'}`);
 
-    // 保存後にストリーク表示を更新
+    // 保存後にストリーク・デイリーゴール・達成率推移を更新
     if (typeof renderStreakCard === 'function') renderStreakCard();
+    if (typeof renderDailyGoalCard === 'function') renderDailyGoalCard();
+    if (typeof renderGoalTrendCard === 'function') renderGoalTrendCard();
   }
 
   // ========================================
@@ -2239,6 +2268,252 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
   // 初期描画（認証チェック後にも呼ばれるが、念のため二重実行）
   // ※ checkMemberAuth が先に走ってログイン情報を確定させているため、それ以降に呼ぶ
   renderStreakCard();
+  renderDailyGoalCard();
+  renderGoalTrendCard();
+
+  // ========================================
+  // ===== 達成率の推移カード（期間切替：本日/今週/今月） =====
+  // ========================================
+  // 各タブで直近7期間の達成率を計算し、棒グラフで表示
+  // - 本日タブ：6日前〜今日（7日分、棒1本=1日）
+  // - 今週タブ：6週前〜今週（7週分、棒1本=7日）
+  // - 今月タブ：6ヶ月前〜今月（7月分、棒1本=その月の日数分）
+  let gtCurrentPeriod = 'today';  // デフォルト：日別
+
+  function gtSwitchPeriod(period) {
+    gtCurrentPeriod = period;
+    // タブの見た目切替
+    document.querySelectorAll('.gt-tab').forEach(b => {
+      const isActive = b.dataset.period === period;
+      b.style.background = isActive ? '#fff' : 'transparent';
+      b.style.color = isActive ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)';
+      b.style.fontWeight = isActive ? '700' : 'normal';
+      b.style.boxShadow = isActive ? '0 1px 3px rgba(0,0,0,0.08)' : 'none';
+      b.classList.toggle('active', isActive);
+    });
+    renderGoalTrendCard();
+  }
+
+  // ログイン中会員の dailyTargetMinutes 取得（共通）
+  function gtGetMyTargetAndLogs() {
+    let cm = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) cm = JSON.parse(stored);
+    } catch (e) {}
+    if (!cm || !cm.id) return null;
+    const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+    const me = allMembers.find(m => m.id === cm.id);
+    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+    const logs = mlLoadLogs().filter(l => l.memberId === cm.id);
+    return { target, logs };
+  }
+
+  // 期間ごとの直近7区間データ計算
+  // 戻り値: [{label, totalMin, targetMin, rate, isCurrent}, ...]（古い→新しい順、最後が現在）
+  function gtComputeBuckets(period) {
+    const data = gtGetMyTargetAndLogs();
+    if (!data) return [];
+    const target = data.target;
+    const logs = data.logs;
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const ymdStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const buckets = [];
+    if (period === 'today') {
+      // 6日前〜今日
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        const ds = ymdStr(d);
+        const totalMin = logs.filter(l => l.date === ds).reduce((s, l) => s + (l.minutes || 0), 0);
+        const targetMin = target;
+        const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+        const label = i === 0 ? '今日' : i === 1 ? '昨日' : `${i}日前`;
+        buckets.push({ label, totalMin, targetMin, rate, isCurrent: i === 0 });
+      }
+    } else if (period === 'week') {
+      // 6週前〜今週（月曜起点）
+      const weekStartMon = (d) => {
+        const x = new Date(d); x.setHours(0, 0, 0, 0);
+        const day = x.getDay(); const diff = day === 0 ? 6 : day - 1;
+        x.setDate(x.getDate() - diff);
+        return x;
+      };
+      const thisWeekStart = weekStartMon(today);
+      for (let i = 6; i >= 0; i--) {
+        const ws = new Date(thisWeekStart); ws.setDate(ws.getDate() - 7 * i);
+        const we = new Date(ws); we.setDate(we.getDate() + 6);
+        const wsStr = ymdStr(ws); const weStr = ymdStr(we);
+        const totalMin = logs.filter(l => l.date >= wsStr && l.date <= weStr).reduce((s, l) => s + (l.minutes || 0), 0);
+        // 今週は経過日数のみ、過去週は7日
+        const elapsedDays = (i === 0)
+          ? Math.min(7, Math.floor((today - ws) / 86400000) + 1)
+          : 7;
+        const targetMin = target * elapsedDays;
+        const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+        const label = i === 0 ? '今週' : `${i}週前`;
+        buckets.push({ label, totalMin, targetMin, rate, isCurrent: i === 0 });
+      }
+    } else { // month
+      // 6ヶ月前〜今月
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const yyyy = d.getFullYear(); const mm = d.getMonth();
+        const monthLogs = logs.filter(l => {
+          const ld = new Date(l.date);
+          return ld.getFullYear() === yyyy && ld.getMonth() === mm;
+        });
+        const totalMin = monthLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+        // 今月は経過日数、過去月は月の日数
+        const daysInMonth = new Date(yyyy, mm + 1, 0).getDate();
+        const effectiveDays = (i === 0) ? today.getDate() : daysInMonth;
+        const targetMin = target * effectiveDays;
+        const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+        const label = i === 0 ? '今月' : `${i}ヶ月前`;
+        buckets.push({ label, totalMin, targetMin, rate, isCurrent: i === 0 });
+      }
+    }
+    return buckets;
+  }
+
+  // 達成率カードの描画
+  function renderGoalTrendCard() {
+    const buckets = gtComputeBuckets(gtCurrentPeriod);
+    if (buckets.length === 0) return;
+
+    const periodLabels = { today: '日別', week: '週別', month: '月別' };
+    const periodLabel = periodLabels[gtCurrentPeriod];
+
+    // カード見出し
+    document.getElementById('gt-card-label').textContent = `${periodLabel}の目標達成率`;
+
+    // 現在の期間（最後の要素）の数値
+    const current = buckets[buckets.length - 1];
+    // 上部表示：目標／実績／達成%
+    const formatMin = (min) => {
+      const h = Math.floor(min / 60); const m = min % 60;
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}分`;
+    };
+    document.getElementById('gt-goal-label').textContent = `目標：${formatMin(current.targetMin)}`;
+    document.getElementById('gt-goal-val').textContent = `${formatMin(current.totalMin)} / ${formatMin(current.targetMin)}`;
+    document.getElementById('gt-progress-caption').textContent = `${current.rate}% 達成`;
+    const fillWidth = Math.min(100, current.rate);
+    document.getElementById('gt-progress-fill').style.width = `${fillWidth}%`;
+
+    // 棒グラフ：高さは達成率に比例（最大60px、100%超は60px固定）
+    const chart = document.getElementById('gt-bar-chart');
+    chart.innerHTML = buckets.map(b => {
+      // 高さ：最低4px、最大60px
+      const h = b.totalMin === 0 ? 4 : Math.max(8, Math.min(60, (b.rate / 100) * 60));
+      const isEmpty = b.totalMin === 0;
+      let className = 'bar';
+      if (b.isCurrent) className += ' today';
+      if (isEmpty) className += ' empty';
+      return `
+        <div class="bar-wrap" title="${b.label}：${b.rate}% (${formatMin(b.totalMin)} / ${formatMin(b.targetMin)})">
+          <div class="${className}" style="height:${h}px"></div>
+          <span class="bar-day">${b.label}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ========================================
+  // ===== S-2：デイリーゴール円リング =====
+  // ========================================
+  // ロジック：
+  //   - ログイン中会員の addedMembers_v2 から dailyTargetMinutes を取得
+  //   - 当日の learningLogs_v1 から今日の合計学習時間を計算
+  //   - 達成率 = 合計学習時間 ÷ 目標時間 × 100
+  //   - 円リングのstroke-dasharray で進捗表現（円周 = 2πr ≈ 301.6）
+  function renderDailyGoalCard() {
+    const card = document.getElementById('daily-goal-card');
+    if (!card) return;
+    const ring = document.getElementById('dg-ring-progress');
+    const percentEl = document.getElementById('dg-ring-percent');
+    const subEl = document.getElementById('dg-ring-sub');
+    const titleEl = document.getElementById('dg-status-title');
+    const timeEl = document.getElementById('dg-time-line');
+    const helpEl = document.getElementById('dg-help-text');
+
+    // ログイン中会員ID
+    let cm = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) cm = JSON.parse(stored);
+    } catch (e) {}
+    if (!cm || !cm.id) return;
+
+    // 自分の会員データから dailyTargetMinutes 取得
+    const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+    const me = allMembers.find(m => m.id === cm.id);
+    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+
+    // 今日の合計学習時間
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayLogs = mlLoadLogs().filter(l => l.memberId === cm.id && l.date === todayStr);
+    const totalMin = todayLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+
+    // 円周計算：r=48 → 2πr ≈ 301.6
+    const C = 2 * Math.PI * 48;
+
+    if (target === 0) {
+      // 目標未設定
+      ring.setAttribute('stroke', '#BDC3C7');
+      ring.setAttribute('stroke-dasharray', `0 ${C}`);
+      percentEl.textContent = '—';
+      percentEl.setAttribute('fill', '#999');
+      subEl.textContent = '目標未設定';
+      titleEl.textContent = '目標未設定';
+      titleEl.style.color = '#999';
+      timeEl.textContent = `本日の学習時間：${totalMin} 分`;
+      helpEl.textContent = 'コーチに「1日の目標学習時間」の設定を依頼してください。';
+      return;
+    }
+
+    // 達成率（小数1位は四捨五入）
+    const ratio = totalMin / target;
+    const percent = Math.round(ratio * 100);
+    const remaining = Math.max(0, target - totalMin);
+
+    // リングの長さ（達成率100%超過時は満タン）
+    const dashLen = Math.min(C, ratio * C);
+    ring.setAttribute('stroke-dasharray', `${dashLen} ${C}`);
+
+    // 色＆中央テキスト切替
+    if (percent >= 100) {
+      // 達成
+      ring.setAttribute('stroke', '#27AE60');
+      percentEl.textContent = `${percent}%`;
+      percentEl.setAttribute('fill', '#27AE60');
+      subEl.textContent = '✅ 達成！';
+      titleEl.textContent = '本日の目標達成！';
+      titleEl.style.color = '#27AE60';
+      helpEl.textContent = percent > 100 ? `目標を ${percent - 100}% 超過しました 🎉` : '今日の頑張りを記録に残しました。';
+    } else if (percent === 0) {
+      // 記録ゼロ
+      ring.setAttribute('stroke', '#F39C12');
+      percentEl.textContent = '0%';
+      percentEl.setAttribute('fill', 'var(--color-text-muted)');
+      subEl.textContent = `残り${remaining}分`;
+      titleEl.textContent = '本日まだ記録なし';
+      titleEl.style.color = 'var(--color-primary-dark)';
+      helpEl.textContent = '右上の「＋ 学習記録」から今日の記録を追加しましょう。';
+    } else {
+      // 進行中
+      ring.setAttribute('stroke', '#F39C12');
+      percentEl.textContent = `${percent}%`;
+      percentEl.setAttribute('fill', 'var(--color-primary-dark)');
+      subEl.textContent = `残り${remaining}分`;
+      titleEl.textContent = `あと ${remaining} 分で達成！`;
+      titleEl.style.color = 'var(--color-primary-dark)';
+      helpEl.textContent = '';
+    }
+    timeEl.textContent = `学習時間：${totalMin} / ${target} 分`;
+  }
 </script>
 
 </body>
