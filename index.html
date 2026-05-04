@@ -1191,6 +1191,26 @@
     </div>
   </div>
 
+  <!-- 学習履歴カレンダー（S-4） -->
+  <div class="card" id="study-calendar-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="card-label" style="margin:0;">📅 学習履歴カレンダー</div>
+      <div style="display:inline-flex; align-items:center; gap:8px;">
+        <button id="cal-prev-btn" onclick="calChangeMonth(-1)" style="border:1px solid var(--color-border); background:#fff; width:28px; height:28px; border-radius:6px; cursor:pointer; font-size:14px; color:var(--color-text-secondary);">‹</button>
+        <span id="cal-month-label" style="font-size:13px; font-weight:700; color:var(--color-primary-dark); min-width:90px; text-align:center;">— 年 — 月</span>
+        <button id="cal-next-btn" onclick="calChangeMonth(1)" style="border:1px solid var(--color-border); background:#fff; width:28px; height:28px; border-radius:6px; cursor:pointer; font-size:14px; color:var(--color-text-secondary);">›</button>
+      </div>
+    </div>
+    <!-- カレンダー本体 -->
+    <div id="cal-grid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px;"></div>
+    <!-- 凡例 -->
+    <div style="display:flex; justify-content:center; gap:14px; margin-top:12px; font-size:11px; color:var(--color-text-secondary);">
+      <div style="display:flex; align-items:center; gap:4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#27AE60;"></span>達成</div>
+      <div style="display:flex; align-items:center; gap:4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#F39C12;"></span>努力中</div>
+      <div style="display:flex; align-items:center; gap:4px;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#ECEFF1;"></span>記録なし</div>
+    </div>
+  </div>
+
   <!-- 教材進捗（CSVから動的生成） -->
   <div class="card">
     <div class="card-label">教材の進捗</div>
@@ -2139,10 +2159,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     closeMemberLogModal();
     alert(`学習記録を保存しました。\n\n日付：${date}\n学習時間：${minutes}分（${hours}時間${mm2}分）\nコメント：${comment || '(なし)'}`);
 
-    // 保存後にストリーク・デイリーゴール・達成率推移を更新
+    // 保存後にストリーク・デイリーゴール・達成率推移・学習履歴カレンダーを更新
     if (typeof renderStreakCard === 'function') renderStreakCard();
     if (typeof renderDailyGoalCard === 'function') renderDailyGoalCard();
     if (typeof renderGoalTrendCard === 'function') renderGoalTrendCard();
+    if (typeof renderStudyCalendar === 'function') renderStudyCalendar();
   }
 
   // ========================================
@@ -2265,11 +2286,112 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }
   }
 
+  // ========================================
+  // ===== S-4：学習履歴カレンダー（変数宣言を先に） =====
+  // ========================================
+  // ロジック：
+  //   - 表示月を内部状態で管理（calCurrentMonth = {year, month}）
+  //   - 月の各日について、自分の learningLogs_v1 から達成率を算出
+  //   - 達成率3段階で色分け：達成（緑）/ 努力中（黄）/ 記録なし（グレー）
+  //   - 今日のセルは太枠で識別
+  //   - 翌月ボタンは未来月に進めない（無効化）
+  // ※ 変数宣言を renderStudyCalendar 呼び出しより先に置く（TDZ回避）
+  const calToday = (() => { const t = new Date(); t.setHours(0,0,0,0); return t; })();
+  let calCurrentMonth = { year: calToday.getFullYear(), month: calToday.getMonth() };
+
   // 初期描画（認証チェック後にも呼ばれるが、念のため二重実行）
   // ※ checkMemberAuth が先に走ってログイン情報を確定させているため、それ以降に呼ぶ
   renderStreakCard();
   renderDailyGoalCard();
   renderGoalTrendCard();
+  renderStudyCalendar();
+
+  function calChangeMonth(delta) {
+    let y = calCurrentMonth.year;
+    let m = calCurrentMonth.month + delta;
+    if (m < 0) { m = 11; y--; }
+    else if (m > 11) { m = 0; y++; }
+    // 未来月チェック：今日の年月を超えないように
+    if (y > calToday.getFullYear() || (y === calToday.getFullYear() && m > calToday.getMonth())) return;
+    calCurrentMonth = { year: y, month: m };
+    renderStudyCalendar();
+  }
+
+  function renderStudyCalendar() {
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+    const label = document.getElementById('cal-month-label');
+    const nextBtn = document.getElementById('cal-next-btn');
+
+    // ログイン中会員データ
+    let cm = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) cm = JSON.parse(stored);
+    } catch (e) {}
+    if (!cm || !cm.id) return;
+    const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+    const me = allMembers.find(m => m.id === cm.id);
+    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+    const myLogs = mlLoadLogs().filter(l => l.memberId === cm.id);
+
+    const { year, month } = calCurrentMonth;
+    label.textContent = `${year}年 ${month + 1}月`;
+
+    // 翌月ボタン：今月以降は無効化
+    const isCurrentMonth = (year === calToday.getFullYear() && month === calToday.getMonth());
+    nextBtn.disabled = isCurrentMonth;
+    nextBtn.style.opacity = isCurrentMonth ? '0.3' : '1';
+    nextBtn.style.cursor = isCurrentMonth ? 'not-allowed' : 'pointer';
+
+    // 月の最初の曜日（月曜起点で 0=月,...,6=日）
+    const firstDay = new Date(year, month, 1);
+    const firstWeekday = (firstDay.getDay() + 6) % 7;  // 月曜起点に変換
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = `${calToday.getFullYear()}-${String(calToday.getMonth() + 1).padStart(2, '0')}-${String(calToday.getDate()).padStart(2, '0')}`;
+
+    // 曜日ヘッダー
+    const weekdayLabels = ['月', '火', '水', '木', '金', '土', '日'];
+    let html = weekdayLabels.map(w => {
+      const isWeekend = (w === '土' || w === '日');
+      const color = isWeekend ? (w === '日' ? '#E74C3C' : '#3498DB') : 'var(--color-text-secondary)';
+      return `<div style="text-align:center; font-size:10px; font-weight:700; color:${color}; padding:4px 0;">${w}</div>`;
+    }).join('');
+
+    // 月初前の空白セル
+    for (let i = 0; i < firstWeekday; i++) {
+      html += `<div></div>`;
+    }
+
+    // 各日のセル
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isToday = (dStr === todayStr);
+      const dayLogs = myLogs.filter(l => l.date === dStr);
+      const totalMin = dayLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+      const rate = target > 0 ? (totalMin / target) * 100 : 0;
+
+      // 色判定
+      let bg, fg;
+      if (totalMin === 0) {
+        bg = '#ECEFF1'; fg = '#999';
+      } else if (rate >= 100) {
+        bg = '#27AE60'; fg = '#fff';
+      } else {
+        bg = '#F39C12'; fg = '#fff';
+      }
+
+      // 今日は太枠
+      const border = isToday ? '2px solid var(--color-primary)' : '1px solid transparent';
+      const todayBoost = isToday ? 'font-weight:800;' : '';
+
+      html += `
+        <div title="${dStr}：${totalMin}分${target > 0 ? ` / 目標${target}分（達成率 ${Math.round(rate)}%）` : ''}" style="aspect-ratio:1; background:${bg}; color:${fg}; border:${border}; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; ${todayBoost}">${day}</div>
+      `;
+    }
+
+    grid.innerHTML = html;
+  }
 
   // ========================================
   // ===== 達成率の推移カード（期間切替：本日/今週/今月） =====
