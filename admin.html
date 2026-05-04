@@ -1788,7 +1788,7 @@
                   <th>ステータス</th>
                   <th>入会プラン</th>
                   <th>受講期間</th>
-                  <th>入学日</th>
+                  <th>オリエンテーション実施日</th>
                   <th>現在のクラス</th>
                   <th>入学時のクラス</th>
                   <th>今月達成率</th>
@@ -2054,10 +2054,10 @@
     </div>
     <div class="panel-body" id="panel-body"></div>
     <div class="panel-footer">
-      <button class="danger-btn" onclick="alert('【サンプル】会員を削除しました')">削除</button>
+      <button class="danger-btn" id="member-delete-btn" onclick="deleteMemberWithConfirm()">🗑 削除</button>
       <div style="display:flex; gap:8px;">
         <button class="secondary-btn" onclick="closeMemberPanel()">キャンセル</button>
-        <button class="primary-btn" onclick="alert('【サンプル】変更を保存しました'); closeMemberPanel();">変更を保存</button>
+        <button class="primary-btn" onclick="saveEditedMember()">変更を保存</button>
       </div>
     </div>
   </div>
@@ -2225,7 +2225,7 @@
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             <div class="form-group">
-              <label class="form-label">入学日 兼 オリエンテーション実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <label class="form-label">オリエンテーション実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
               <input type="date" class="form-input" id="nm-enrollmentDate">
             </div>
             <div class="form-group">
@@ -3100,7 +3100,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       }
 
       grid.innerHTML =
-        buildReminder('入学日 未確定', '📅', noEnrollment, '#E67E22') +
+        buildReminder('オリエンテーション実施日 未確定', '📅', noEnrollment, '#E67E22') +
         buildReminder('受講開始日 未確定', '🎓', noStart, '#F39C12') +
         buildReminder('卒業予定日 未確定', '🏁', noGraduate, '#3498DB');
     }
@@ -3364,124 +3364,369 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }
 
     // ===== スライドパネル：開く =====
+    // 現在編集中の会員ID（保存・削除時に参照）
+    let editingMemberId = null;
+
     function openMemberPanel(memberId) {
       const m = members.find(x => x.id === memberId);
       if (!m) return;
+      editingMemberId = memberId;
 
-      // セレクト用のヘルパー（選択中の値があれば selected を付ける）
-      const selOpt = (val, sel) => `<option value="${val}"${val === sel ? ' selected' : ''}>${val || '選択してください'}</option>`;
       const v = (x) => (x == null ? '' : x);
+      // セレクトのoption生成ヘルパー
+      const opt = (val, label, sel) => `<option value="${val}"${val === sel ? ' selected' : ''}>${label}</option>`;
+      const buildEnumOptions = (vals, sel) =>
+        ['<option value="">選択してください</option>']
+          .concat(vals.map(x => opt(x, x, sel)))
+          .join('');
+
+      // 担当者プルダウン用：スタッフ一覧（Consultant / CS ロール + 「その他」）
+      const allStaff = miGetAllStaff();
+      const consultants = allStaff.filter(s => s.role === 'Consultant');
+      const css = allStaff.filter(s => s.role === 'CS');
+      const buildStaffOptions = (list, sel) => {
+        const items = ['<option value="">選択してください</option>'];
+        list.forEach(s => items.push(opt(s.name, s.name, sel)));
+        items.push(opt('その他', 'その他', sel));
+        return items.join('');
+      };
 
       document.getElementById('panel-body').innerHTML = `
-        <!-- 氏名・ニックネーム -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">氏名</label>
-            <input type="text" class="form-input" value="${v(m.name)}" readonly style="background:#f4f6f8;">
-          </div>
-          <div class="form-group">
-            <label class="form-label">ニックネーム</label>
-            <input type="text" class="form-input" value="${v(m.nickname)}" readonly style="background:#f4f6f8;">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">性別</label>
-            <input type="text" class="form-input" value="${v(m.gender)}" readonly style="background:#f4f6f8;">
-          </div>
-          <div class="form-group">
-            <label class="form-label">生年月日</label>
-            <input type="date" class="form-input" value="${v(m.birthDate)}" readonly style="background:#f4f6f8;">
-          </div>
+        <!-- ============================ -->
+        <!-- 1. 基本情報 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">1. 基本情報</div>
+
+        <div class="form-group">
+          <label class="form-label">会員ID <span style="color:var(--color-text-muted); font-weight:normal; font-size:11px;">(変更不可)</span></label>
+          <input type="text" class="form-input" id="em-id" value="${v(m.id)}" readonly style="background:#f4f6f8;">
         </div>
 
-        <!-- 連絡先 -->
-        <div class="form-group">
-          <label class="form-label">メールアドレス</label>
-          <input type="email" class="form-input" value="${v(m.email)}" readonly style="background:#f4f6f8;">
-        </div>
-        <div class="form-group">
-          <label class="form-label">電話番号</label>
-          <input type="tel" class="form-input" value="${v(m.phone)}" readonly style="background:#f4f6f8;">
-        </div>
-
-        <!-- 受講情報 -->
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">入会プラン</label>
-            <input type="text" class="form-input" value="${v(m.plan)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">姓(漢字) <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-lastNameKanji" value="${v(m.lastNameKanji)}" required>
           </div>
           <div class="form-group">
-            <label class="form-label">ステータス</label>
-            <input type="text" class="form-input" value="${v(m.status)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">名(漢字) <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-firstNameKanji" value="${v(m.firstNameKanji)}" required>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">入学日 兼 オリエンテーション実施日</label>
-            <input type="date" class="form-input" value="${v(m.enrollmentDate)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">姓(カタカナ) <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-lastNameKana" value="${v(m.lastNameKana)}" required>
           </div>
           <div class="form-group">
-            <label class="form-label">受講開始日</label>
-            <input type="date" class="form-input" value="${v(m.startDate)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">名(カタカナ) <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-firstNameKana" value="${v(m.firstNameKana)}" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">姓(アルファベット) <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-lastNameAlpha" value="${v(m.lastNameAlpha)}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">名(アルファベット) <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-firstNameAlpha" value="${v(m.firstNameAlpha)}" required>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">卒業予定日</label>
-          <input type="date" class="form-input" value="${v(m.graduateDate)}" readonly style="background:#f4f6f8;">
+          <label class="form-label">ニックネーム <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <input type="text" class="form-input" id="em-nickname" value="${v(m.nickname)}">
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">現在のクラス</label>
-            <input type="text" class="form-input" value="${v(m.currentClass)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">性別 <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-gender" required>
+              ${buildEnumOptions(['男性','女性','その他'], v(m.gender))}
+            </select>
           </div>
           <div class="form-group">
-            <label class="form-label">入学時クラス</label>
-            <input type="text" class="form-input" value="${v(m.initialClass)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">生年月日 <span style="color:var(--color-error);">*</span></label>
+            <input type="date" class="form-input" id="em-birthDate" value="${v(m.birthDate)}" required>
+          </div>
+        </div>
+
+        <!-- ============================ -->
+        <!-- 2. 連絡先 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">2. 連絡先</div>
+
+        <div class="form-group">
+          <label class="form-label">メールアドレス <span style="color:var(--color-error);">*</span></label>
+          <input type="email" class="form-input" id="em-email" value="${v(m.email)}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">電話番号 <span style="color:var(--color-error);">*</span></label>
+          <input type="tel" class="form-input" id="em-phone" value="${v(m.phone)}" required>
+        </div>
+
+        <!-- ============================ -->
+        <!-- 3. 受講情報 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">3. 受講情報</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">入会プラン <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-plan" required>
+              ${buildEnumOptions(['6ヶ月プラン','給付金6ヶ月プラン','給付金9ヶ月プラン','給付金12ヶ月プラン'], v(m.plan))}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ステータス <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-status" required>
+              ${buildEnumOptions(['入学手続き中','受講中','休会中','卒業','途中退会'], v(m.status))}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">オリエンテーション実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="date" class="form-input" id="em-enrollmentDate" value="${v(m.enrollmentDate)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">受講開始日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="date" class="form-input" id="em-startDate" value="${v(m.startDate)}">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">ネイティブキャンプ</label>
-          <input type="text" class="form-input" value="${v(m.nativecamp)}" readonly style="background:#f4f6f8;">
+          <label class="form-label">卒業予定日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <input type="date" class="form-input" id="em-graduateDate" value="${v(m.graduateDate)}">
         </div>
-
-        <!-- 担当者 -->
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">担当コンサルタント</label>
-            <input type="text" class="form-input" value="${v(m.consultant)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">現在のクラス <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-currentClass" required>
+              ${buildEnumOptions(['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'], v(m.currentClass))}
+            </select>
           </div>
           <div class="form-group">
-            <label class="form-label">担当CS</label>
-            <input type="text" class="form-input" value="${v(m.cs)}" readonly style="background:#f4f6f8;">
+            <label class="form-label">入学時クラス <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-initialClass" required>
+              ${buildEnumOptions(['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'], v(m.initialClass))}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ネイティブキャンプ <span style="color:var(--color-error);">*</span></label>
+          <select class="form-input" id="em-nativecamp" required>
+            ${buildEnumOptions(['未選択','未導入','導入済み'], v(m.nativecamp))}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">1日の目標学習時間(分) <span style="color:var(--color-error);">*</span></label>
+          <input type="number" class="form-input" id="em-dailyTargetMinutes" min="1" max="1440" step="1" value="${v(m.dailyTargetMinutes)}" required>
+        </div>
+
+        <!-- ============================ -->
+        <!-- 4. 担当者 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">4. 担当者</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">担当コンサルタント <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-consultant" required>
+              ${buildStaffOptions(consultants, v(m.consultant))}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">担当CS <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-cs" required>
+              ${buildStaffOptions(css, v(m.cs))}
+            </select>
           </div>
         </div>
 
-        <!-- 編集可能：1日の目標学習時間 -->
-        <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:2px solid var(--color-border);">
-          <label class="form-label">1日の目標学習時間(分) <span style="color:var(--color-primary); font-weight:normal; font-size:11px;">[編集可]</span></label>
-          <input type="number" class="form-input" id="edit-dailyTargetMinutes-${m.id}" min="1" max="1440" step="1" value="${v(m.dailyTargetMinutes)}" placeholder="例：90">
-          <button class="secondary-btn" style="margin-top:8px; width:100%; padding:6px 12px; font-size:12px;" onclick="updateDailyTargetMinutes('${m.id}')">この目標時間を保存</button>
-          <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">達成率(その日の合計学習時間 ÷ この目標時間)の分母として使用されます。</div>
+        <!-- ============================ -->
+        <!-- 5. コーチ入力 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">5. コーチ入力</div>
+        <div class="form-group">
+          <label class="form-label">学習目標・目的 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <textarea class="form-input" id="em-coachLearningGoal" rows="3" style="resize:vertical; font-family:inherit;">${v(m.coachLearningGoal)}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">備考 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <textarea class="form-input" id="em-note" rows="2" style="resize:vertical; font-family:inherit;">${v(m.note)}</textarea>
         </div>
 
         <!-- パスワード再発行 -->
-        <div class="form-group">
+        <div class="form-group" style="margin-top:16px; padding-top:12px; border-top:2px solid var(--color-border);">
           <label class="form-label">パスワード管理</label>
-          <button class="secondary-btn" style="width:100%;" onclick="alert('【サンプル】新しいパスワードをメールで送信しました')">🔑 パスワード再発行</button>
-        </div>
-
-        <div style="font-size:11px; color:var(--color-text-muted); padding:8px; background:#FFF8E1; border-radius:4px; margin-top:12px;">
-          ⚠️ 大半の項目は閲覧のみとなっています。フル編集機能は別途実装予定です。
+          <button type="button" class="secondary-btn" style="width:100%;" onclick="alert('【サンプル】新しいパスワードをメールで送信しました')">🔑 パスワード再発行</button>
+          <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">※ パスワード再発行機能は別途実装予定</div>
         </div>
       `;
       document.getElementById('overlay').classList.add('show');
       document.getElementById('member-panel').classList.add('show');
     }
 
+    // ===== 会員情報スライドパネル：変更を保存 =====
+    function saveEditedMember() {
+      if (!editingMemberId) return;
+      const m = members.find(x => x.id === editingMemberId);
+      if (!m) { alert('編集対象の会員が見つかりません。'); return; }
+
+      // 値を取得
+      const getVal = (id) => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+
+      const lastNameKanji = getVal('em-lastNameKanji');
+      const firstNameKanji = getVal('em-firstNameKanji');
+      const lastNameKana = getVal('em-lastNameKana');
+      const firstNameKana = getVal('em-firstNameKana');
+      const lastNameAlpha = getVal('em-lastNameAlpha');
+      const firstNameAlpha = getVal('em-firstNameAlpha');
+      const nickname = getVal('em-nickname');
+      const gender = getVal('em-gender');
+      const birthDate = getVal('em-birthDate');
+      const email = getVal('em-email');
+      const phone = getVal('em-phone');
+      const plan = getVal('em-plan');
+      const status = getVal('em-status');
+      const enrollmentDate = getVal('em-enrollmentDate');
+      const startDate = getVal('em-startDate');
+      const graduateDate = getVal('em-graduateDate');
+      const currentClass = getVal('em-currentClass');
+      const initialClass = getVal('em-initialClass');
+      const nativecamp = getVal('em-nativecamp');
+      const dailyTargetMinutesStr = getVal('em-dailyTargetMinutes');
+      const consultant = getVal('em-consultant');
+      const cs = getVal('em-cs');
+      const coachLearningGoal = getVal('em-coachLearningGoal');
+      const note = getVal('em-note');
+
+      // 必須チェック
+      const requiredFields = [
+        ['lastNameKanji', '姓(漢字)', lastNameKanji],
+        ['firstNameKanji', '名(漢字)', firstNameKanji],
+        ['lastNameKana', '姓(カタカナ)', lastNameKana],
+        ['firstNameKana', '名(カタカナ)', firstNameKana],
+        ['lastNameAlpha', '姓(アルファベット)', lastNameAlpha],
+        ['firstNameAlpha', '名(アルファベット)', firstNameAlpha],
+        ['gender', '性別', gender],
+        ['birthDate', '生年月日', birthDate],
+        ['email', 'メールアドレス', email],
+        ['phone', '電話番号', phone],
+        ['plan', '入会プラン', plan],
+        ['status', 'ステータス', status],
+        ['currentClass', '現在のクラス', currentClass],
+        ['initialClass', '入学時クラス', initialClass],
+        ['nativecamp', 'ネイティブキャンプ', nativecamp],
+        ['consultant', '担当コンサルタント', consultant],
+        ['cs', '担当CS', cs]
+      ];
+      for (const [id, label, val] of requiredFields) {
+        if (!val) {
+          alert(`「${label}」を入力してください。`);
+          const el = document.getElementById(`em-${id}`);
+          if (el) el.focus();
+          return;
+        }
+      }
+
+      // 1日の目標学習時間バリデーション
+      const dailyTargetMinutes = parseInt(dailyTargetMinutesStr, 10);
+      if (!Number.isFinite(dailyTargetMinutes) || dailyTargetMinutes < 1 || dailyTargetMinutes > 1440) {
+        alert('1日の目標学習時間は1〜1440(分)の範囲で入力してください。');
+        document.getElementById('em-dailyTargetMinutes').focus();
+        return;
+      }
+
+      // メール重複チェック（自分以外の会員 + スタッフ全員）
+      const emailLower = email.toLowerCase();
+      const dupMember = members.find(x => x.id !== m.id && (x.email || '').toLowerCase() === emailLower);
+      if (dupMember) {
+        alert(`メールアドレス「${email}」は既に「${dupMember.name}」さんが使用しています。`);
+        document.getElementById('em-email').focus();
+        return;
+      }
+      const allStaff = miGetAllStaff();
+      const dupStaff = allStaff.find(s => (s.email || '').toLowerCase() === emailLower);
+      if (dupStaff) {
+        alert(`メールアドレス「${email}」は既にスタッフ「${dupStaff.name}」さんが使用しています。`);
+        document.getElementById('em-email').focus();
+        return;
+      }
+
+      // 表示用 name と initial を再生成
+      const displayName = `${lastNameKanji} ${firstNameKanji}`;
+      const initial = lastNameKanji;
+
+      // 会員データを更新
+      Object.assign(m, {
+        name: displayName, initial, nickname,
+        lastNameKanji, firstNameKanji,
+        lastNameKana, firstNameKana,
+        lastNameAlpha, firstNameAlpha,
+        gender, birthDate, email, phone,
+        plan, status,
+        enrollmentDate, startDate, graduateDate,
+        currentClass, initialClass, nativecamp,
+        dailyTargetMinutes,
+        consultant, cs,
+        coachLearningGoal, note,
+        course: currentClass  // 旧コード互換
+      });
+      saveAddedMembersToStorage();
+
+      // 関連画面を再描画
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+      if (typeof renderKarteList === 'function') renderKarteList();
+      if (typeof renderAssignList === 'function') renderAssignList();
+
+      closeMemberPanel();
+      alert(`会員「${displayName}」さんの情報を更新しました。`);
+    }
+
+    // ===== 会員削除（3段階確認） =====
+    function deleteMemberWithConfirm() {
+      if (!editingMemberId) return;
+      const m = members.find(x => x.id === editingMemberId);
+      if (!m) { alert('削除対象の会員が見つかりません。'); return; }
+
+      // 第1段階：基本確認
+      if (!confirm(`会員「${m.name}」(ID: ${m.id})を削除します。\n\n本当によろしいですか？`)) return;
+
+      // 第2段階：影響範囲の警告
+      if (!confirm(`⚠️ 削除すると、この会員の以下の情報もすべて消えます：\n\n・学習記録\n・PROGOSスコア\n・関連するすべてのデータ\n\nこの操作は取り消せません。続行しますか？`)) return;
+
+      // 第3段階：会員IDの入力確認
+      const inputId = prompt(`誤削除を防ぐため、削除対象の会員ID「${m.id}」を入力してください：`);
+      if (inputId === null) return;  // キャンセル
+      if (String(inputId).trim() !== String(m.id)) {
+        alert('入力された会員IDが一致しません。削除をキャンセルしました。');
+        return;
+      }
+
+      // ===== 削除実行 =====
+      const memberId = m.id;
+      const memberName = m.name;
+      // 1. members[] から削除
+      const idx = members.findIndex(x => x.id === memberId);
+      if (idx !== -1) members.splice(idx, 1);
+      saveAddedMembersToStorage();
+      // 2. learningLogs_v1 から該当 memberId のレコードを削除
+      try {
+        const logs = loadLearningLogs().filter(l => l.memberId !== memberId);
+        saveLearningLogs(logs);
+      } catch (e) { console.warn('学習記録の削除失敗', e); }
+
+      // 関連画面を再描画
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+      if (typeof renderKarteList === 'function') renderKarteList();
+      if (typeof renderAssignList === 'function') renderAssignList();
+
+      closeMemberPanel();
+      alert(`会員「${memberName}」(ID: ${memberId})を削除しました。\n関連する学習記録・PROGOSスコアもすべて削除されました。`);
+    }
+
     function closeMemberPanel() {
       document.getElementById('overlay').classList.remove('show');
       document.getElementById('member-panel').classList.remove('show');
+      editingMemberId = null;
     }
 
     // ===== 会員情報スライドパネル：1日の目標学習時間を更新 =====
@@ -4151,7 +4396,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         { key: 'phone',               label: '電話番号' },
         { key: 'plan',                label: '入会プラン' },
         { key: 'status',              label: 'ステータス' },
-        { key: 'enrollmentDate',      label: '入学日(オリエンテーション実施日)' },
+        { key: 'enrollmentDate',      label: 'オリエンテーション実施日' },
         { key: 'startDate',           label: '受講開始日' },
         { key: 'graduateDate',        label: '卒業予定日' },
         { key: 'currentClass',        label: '現在のクラス' },
@@ -4224,7 +4469,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       { csv: '電話番号',                        key: 'phone',               required: true,  type: 'text' },
       { csv: '入会プラン',                      key: 'plan',                required: true,  type: 'enum',   options: ['6ヶ月プラン','給付金6ヶ月プラン','給付金9ヶ月プラン','給付金12ヶ月プラン'] },
       { csv: 'ステータス',                      key: 'status',              required: true,  type: 'enum',   options: ['入学手続き中','受講中','休会中','卒業','途中退会'] },
-      { csv: '入学日',                          key: 'enrollmentDate',      required: false, type: 'date' },
+      { csv: 'オリエンテーション実施日',        key: 'enrollmentDate',      required: false, type: 'date' },
       { csv: '受講開始日',                      key: 'startDate',           required: false, type: 'date' },
       { csv: '卒業予定日',                      key: 'graduateDate',        required: false, type: 'date' },
       { csv: '現在のクラス',                    key: 'currentClass',        required: true,  type: 'enum',   options: ['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'] },
