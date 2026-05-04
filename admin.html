@@ -2912,50 +2912,166 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       }
     }
 
-    // ===== 期間別ダミーデータ =====
-    const periodData = {
-      today: {
-        rate: 72, rateCompare: '前日比 +8%', rateCompareDown: false,
-        rateGoal: '目標80%まで あと8%', rateGoalDown: true,
-        hours: 8.5, hoursCompare: '前日比 +1.2h', hoursCompareDown: false,
-        hoursGoal: '目標10h まで あと1.5h', hoursGoalDown: true
-      },
-      week: {
-        rate: 59, rateCompare: '先週比 +5%', rateCompareDown: false,
-        rateGoal: '週目標80%まで あと21%', rateGoalDown: true,
-        hours: 42.3, hoursCompare: '先週比 +3.8h', hoursCompareDown: false,
-        hoursGoal: '週目標46h まで あと3.7h', hoursGoalDown: true
-      },
-      month: {
-        rate: 55, rateCompare: '先月比 +3%', rateCompareDown: false,
-        rateGoal: '月目標80%まで あと25%', rateGoalDown: true,
-        hours: 141.6, hoursCompare: '先月比 +12.4h', hoursCompareDown: false,
-        hoursGoal: '月目標200h まで あと58.4h', hoursGoalDown: true
-      },
-      all: {
-        rate: 62, rateCompare: '入会時比 +42%', rateCompareDown: false,
-        rateGoal: '最終目標80% まで あと18%', rateGoalDown: true,
-        hours: 680.5, hoursCompare: '累計', hoursCompareDown: false,
-        hoursGoal: '年間目標1000h まで あと319.5h', hoursGoalDown: true
-      }
-    };
+    // ===== 期間別データ（learningLogs_v1 から動的集計） =====
+    // 既存ダッシュボード用：本日／今週／今月／入会から本日 の4期間
+    function computePeriodData() {
+      const allLogs = (typeof loadLearningLogs === 'function') ? loadLearningLogs() : [];
+      // 全会員の1日目標時間の合計（dailyTargetMinutes 未設定は0）
+      const totalTargetPerDay = members.reduce((s, m) => s + (m.dailyTargetMinutes || 0), 0);
 
-    // ===== 月別平均達成率（直近7ヶ月分ダミー） =====
-    const monthlyRates = [
-      { month: '10月', rate: 38 },
-      { month: '11月', rate: 42 },
-      { month: '12月', rate: 45 },
-      { month: '1月', rate: 50 },
-      { month: '2月', rate: 53 },
-      { month: '3月', rate: 56 },
-      { month: '4月', rate: 59 }
-    ];
+      // 期間範囲を取得 [start, end)（日数 days、daysOffset で過去にズラす）
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const calcRange = (days, daysOffset) => {
+        const start = new Date(today);
+        start.setDate(start.getDate() - daysOffset);
+        const end = new Date(today);
+        end.setDate(end.getDate() - (daysOffset - days) + 1);  // [start, end) で end は翌日0時
+        return { start, end };
+      };
+
+      // 期間内の合計学習時間（分）
+      const sumMinutes = (range) => {
+        let total = 0;
+        allLogs.forEach(log => {
+          const d = new Date(log.date);
+          if ((!range.start || d >= range.start) && (!range.end || d < range.end)) {
+            total += (log.minutes != null ? log.minutes : (log.duration || 0));
+          }
+        });
+        return total;
+      };
+
+      // 期間達成率：合計学習時間(分) ÷ (期間日数 × 全会員1日目標合計)
+      const calcRate = (range, periodDays) => {
+        if (totalTargetPerDay === 0 || periodDays === 0) return 0;
+        const min = sumMinutes(range);
+        return Math.round((min / (totalTargetPerDay * periodDays)) * 100);
+      };
+
+      // ===== 各期間の集計 =====
+      // today: 本日 / 前日比は昨日の同じ1日と比較
+      const todayRange    = calcRange(1, 0);
+      const yesterdayRange = calcRange(1, 1);
+      const todayMin = sumMinutes(todayRange);
+      const yesterMin = sumMinutes(yesterdayRange);
+      const todayRate = calcRate(todayRange, 1);
+      const yesterRate = calcRate(yesterdayRange, 1);
+
+      // week: 直近7日 / 先週比は8〜14日前の7日間
+      const weekRange     = calcRange(7, 6);
+      const lastWeekRange = calcRange(7, 13);
+      const weekMin = sumMinutes(weekRange);
+      const lastWeekMin = sumMinutes(lastWeekRange);
+      const weekRate = calcRate(weekRange, 7);
+      const lastWeekRate = calcRate(lastWeekRange, 7);
+
+      // month: 直近30日 / 先月比は31〜60日前
+      const monthRange     = calcRange(30, 29);
+      const lastMonthRange = calcRange(30, 59);
+      const monthMin = sumMinutes(monthRange);
+      const lastMonthMin = sumMinutes(lastMonthRange);
+      const monthRate = calcRate(monthRange, 30);
+      const lastMonthRate = calcRate(lastMonthRange, 30);
+
+      // all: 累計（全期間）
+      const allMin = sumMinutes({ start: null, end: null });
+      // 累計の達成率：累計学習時間 ÷ (会員ごとの受講日数の合計 × 1日目標)
+      // 簡易版：全会員平均 = 累計分 ÷ (会員数 × 平均受講日数 × 1日目標)
+      // 入会日が分からない場合は最古ログの日付から今日までの日数で代用
+      let totalElapsedDays = 0;
+      members.forEach(m => {
+        const memberLogs = allLogs.filter(l => l.memberId === m.id);
+        if (memberLogs.length > 0) {
+          const dates = memberLogs.map(l => new Date(l.date)).sort((a, b) => a - b);
+          const days = Math.max(1, Math.round((today - dates[0]) / 86400000) + 1);
+          totalElapsedDays += days;
+        }
+      });
+      const allRate = (totalTargetPerDay > 0 && totalElapsedDays > 0)
+        ? Math.round((allMin / ((totalTargetPerDay / Math.max(1, members.length)) * totalElapsedDays)) * 100)
+        : 0;
+
+      // 比較ラベル整形ヘルパー
+      const sign = (n) => (n >= 0 ? '+' : '') + n;
+      const minToHours = (m) => +(m / 60).toFixed(1);
+
+      return {
+        today: {
+          rate: todayRate,
+          rateCompare: `前日比 ${sign(todayRate - yesterRate)}%`,
+          rateCompareDown: (todayRate - yesterRate) < 0,
+          rateGoal: '', rateGoalDown: false,
+          hours: minToHours(todayMin),
+          hoursCompare: `前日比 ${sign(minToHours(todayMin - yesterMin))}h`,
+          hoursCompareDown: (todayMin - yesterMin) < 0,
+          hoursGoal: '', hoursGoalDown: false
+        },
+        week: {
+          rate: weekRate,
+          rateCompare: `先週比 ${sign(weekRate - lastWeekRate)}%`,
+          rateCompareDown: (weekRate - lastWeekRate) < 0,
+          rateGoal: '', rateGoalDown: false,
+          hours: minToHours(weekMin),
+          hoursCompare: `先週比 ${sign(minToHours(weekMin - lastWeekMin))}h`,
+          hoursCompareDown: (weekMin - lastWeekMin) < 0,
+          hoursGoal: '', hoursGoalDown: false
+        },
+        month: {
+          rate: monthRate,
+          rateCompare: `先月比 ${sign(monthRate - lastMonthRate)}%`,
+          rateCompareDown: (monthRate - lastMonthRate) < 0,
+          rateGoal: '', rateGoalDown: false,
+          hours: minToHours(monthMin),
+          hoursCompare: `先月比 ${sign(minToHours(monthMin - lastMonthMin))}h`,
+          hoursCompareDown: (monthMin - lastMonthMin) < 0,
+          hoursGoal: '', hoursGoalDown: false
+        },
+        all: {
+          rate: allRate,
+          rateCompare: '',
+          rateCompareDown: false,
+          rateGoal: '', rateGoalDown: false,
+          hours: minToHours(allMin),
+          hoursCompare: '累計',
+          hoursCompareDown: false,
+          hoursGoal: '', hoursGoalDown: false
+        }
+      };
+    }
+
+    // ===== 月別平均達成率（直近7ヶ月分、learningLogs_v1 から動的集計） =====
+    function computeMonthlyRates() {
+      const allLogs = (typeof loadLearningLogs === 'function') ? loadLearningLogs() : [];
+      const totalTargetPerDay = members.reduce((s, m) => s + (m.dailyTargetMinutes || 0), 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const result = [];
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const yyyy = d.getFullYear();
+        const mm = d.getMonth();
+        const monthLogs = allLogs.filter(l => {
+          const ld = new Date(l.date);
+          return ld.getFullYear() === yyyy && ld.getMonth() === mm;
+        });
+        const min = monthLogs.reduce((s, l) => s + (l.minutes != null ? l.minutes : (l.duration || 0)), 0);
+        // その月の日数
+        const daysInMonth = new Date(yyyy, mm + 1, 0).getDate();
+        const rate = (totalTargetPerDay > 0)
+          ? Math.round((min / (totalTargetPerDay * daysInMonth)) * 100)
+          : 0;
+        result.push({ month: `${mm + 1}月`, rate });
+      }
+      return result;
+    }
 
     // ===== 期間切替 =====
     function switchPeriod(period) {
       document.querySelectorAll('.period-tab').forEach(el => {
         el.classList.toggle('active', el.dataset.period === period);
       });
+      // 表示直前に最新データから動的集計
+      const periodData = computePeriodData();
       const d = periodData[period];
       document.getElementById('big-rate').textContent = d.rate;
       document.getElementById('big-hours').textContent = d.hours;
@@ -2977,12 +3093,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       hg.className = 'big-stat-compare' + (d.hoursGoalDown ? ' down' : '');
     }
 
-    // ===== 月別推移グラフ描画 =====
+    // ===== 月別推移グラフ描画（learningLogs_v1から動的集計） =====
     function renderMonthlyChart() {
       const chart = document.getElementById('monthly-chart');
+      // 表示直前に最新データから動的集計
+      const monthlyRates = computeMonthlyRates();
       const maxRate = 100;
       chart.innerHTML = monthlyRates.map((item, i) => {
-        const h = (item.rate / maxRate) * 100;
+        const h = Math.min(100, (item.rate / maxRate) * 100);
         let color = '#1A5276';
         if (item.rate <= 50) color = '#F39C12';
         else if (item.rate >= 80) color = '#2E86C1';
