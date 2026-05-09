@@ -1771,6 +1771,119 @@
               </div>
             </div>
 
+            <!-- 詳細検索の開閉ボタン -->
+            <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--color-border);">
+              <button type="button" class="secondary-btn" id="search-detail-toggle-btn" onclick="toggleSearchDetail()" style="width:100%; text-align:center; background:#F8F9FA;">
+                ＋ 詳細検索を表示
+              </button>
+            </div>
+
+            <!-- 詳細検索エリア（初期は非表示） -->
+            <div id="search-detail-area" style="display:none; margin-top:12px;">
+              <div class="search-grid-3">
+                <!-- ⑨ ステータス -->
+                <div>
+                  <div class="search-section-label">ステータス</div>
+                  <select class="form-select" id="search-status">
+                    <option value="">すべて</option>
+                    <option value="入学手続き中">入学手続き中</option>
+                    <option value="再入学手続き中">再入学手続き中</option>
+                    <option value="受講中">受講中</option>
+                    <option value="継続中">継続中</option>
+                    <option value="休会中">休会中</option>
+                    <option value="卒業">卒業</option>
+                    <option value="途中退会">途中退会</option>
+                  </select>
+                </div>
+
+                <!-- ⑩ 職業 -->
+                <div>
+                  <div class="search-section-label">職業</div>
+                  <select class="form-select" id="search-occupation">
+                    <option value="">すべて</option>
+                    <option value="会社員">会社員</option>
+                    <option value="経営者・役員">経営者・役員</option>
+                    <option value="自営業・フリーランス">自営業・フリーランス</option>
+                    <option value="公務員">公務員</option>
+                    <option value="大学・大学院生">大学・大学院生</option>
+                    <option value="中学・高校生">中学・高校生</option>
+                    <option value="パート・アルバイト">パート・アルバイト</option>
+                    <option value="無職">無職</option>
+                    <option value="その他">その他</option>
+                    <option value="__unset__">未設定</option>
+                  </select>
+                </div>
+
+                <!-- ⑪ 入学時の在住国 -->
+                <div>
+                  <div class="search-section-label">入学時の在住国</div>
+                  <select class="form-select" id="search-residence">
+                    <option value="">すべて</option>
+                    <option value="日本">日本</option>
+                    <option value="海外">海外</option>
+                    <option value="__unset__">未設定</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="search-grid-3" style="margin-top:12px;">
+                <!-- ⑫ オリエン担当者 -->
+                <div>
+                  <div class="search-section-label">オリエン担当者</div>
+                  <select class="form-select" id="search-orient-staff">
+                    <option value="">すべて</option>
+                    <!-- JS で Coach のみを動的生成 -->
+                  </select>
+                </div>
+
+                <!-- ⑬ 渡航先（国） -->
+                <div>
+                  <div class="search-section-label">渡航先（国）</div>
+                  <select class="form-select" id="search-travel-country">
+                    <option value="">すべて</option>
+                    <option value="オーストラリア">オーストラリア</option>
+                    <option value="カナダ">カナダ</option>
+                    <option value="イギリス">イギリス</option>
+                    <option value="ニュージーランド">ニュージーランド</option>
+                    <option value="フィリピン">フィリピン</option>
+                    <option value="その他">その他</option>
+                    <option value="未決定">未決定</option>
+                    <option value="__unset__">未設定</option>
+                  </select>
+                </div>
+
+                <!-- ⑭ 渡航時期 -->
+                <div>
+                  <div class="search-section-label">渡航時期</div>
+                  <select class="form-select" id="search-travel-date">
+                    <option value="">すべて</option>
+                    <option value="within3m">3ヶ月以内</option>
+                    <option value="within6m">半年以内</option>
+                    <option value="within12m">1年以内</option>
+                    <option value="over12m">1年以上先</option>
+                    <option value="__unset__">未設定</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="search-grid-3" style="margin-top:12px;">
+                <!-- ⑮ 渡航理由 -->
+                <div>
+                  <div class="search-section-label">渡航理由</div>
+                  <select class="form-select" id="search-travel-reason">
+                    <option value="">すべて</option>
+                    <option value="語学学校">語学学校</option>
+                    <option value="ワーキングホリデー">ワーキングホリデー</option>
+                    <option value="進学（大学・大学院）">進学（大学・大学院）</option>
+                    <option value="高校留学">高校留学</option>
+                    <option value="海外就職">海外就職</option>
+                    <option value="その他">その他</option>
+                    <option value="__unset__">未設定</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <!-- 操作ボタン -->
             <div class="search-actions">
               <button class="secondary-btn" onclick="clearMemberFilter()">クリア</button>
@@ -2183,6 +2296,27 @@
             </div>
           </div>
 
+          <div class="form-group">
+            <label class="form-label">職業 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="nm-occupation">
+              <option value="">選択してください</option>
+              <option value="会社員">会社員</option>
+              <option value="経営者・役員">経営者・役員</option>
+              <option value="自営業・フリーランス">自営業・フリーランス</option>
+              <option value="公務員">公務員</option>
+              <option value="大学・大学院生">大学・大学院生</option>
+              <option value="中学・高校生">中学・高校生</option>
+              <option value="パート・アルバイト">パート・アルバイト</option>
+              <option value="無職">無職</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">職業 備考 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="text" class="form-input" id="nm-occupationNote" placeholder="「その他」選択時の詳細など（自由記述）">
+          </div>
+
           <!-- ============================ -->
           <!-- 2. 連絡先 -->
           <!-- ============================ -->
@@ -2219,7 +2353,9 @@
               <select class="form-input" id="nm-status" required>
                 <option value="">選択してください</option>
                 <option value="入学手続き中">入学手続き中</option>
+                <option value="再入学手続き中">再入学手続き中</option>
                 <option value="受講中">受講中</option>
+                <option value="継続中">継続中</option>
                 <option value="休会中">休会中</option>
                 <option value="卒業">卒業</option>
                 <option value="途中退会">途中退会</option>
@@ -2229,25 +2365,33 @@
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             <div class="form-group">
-              <label class="form-label">オリエンテーション実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <label class="form-label">オリエン実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
               <input type="date" class="form-input" id="nm-enrollmentDate">
             </div>
             <div class="form-group">
-              <label class="form-label">受講開始日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-              <input type="date" class="form-input" id="nm-startDate" onchange="nmAutoCalcGraduateDate()">
+              <label class="form-label">オリエン担当者 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-orientStaff">
+                <!-- JS で動的生成（role=Coach のみ） -->
+              </select>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">卒業予定日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意・自動算出 / 手動上書き可)</span></label>
-            <input type="date" class="form-input" id="nm-graduateDate">
-            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">入会プランと受講開始日から自動算出されます。手動入力で上書き可能。</div>
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             <div class="form-group">
-              <label class="form-label">現在のクラス <span style="color:var(--color-error);">*</span></label>
-              <select class="form-input" id="nm-currentClass" required>
+              <label class="form-label">受講開始日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <input type="date" class="form-input" id="nm-startDate" onchange="nmAutoCalcGraduateDate()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">卒業予定日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意・自動算出 / 手動上書き可)</span></label>
+              <input type="date" class="form-input" id="nm-graduateDate">
+              <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">入会プランと受講開始日から自動算出されます。手動入力で上書き可能。</div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">入学時クラス <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="nm-initialClass" required>
                 <option value="">選択してください</option>
                 <option value="Beginner">Beginner</option>
                 <option value="Lower-Intermediate">Lower-Intermediate</option>
@@ -2256,8 +2400,8 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">入学時クラス <span style="color:var(--color-error);">*</span></label>
-              <select class="form-input" id="nm-initialClass" required>
+              <label class="form-label">現在のクラス <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="nm-currentClass" required>
                 <option value="">選択してください</option>
                 <option value="Beginner">Beginner</option>
                 <option value="Lower-Intermediate">Lower-Intermediate</option>
@@ -2305,9 +2449,127 @@
           </div>
 
           <!-- ============================ -->
-          <!-- 5. コーチ入力 -->
+          <!-- 5. 在住・渡航情報 -->
           <!-- ============================ -->
-          <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">5. コーチ入力</div>
+          <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">5. 在住・渡航情報</div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">入学時の在住国 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-residence" onchange="nmOnResidenceChange()">
+                <option value="">選択してください</option>
+                <option value="日本">日本</option>
+                <option value="海外">海外</option>
+              </select>
+            </div>
+            <div class="form-group" id="nm-residence-overseas-wrap" style="display:none;">
+              <label class="form-label">海外の国名 <span style="color:var(--color-error);">*</span></label>
+              <input type="text" class="form-input" id="nm-residenceOverseas" placeholder="例：オーストラリア">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">渡航先（国） <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-travelCountry" onchange="nmOnCountryChange()">
+                <option value="">選択してください</option>
+                <option value="オーストラリア">オーストラリア</option>
+                <option value="カナダ">カナダ</option>
+                <option value="イギリス">イギリス</option>
+                <option value="ニュージーランド">ニュージーランド</option>
+                <option value="フィリピン">フィリピン</option>
+                <option value="その他">その他</option>
+                <option value="未決定">未決定</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">渡航先（都市） <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-travelCity" disabled>
+                <option value="">先に国を選択してください</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">渡航時期 <span style="color:var(--color-text-muted); font-weight:normal;">(任意・未来日のみ)</span></label>
+              <input type="date" class="form-input" id="nm-travelDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">渡航理由 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-travelReason">
+                <option value="">選択してください</option>
+                <option value="語学学校">語学学校</option>
+                <option value="ワーキングホリデー">ワーキングホリデー</option>
+                <option value="進学（大学・大学院）">進学（大学・大学院）</option>
+                <option value="高校留学">高校留学</option>
+                <option value="海外就職">海外就職</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">在住・渡航 備考 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="nm-travelNote" rows="2" placeholder="例：渡航時期は秋ごろ予定／渡航先「その他」の場合の国名・都市名など" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+
+          <!-- ============================ -->
+          <!-- 6. 直近の英語スコア -->
+          <!-- ============================ -->
+          <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">6. 直近の英語スコア</div>
+          <div style="font-size:11px; color:var(--color-text-muted); margin-bottom:8px;">受験経験があるもののみ入力してください（未入力の検定はカルテ等で非表示になります）。</div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">TOEIC L&R <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <input type="number" class="form-input" id="nm-scoreToeicLR" min="10" max="990" step="5" placeholder="例：650">
+            </div>
+            <div class="form-group">
+              <label class="form-label">TOEIC S&W <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <input type="number" class="form-input" id="nm-scoreToeicSW" min="0" max="400" step="10" placeholder="例：260">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">TOEFL iBT <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <input type="number" class="form-input" id="nm-scoreToefl" min="0" max="120" step="1" placeholder="例：80">
+            </div>
+            <div class="form-group">
+              <label class="form-label">IELTS <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-scoreIelts">
+                <option value="">選択してください</option>
+                <!-- JS で 0.0〜9.0 を 0.5刻みで動的生成 -->
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label">英検 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <select class="form-input" id="nm-scoreEiken">
+                <option value="">選択してください</option>
+                <option value="5級">5級</option>
+                <option value="4級">4級</option>
+                <option value="3級">3級</option>
+                <option value="準2級">準2級</option>
+                <option value="準2級プラス">準2級プラス</option>
+                <option value="2級">2級</option>
+                <option value="準1級">準1級</option>
+                <option value="1級">1級</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">その他 検定名・スコア <span style="color:var(--color-text-muted); font-weight:normal;">(任意・自由入力)</span></label>
+              <input type="text" class="form-input" id="nm-scoreOther" placeholder="例：ケンブリッジ英検 FCE B2 ／ GTEC 800">
+            </div>
+          </div>
+
+          <!-- ============================ -->
+          <!-- 7. コーチ入力 -->
+          <!-- ============================ -->
+          <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">7. コーチ入力</div>
 
           <div class="form-group">
             <label class="form-label">学習目標・目的 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
@@ -2324,6 +2586,119 @@
       <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
         <button class="secondary-btn" onclick="closeNewMemberModal()">キャンセル</button>
         <button class="primary-btn" onclick="saveNewMember()">登録する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 継続プラン 入力モーダル（B-2 Phase2） ===== -->
+  <div class="center-modal-overlay" id="cp-overlay" onclick="closeContinuationPlanModal()">
+    <div class="center-modal" onclick="event.stopPropagation()" style="max-width: 520px;">
+      <div class="center-modal-header">
+        <div class="panel-title" id="cp-modal-title">＋ 継続プランを追加</div>
+        <button class="panel-close" onclick="closeContinuationPlanModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="cp-member-info" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:10px 12px; border-radius:6px; font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;"></div>
+
+        <form id="cp-form" onsubmit="return false;">
+          <div class="form-group">
+            <label class="form-label">プラン種類 <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="cp-planType" required>
+              <option value="">選択してください</option>
+              <option value="タビプラプラン">タビプラプラン</option>
+              <option value="英語講座プラン">英語講座プラン</option>
+              <option value="英語コーチングプラン">英語コーチングプラン</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">期間 <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="cp-months" required onchange="cpAutoCalcEndDate()">
+                <option value="">選択</option>
+                <option value="1">1ヶ月</option>
+                <option value="2">2ヶ月</option>
+                <option value="3">3ヶ月</option>
+                <option value="4">4ヶ月</option>
+                <option value="5">5ヶ月</option>
+                <option value="6">6ヶ月</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">開始日 <span style="color:var(--color-error);">*</span></label>
+              <input type="date" class="form-input" id="cp-startDate" required onchange="cpAutoCalcEndDate()">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">終了日 <span style="color:var(--color-text-muted); font-weight:normal;">(自動算出 / 手動上書き可)</span></label>
+            <input type="date" class="form-input" id="cp-endDate">
+            <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">期間と開始日から自動算出されます。手動入力で上書き可能。</div>
+          </div>
+
+          <!-- 卒業予定日 反映チェック -->
+          <div class="form-group" style="background:#FFF8E1; border:1px solid #F5B041; border-radius:6px; padding:10px 12px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#7E5109;">
+              <input type="checkbox" id="cp-applyGraduateDate" style="width:16px; height:16px; cursor:pointer;">
+              <span>📅 この終了日を会員の<strong>卒業予定日</strong>にも反映する</span>
+            </label>
+            <div style="font-size:11px; color:#7E5109; margin-top:4px; padding-left:24px;">
+              会員カード・一覧で表示される「卒業予定日」が、この終了日に上書きされます。
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">備考 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="cp-note" rows="2" placeholder="例：シームレス継続／再入会後の初回継続 など" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:space-between; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <!-- 編集モード時のみ削除ボタンを表示 -->
+        <button class="secondary-btn" id="cp-delete-btn" onclick="deleteContinuationPlan()" style="display:none; color:var(--color-error); border-color:var(--color-error);">🗑 このプランを削除</button>
+        <div style="display:flex; gap:8px; margin-left:auto;">
+          <button class="secondary-btn" onclick="closeContinuationPlanModal()">キャンセル</button>
+          <button class="primary-btn" onclick="saveContinuationPlan()">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 休会設定モーダル（B-2 Phase3） ===== -->
+  <div class="center-modal-overlay" id="sp-overlay" onclick="closeSuspensionModal()">
+    <div class="center-modal" onclick="event.stopPropagation()" style="max-width: 520px;">
+      <div class="center-modal-header">
+        <div class="panel-title">💤 休会を設定</div>
+        <button class="panel-close" onclick="closeSuspensionModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="sp-member-info" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:10px 12px; border-radius:6px; font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;"></div>
+
+        <form id="sp-form" onsubmit="return false;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">休会開始日 <span style="color:var(--color-error);">*</span></label>
+              <input type="date" class="form-input" id="sp-from" required onchange="spUpdatePreview()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">休会終了日 <span style="color:var(--color-error);">*</span></label>
+              <input type="date" class="form-input" id="sp-until" required onchange="spUpdatePreview()">
+            </div>
+          </div>
+
+          <!-- プレビュー：休会日数と新しい卒業予定日 -->
+          <div id="sp-preview" style="display:none; background:#FFF8E1; border:1px solid #F5B041; border-radius:6px; padding:10px 12px; font-size:12px; color:#7E5109;">
+            <div id="sp-preview-content"></div>
+          </div>
+
+          <div style="font-size:11px; color:var(--color-text-muted); margin-top:8px;">
+            ⚠️ 休会期間は最短2週間（14日）〜最長3ヶ月（92日）以内で設定してください。
+          </div>
+        </form>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" onclick="closeSuspensionModal()">キャンセル</button>
+        <button class="primary-btn" onclick="saveSuspension()">💤 休会を設定する</button>
       </div>
     </div>
   </div>
@@ -3335,6 +3710,68 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       return memberLevel === filterLevel;
     }
 
+    // ===== 詳細検索エリアの開閉 =====
+    function toggleSearchDetail() {
+      const area = document.getElementById('search-detail-area');
+      const btn = document.getElementById('search-detail-toggle-btn');
+      if (!area || !btn) return;
+      const isOpen = area.style.display !== 'none';
+      if (isOpen) {
+        area.style.display = 'none';
+        btn.textContent = '＋ 詳細検索を表示';
+      } else {
+        area.style.display = '';
+        btn.textContent = '－ 詳細検索を閉じる';
+        // 開いた時にオリエン担当者プルダウンを最新スタッフから生成（初回のみ要・複数回でも問題なし）
+        searchPopulateOrientStaff();
+      }
+    }
+
+    // ===== 検索パネル：オリエン担当者プルダウン生成（role=Coach のみ） =====
+    function searchPopulateOrientStaff() {
+      let all = [];
+      try {
+        const stored = localStorage.getItem('staffList_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) all = parsed;
+        }
+      } catch (e) {}
+      if (typeof staffData !== 'undefined' && Array.isArray(staffData)) {
+        staffData.forEach(s => {
+          if (!all.find(x => (x.email || '').toLowerCase() === (s.email || '').toLowerCase())) all.push(s);
+        });
+      }
+      const coaches = all.filter(s => s.role === 'Coach');
+      const el = document.getElementById('search-orient-staff');
+      if (!el) return;
+      const currentVal = el.value;  // 既存選択を保持
+      const opts = ['<option value="">すべて</option>'];
+      coaches.forEach(s => {
+        opts.push(`<option value="${s.name}">${s.name}</option>`);
+      });
+      opts.push('<option value="__unset__">未設定</option>');
+      el.innerHTML = opts.join('');
+      el.value = currentVal;  // 既存選択を復元
+    }
+
+    // ===== 詳細検索：渡航時期プルダウン → 期間範囲（日数）への変換 =====
+    // 「3ヶ月以内」= 0〜90日、「半年以内」= 0〜180日、「1年以内」= 0〜365日、「1年以上先」= 366日以降
+    function travelDateMatches(travelDateStr, cond) {
+      if (cond === '__unset__') return !travelDateStr;
+      if (!travelDateStr) return false;  // 未設定値は他の条件にはマッチしない
+      const td = new Date(travelDateStr);
+      if (Number.isNaN(td.getTime())) return false;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const diffDays = Math.floor((td - today) / 86400000);
+      if (diffDays < 0) return false;  // 過去日は対象外（未来日のみ）
+      if (cond === 'within3m')  return diffDays <= 90;
+      if (cond === 'within6m')  return diffDays <= 180;
+      if (cond === 'within12m') return diffDays <= 365;
+      if (cond === 'over12m')   return diffDays > 365;
+      return true;
+    }
+
     // 検索フィルタ適用
     function applyMemberFilter() {
       const keyword = document.getElementById('search-keyword').value.trim().toLowerCase();
@@ -3346,6 +3783,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const progosLevel = document.getElementById('search-progos').value;
       const startMonth = document.getElementById('search-startmonth').value;
       const checkedTextbooks = Array.from(document.querySelectorAll('.search-textbook-cb:checked')).map(cb => cb.value);
+      // 詳細検索（7項目）
+      const statusCond = document.getElementById('search-status').value;
+      const occupationCond = document.getElementById('search-occupation').value;
+      const residenceCond = document.getElementById('search-residence').value;
+      const orientStaffCond = document.getElementById('search-orient-staff').value;
+      const travelCountryCond = document.getElementById('search-travel-country').value;
+      const travelDateCond = document.getElementById('search-travel-date').value;
+      const travelReasonCond = document.getElementById('search-travel-reason').value;
 
       const filtered = members.filter(m => {
         // キーワード検索
@@ -3401,6 +3846,34 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         if (startMonth) {
           if (!m.startDate || !String(m.startDate).startsWith(startMonth)) return false;
         }
+        // ===== 詳細検索（7項目）=====
+        // 「__unset__」は値が未入力の会員、それ以外は完全一致で絞り込み
+        if (statusCond) {
+          if (m.status !== statusCond) return false;
+        }
+        if (occupationCond) {
+          if (occupationCond === '__unset__') { if (m.occupation) return false; }
+          else if (m.occupation !== occupationCond) return false;
+        }
+        if (residenceCond) {
+          if (residenceCond === '__unset__') { if (m.residence) return false; }
+          else if (m.residence !== residenceCond) return false;
+        }
+        if (orientStaffCond) {
+          if (orientStaffCond === '__unset__') { if (m.orientStaff) return false; }
+          else if (m.orientStaff !== orientStaffCond) return false;
+        }
+        if (travelCountryCond) {
+          if (travelCountryCond === '__unset__') { if (m.travelCountry) return false; }
+          else if (m.travelCountry !== travelCountryCond) return false;
+        }
+        if (travelDateCond) {
+          if (!travelDateMatches(m.travelDate, travelDateCond)) return false;
+        }
+        if (travelReasonCond) {
+          if (travelReasonCond === '__unset__') { if (m.travelReason) return false; }
+          else if (m.travelReason !== travelReasonCond) return false;
+        }
         return true;
       });
 
@@ -3430,6 +3903,18 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       if (startMonth) {
         tags.push(`受講開始: ${startMonth.replace('-', '年')}月`);
       }
+      // ===== 詳細検索のタグ =====
+      const labelUnset = '未設定';
+      if (statusCond) tags.push(`ステータス: ${statusCond}`);
+      if (occupationCond) tags.push(`職業: ${occupationCond === '__unset__' ? labelUnset : occupationCond}`);
+      if (residenceCond) tags.push(`在住国: ${residenceCond === '__unset__' ? labelUnset : residenceCond}`);
+      if (orientStaffCond) tags.push(`オリエン担当: ${orientStaffCond === '__unset__' ? labelUnset : orientStaffCond}`);
+      if (travelCountryCond) tags.push(`渡航先(国): ${travelCountryCond === '__unset__' ? labelUnset : travelCountryCond}`);
+      if (travelDateCond) {
+        const labels = { within3m: '3ヶ月以内', within6m: '半年以内', within12m: '1年以内', over12m: '1年以上先', __unset__: labelUnset };
+        tags.push(`渡航時期: ${labels[travelDateCond] || travelDateCond}`);
+      }
+      if (travelReasonCond) tags.push(`渡航理由: ${travelReasonCond === '__unset__' ? labelUnset : travelReasonCond}`);
 
       // 結果バー表示
       const bar = document.getElementById('search-result-bar');
@@ -3458,6 +3943,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       document.querySelectorAll('.search-textbook-cb').forEach(cb => cb.checked = false);
       updateTextbookBtnLabel();
       switchKeywordTab('name');
+      // ===== 詳細検索のクリア =====
+      document.getElementById('search-status').value = '';
+      document.getElementById('search-occupation').value = '';
+      document.getElementById('search-residence').value = '';
+      document.getElementById('search-orient-staff').value = '';
+      document.getElementById('search-travel-country').value = '';
+      document.getElementById('search-travel-date').value = '';
+      document.getElementById('search-travel-reason').value = '';
       document.getElementById('search-result-bar').style.display = 'none';
       renderMembersTable(members);
     }
@@ -3471,14 +3964,16 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#999;">該当する会員が見つかりません</td></tr>`;
         return;
       }
-      // ステータス色（受講中=緑、入学手続き中=青、休会中=黄、卒業=グレー、途中退会=赤）
+      // ステータス色（受講中=緑、入学手続き中=青、再入学手続き中=紫、継続中=オレンジ、休会中=黄、卒業=グレー、途中退会=赤）
       const statusBadge = (st) => {
         const colorMap = {
-          '受講中':       { bg: '#E8F8F0', fg: '#27AE60' },
-          '入学手続き中': { bg: '#EAF2F8', fg: '#2E86C1' },
-          '休会中':       { bg: '#FEF5E7', fg: '#B7791F' },
-          '卒業':         { bg: '#ECEFF1', fg: '#7F8C8D' },
-          '途中退会':     { bg: '#FDEDEC', fg: '#E74C3C' }
+          '受講中':         { bg: '#E8F8F0', fg: '#27AE60' },
+          '入学手続き中':   { bg: '#EAF2F8', fg: '#2E86C1' },
+          '再入学手続き中': { bg: '#F5EEF8', fg: '#8E44AD' },
+          '継続中':         { bg: '#FDF2E9', fg: '#E67E22' },
+          '休会中':         { bg: '#FEF5E7', fg: '#B7791F' },
+          '卒業':           { bg: '#ECEFF1', fg: '#7F8C8D' },
+          '途中退会':       { bg: '#FDEDEC', fg: '#E74C3C' }
         };
         const c = colorMap[st] || { bg: '#F4F6F8', fg: '#999' };
         return `<span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:11px; padding:3px 8px; border-radius:10px; white-space:nowrap;">${st || '未設定'}</span>`;
@@ -3556,7 +4051,17 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         return items.join('');
       };
 
+      // 卒業ステータスの会員には「🔄 再入会させる」バナーを表示
+      const reinstatementBanner = (m.status === '卒業') ? `
+        <div style="background:#F5EEF8; border:2px solid #8E44AD; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+          <div style="font-size:13px; font-weight:700; color:#8E44AD; margin-bottom:4px;">⚠️ この会員は卒業ステータスです</div>
+          <div style="font-size:12px; color:#6C3483; margin-bottom:10px;">再入会の場合は下記ボタンから継続プランを登録してください。</div>
+          <button type="button" class="primary-btn" onclick="openContinuationPlanModal(editingMemberId, null, true)" style="width:100%; background:#8E44AD; border-color:#8E44AD;">🔄 再入会させる</button>
+        </div>
+      ` : '';
+
       document.getElementById('panel-body').innerHTML = `
+        ${reinstatementBanner}
         <!-- ============================ -->
         <!-- 1. 基本情報 -->
         <!-- ============================ -->
@@ -3614,6 +4119,18 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           </div>
         </div>
 
+        <div class="form-group">
+          <label class="form-label">職業 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <select class="form-input" id="em-occupation">
+            ${buildEnumOptions(['会社員','経営者・役員','自営業・フリーランス','公務員','大学・大学院生','中学・高校生','パート・アルバイト','無職','その他'], v(m.occupation))}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">職業 備考 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <input type="text" class="form-input" id="em-occupationNote" value="${v(m.occupationNote)}" placeholder="「その他」選択時の詳細など（自由記述）">
+        </div>
+
         <!-- ============================ -->
         <!-- 2. 連絡先 -->
         <!-- ============================ -->
@@ -3643,35 +4160,43 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           <div class="form-group">
             <label class="form-label">ステータス <span style="color:var(--color-error);">*</span></label>
             <select class="form-input" id="em-status" required>
-              ${buildEnumOptions(['入学手続き中','受講中','休会中','卒業','途中退会'], v(m.status))}
+              ${buildEnumOptions(['入学手続き中','再入学手続き中','受講中','継続中','休会中','卒業','途中退会'], v(m.status))}
             </select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">オリエンテーション実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <label class="form-label">オリエン実施日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
             <input type="date" class="form-input" id="em-enrollmentDate" value="${v(m.enrollmentDate)}">
           </div>
+          <div class="form-group">
+            <label class="form-label">オリエン担当者 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-orientStaff">
+              <!-- JS で動的生成（role=Coach のみ）：openMemberPanel末尾で初期化 -->
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">受講開始日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
             <input type="date" class="form-input" id="em-startDate" value="${v(m.startDate)}">
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">卒業予定日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-          <input type="date" class="form-input" id="em-graduateDate" value="${v(m.graduateDate)}">
+          <div class="form-group">
+            <label class="form-label">卒業予定日 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="date" class="form-input" id="em-graduateDate" value="${v(m.graduateDate)}">
+          </div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">現在のクラス <span style="color:var(--color-error);">*</span></label>
-            <select class="form-input" id="em-currentClass" required>
-              ${buildEnumOptions(['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'], v(m.currentClass))}
-            </select>
-          </div>
           <div class="form-group">
             <label class="form-label">入学時クラス <span style="color:var(--color-error);">*</span></label>
             <select class="form-input" id="em-initialClass" required>
               ${buildEnumOptions(['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'], v(m.initialClass))}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">現在のクラス <span style="color:var(--color-error);">*</span></label>
+            <select class="form-input" id="em-currentClass" required>
+              ${buildEnumOptions(['Beginner','Lower-Intermediate','Intermediate & Above','Higher Education Prep'], v(m.currentClass))}
             </select>
           </div>
         </div>
@@ -3687,9 +4212,26 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         </div>
 
         <!-- ============================ -->
-        <!-- 4. 担当者 -->
+        <!-- 4. 継続プラン履歴 -->
         <!-- ============================ -->
-        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">4. 担当者</div>
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">4. 継続プラン履歴</div>
+        <div id="em-continuation-plans-body" style="margin-bottom:8px;">
+          <!-- JS で履歴テーブルを描画 -->
+        </div>
+        <button type="button" class="secondary-btn" onclick="openContinuationPlanModal(editingMemberId, null)" style="width:100%;">＋ 継続プランを追加</button>
+
+        <!-- ============================ -->
+        <!-- 5. 休会管理 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">5. 休会管理</div>
+        <div id="em-suspension-body">
+          <!-- JS で内容描画 -->
+        </div>
+
+        <!-- ============================ -->
+        <!-- 6. 担当者 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">6. 担当者</div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">担当コンサルタント <span style="color:var(--color-error);">*</span></label>
@@ -3706,9 +4248,103 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         </div>
 
         <!-- ============================ -->
-        <!-- 5. コーチ入力 -->
+        <!-- 7. 在住・渡航情報 -->
         <!-- ============================ -->
-        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">5. コーチ入力</div>
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">7. 在住・渡航情報</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">入学時の在住国 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-residence" onchange="emOnResidenceChange()">
+              ${buildEnumOptions(['日本','海外'], v(m.residence))}
+            </select>
+          </div>
+          <div class="form-group" id="em-residence-overseas-wrap" style="display:${m.residence === '海外' ? '' : 'none'};">
+            <label class="form-label">海外の国名 <span style="color:var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="em-residenceOverseas" value="${v(m.residenceOverseas)}" placeholder="例：オーストラリア">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">渡航先（国） <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-travelCountry" onchange="emOnCountryChange()">
+              ${buildEnumOptions(['オーストラリア','カナダ','イギリス','ニュージーランド','フィリピン','その他','未決定'], v(m.travelCountry))}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">渡航先（都市） <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-travelCity">
+              <!-- JS で動的生成：openMemberPanel末尾で初期化 -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">渡航時期 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="date" class="form-input" id="em-travelDate" value="${v(m.travelDate)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">渡航理由 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-travelReason">
+              ${buildEnumOptions(['語学学校','ワーキングホリデー','進学（大学・大学院）','高校留学','海外就職','その他'], v(m.travelReason))}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">在住・渡航 備考 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+          <textarea class="form-input" id="em-travelNote" rows="2" placeholder="例：渡航時期は秋ごろ予定／渡航先「その他」の場合の国名・都市名など" style="resize:vertical; font-family:inherit;">${v(m.travelNote)}</textarea>
+        </div>
+
+        <!-- ============================ -->
+        <!-- 8. 直近の英語スコア -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">8. 直近の英語スコア</div>
+        <div style="font-size:11px; color:var(--color-text-muted); margin-bottom:8px;">受験経験があるもののみ入力してください（未入力の検定はカルテ等で非表示になります）。</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">TOEIC L&R <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="number" class="form-input" id="em-scoreToeicLR" min="10" max="990" step="5" value="${v((m.englishScores || {}).toeicLR)}" placeholder="例：650">
+          </div>
+          <div class="form-group">
+            <label class="form-label">TOEIC S&W <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="number" class="form-input" id="em-scoreToeicSW" min="0" max="400" step="10" value="${v((m.englishScores || {}).toeicSW)}" placeholder="例：260">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">TOEFL iBT <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <input type="number" class="form-input" id="em-scoreToefl" min="0" max="120" step="1" value="${v((m.englishScores || {}).toefl)}" placeholder="例：80">
+          </div>
+          <div class="form-group">
+            <label class="form-label">IELTS <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-scoreIelts">
+              <!-- JS で 0.0〜9.0 を 0.5刻みで動的生成：openMemberPanel末尾で初期化 -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">英検 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <select class="form-input" id="em-scoreEiken">
+              ${buildEnumOptions(['5級','4級','3級','準2級','準2級プラス','2級','準1級','1級'], v((m.englishScores || {}).eiken))}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">その他 検定名・スコア <span style="color:var(--color-text-muted); font-weight:normal;">(任意・自由入力)</span></label>
+            <input type="text" class="form-input" id="em-scoreOther" value="${v(typeof (m.englishScores || {}).other === 'string' ? (m.englishScores || {}).other : '')}" placeholder="例：ケンブリッジ英検 FCE B2 ／ GTEC 800">
+          </div>
+        </div>
+
+        <!-- ============================ -->
+        <!-- 9. コーチ入力 -->
+        <!-- ============================ -->
+        <div style="font-size:12px; font-weight:700; color:var(--color-primary); letter-spacing:0.06em; margin:16px 0 8px; padding-bottom:6px; border-bottom:2px solid var(--color-primary);">9. コーチ入力</div>
         <div class="form-group">
           <label class="form-label">学習目標・目的 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
           <textarea class="form-input" id="em-coachLearningGoal" rows="3" style="resize:vertical; font-family:inherit;">${v(m.coachLearningGoal)}</textarea>
@@ -3725,8 +4361,115 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">※ 再発行すると旧パスワードでログインできなくなります。学習記録・PROGOSスコア等の過去データは引き継がれます。</div>
         </div>
       `;
+
+      // ===== 編集パネル内の動的プルダウンを初期化 =====
+      // オリエン担当者プルダウン（role=Coach のみ）
+      emPopulateOrientStaff(v(m.orientStaff));
+      // IELTSプルダウン（0.0〜9.0、0.5刻み）
+      emPopulateIeltsScores(v((m.englishScores || {}).ielts));
+      // 渡航先 都市プルダウン（国に応じてリスト生成）
+      emRefreshCityOptions(v(m.travelCountry), v(m.travelCity));
+      // 継続プラン履歴テーブルを描画
+      renderContinuationPlanHistory(memberId);
+      // 休会管理セクションを描画
+      renderSuspensionSection(memberId);
+
       document.getElementById('overlay').classList.add('show');
       document.getElementById('member-panel').classList.add('show');
+    }
+
+    // ===== 編集パネル：オリエン担当者プルダウン生成（role=Coach のみ） =====
+    function emPopulateOrientStaff(selectedName = '') {
+      let all = [];
+      try {
+        const stored = localStorage.getItem('staffList_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) all = parsed;
+        }
+      } catch (e) {}
+      if (typeof staffData !== 'undefined' && Array.isArray(staffData)) {
+        staffData.forEach(s => {
+          if (!all.find(x => (x.email || '').toLowerCase() === (s.email || '').toLowerCase())) all.push(s);
+        });
+      }
+      const coaches = all.filter(s => s.role === 'Coach');
+      const opts = ['<option value="">選択してください</option>'];
+      coaches.forEach(s => {
+        const sel = (selectedName === s.name) ? ' selected' : '';
+        opts.push(`<option value="${s.name}"${sel}>${s.name}</option>`);
+      });
+      const el = document.getElementById('em-orientStaff');
+      if (el) el.innerHTML = opts.join('');
+    }
+
+    // ===== 編集パネル：IELTSスコアプルダウン生成（0.0〜9.0、0.5刻み） =====
+    function emPopulateIeltsScores(selectedScore = '') {
+      const el = document.getElementById('em-scoreIelts');
+      if (!el) return;
+      const opts = ['<option value="">選択してください</option>'];
+      for (let v = 0; v <= 9.0 + 1e-9; v += 0.5) {
+        const s = v.toFixed(1);
+        const sel = (selectedScore === s) ? ' selected' : '';
+        opts.push(`<option value="${s}"${sel}>${s}</option>`);
+      }
+      el.innerHTML = opts.join('');
+    }
+
+    // ===== 編集パネル：都市プルダウンを国に応じて再生成（既存値があれば selected にする） =====
+    function emRefreshCityOptions(country, selectedCity = '') {
+      const cityEl = document.getElementById('em-travelCity');
+      if (!cityEl) return;
+
+      // 「未決定」 or 未選択 → 都市は選択不可
+      if (!country || country === '未決定') {
+        cityEl.innerHTML = '<option value="">先に国を選択してください</option>';
+        cityEl.disabled = true;
+        cityEl.value = '';
+        return;
+      }
+
+      // 「その他」 → 都市プルダウンには「その他」のみ
+      if (country === 'その他') {
+        const sel = (selectedCity === 'その他') ? ' selected' : '';
+        cityEl.innerHTML = `<option value="">選択してください</option><option value="その他"${sel}>その他</option>`;
+        cityEl.disabled = false;
+        return;
+      }
+
+      // 通常国 → マスターから都市リストを生成（末尾に「その他」も追加）
+      // 新規登録モーダルと同じマスター（NM_TRAVEL_CITIES）を流用
+      const cities = (typeof NM_TRAVEL_CITIES !== 'undefined' && NM_TRAVEL_CITIES[country]) || [];
+      const opts = ['<option value="">選択してください</option>'];
+      cities.forEach(c => {
+        const sel = (selectedCity === c) ? ' selected' : '';
+        opts.push(`<option value="${c}"${sel}>${c}</option>`);
+      });
+      const otherSel = (selectedCity === 'その他') ? ' selected' : '';
+      opts.push(`<option value="その他"${otherSel}>その他</option>`);
+      cityEl.innerHTML = opts.join('');
+      cityEl.disabled = false;
+    }
+
+    // ===== 編集パネル：国の選択変更時 =====
+    function emOnCountryChange() {
+      const country = document.getElementById('em-travelCountry').value;
+      // 国を変えたら都市は一旦リセット（既存値が新しい国のリストに無いため）
+      emRefreshCityOptions(country, '');
+    }
+
+    // ===== 編集パネル：在住国の選択変更時（海外なら国名入力欄を表示） =====
+    function emOnResidenceChange() {
+      const v = document.getElementById('em-residence').value;
+      const wrap = document.getElementById('em-residence-overseas-wrap');
+      const input = document.getElementById('em-residenceOverseas');
+      if (!wrap || !input) return;
+      if (v === '海外') {
+        wrap.style.display = '';
+      } else {
+        wrap.style.display = 'none';
+        input.value = '';
+      }
     }
 
     // ===== 会員情報スライドパネル：変更を保存 =====
@@ -3747,11 +4490,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const nickname = getVal('em-nickname');
       const gender = getVal('em-gender');
       const birthDate = getVal('em-birthDate');
+      const occupation = getVal('em-occupation');
+      const occupationNote = getVal('em-occupationNote');
       const email = getVal('em-email');
       const phone = getVal('em-phone');
       const plan = getVal('em-plan');
       const status = getVal('em-status');
       const enrollmentDate = getVal('em-enrollmentDate');
+      const orientStaff = getVal('em-orientStaff');
       const startDate = getVal('em-startDate');
       const graduateDate = getVal('em-graduateDate');
       const currentClass = getVal('em-currentClass');
@@ -3760,6 +4506,22 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const dailyTargetMinutesStr = getVal('em-dailyTargetMinutes');
       const consultant = getVal('em-consultant');
       const cs = getVal('em-cs');
+      // 5. 在住・渡航情報
+      const residence = getVal('em-residence');
+      const residenceOverseas = getVal('em-residenceOverseas');
+      const travelCountry = getVal('em-travelCountry');
+      const travelCity = getVal('em-travelCity');
+      const travelDate = getVal('em-travelDate');
+      const travelReason = getVal('em-travelReason');
+      const travelNote = getVal('em-travelNote');
+      // 6. 直近の英語スコア
+      const toeicLRStr = getVal('em-scoreToeicLR');
+      const toeicSWStr = getVal('em-scoreToeicSW');
+      const toeflStr   = getVal('em-scoreToefl');
+      const ieltsStr   = getVal('em-scoreIelts');
+      const eikenStr   = getVal('em-scoreEiken');
+      const otherStr   = getVal('em-scoreOther');
+      // 7. コーチ入力
       const coachLearningGoal = getVal('em-coachLearningGoal');
       const note = getVal('em-note');
 
@@ -3800,6 +4562,34 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         return;
       }
 
+      // 在住国「海外」を選択した場合は国名入力が必須
+      if (residence === '海外' && !residenceOverseas) {
+        alert('在住国で「海外」を選択した場合は、海外の国名を入力してください。');
+        document.getElementById('em-residenceOverseas').focus();
+        return;
+      }
+
+      // 直近の英語スコア（範囲チェック・入力時のみ）
+      const englishScores = {};
+      if (toeicLRStr) {
+        const v = parseInt(toeicLRStr, 10);
+        if (!Number.isFinite(v) || v < 10 || v > 990) { alert('TOEIC L&Rは10〜990の範囲で入力してください。'); document.getElementById('em-scoreToeicLR').focus(); return; }
+        englishScores.toeicLR = v;
+      }
+      if (toeicSWStr) {
+        const v = parseInt(toeicSWStr, 10);
+        if (!Number.isFinite(v) || v < 0 || v > 400) { alert('TOEIC S&Wは0〜400の範囲で入力してください。'); document.getElementById('em-scoreToeicSW').focus(); return; }
+        englishScores.toeicSW = v;
+      }
+      if (toeflStr) {
+        const v = parseInt(toeflStr, 10);
+        if (!Number.isFinite(v) || v < 0 || v > 120) { alert('TOEFL iBTは0〜120の範囲で入力してください。'); document.getElementById('em-scoreToefl').focus(); return; }
+        englishScores.toefl = v;
+      }
+      if (ieltsStr) englishScores.ielts = ieltsStr;
+      if (eikenStr) englishScores.eiken = eikenStr;
+      if (otherStr) englishScores.other = otherStr;
+
       // メール重複チェック（自分以外の会員 + スタッフ全員）
       const emailLower = email.toLowerCase();
       const dupMember = members.find(x => x.id !== m.id && (x.email || '').toLowerCase() === emailLower);
@@ -3826,12 +4616,21 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         lastNameKanji, firstNameKanji,
         lastNameKana, firstNameKana,
         lastNameAlpha, firstNameAlpha,
-        gender, birthDate, email, phone,
+        gender, birthDate,
+        occupation, occupationNote,
+        email, phone,
         plan, status,
-        enrollmentDate, startDate, graduateDate,
+        enrollmentDate, orientStaff,
+        startDate, graduateDate,
         currentClass, initialClass, nativecamp,
         dailyTargetMinutes,
         consultant, cs,
+        // 5. 在住・渡航情報
+        residence, residenceOverseas,
+        travelCountry, travelCity, travelDate, travelReason, travelNote,
+        // 6. 直近の英語スコア
+        englishScores,
+        // 7. コーチ入力
         coachLearningGoal, note,
         course: currentClass  // 旧コード互換
       });
@@ -3844,6 +4643,502 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
       closeMemberPanel();
       alert(`会員「${displayName}」さんの情報を更新しました。`);
+    }
+
+    // ========================================
+    // ===== B-2 継続プラン管理（Phase 2） =====
+    // ========================================
+
+    // モーダルが対象としている会員IDと、編集中の継続プランID（新規時はnull）
+    let cpTargetMemberId = null;
+    let cpEditingPlanId = null;
+    let cpIsReinstatement = false;  // 再入会モード（true なら保存時にステータス自動変更）
+
+    // ===== 継続プラン入力モーダルを開く =====
+    // mode: 'add'（新規）, 'edit'（既存編集）, 'reinstatement'（再入会＝新規 + ステータス変更）
+    // planId: editモード時に必須（編集対象の継続プランID）
+    // isReinstatement: 再入会モードかどうか（卒業会員からの再入会フローで true）
+    function openContinuationPlanModal(memberId, planId = null, isReinstatement = false) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+
+      cpTargetMemberId = memberId;
+      cpEditingPlanId = planId;
+      cpIsReinstatement = isReinstatement;
+
+      // 会員情報を上部に表示
+      const banner = isReinstatement
+        ? `<div style="background:#F5EEF8; padding:8px 10px; border-radius:4px; color:#8E44AD; font-weight:700; margin-bottom:6px;">🔄 再入会モード：保存後、ステータスが自動で「再入学手続き中」または「継続中」になります</div>`
+        : '';
+      document.getElementById('cp-member-info').innerHTML = `
+        ${banner}
+        対象会員：<strong>${m.name}</strong> さん（${m.id}）
+      `;
+
+      // タイトルと削除ボタンの表示切替
+      const isEdit = !!planId;
+      let title = '＋ 継続プランを追加';
+      if (isEdit) title = '✏️ 継続プランを編集';
+      else if (isReinstatement) title = '🔄 再入会：継続プランを設定';
+      document.getElementById('cp-modal-title').textContent = title;
+      document.getElementById('cp-delete-btn').style.display = isEdit ? '' : 'none';
+
+      // フォームをリセット
+      document.getElementById('cp-form').reset();
+
+      // 再入会モードでは「卒業日に反映」チェックボックスをデフォルトオン
+      if (isReinstatement) {
+        document.getElementById('cp-applyGraduateDate').checked = true;
+      }
+
+      // 編集モード時は既存値を流し込む
+      if (isEdit) {
+        const list = m.continuationPlans || [];
+        const plan = list.find(p => p.id === planId);
+        if (plan) {
+          document.getElementById('cp-planType').value = plan.planType || '';
+          document.getElementById('cp-months').value = plan.months || '';
+          document.getElementById('cp-startDate').value = plan.startDate || '';
+          document.getElementById('cp-endDate').value = plan.endDate || '';
+          document.getElementById('cp-note').value = plan.note || '';
+        }
+      }
+
+      document.getElementById('cp-overlay').classList.add('show');
+    }
+
+    function closeContinuationPlanModal() {
+      document.getElementById('cp-overlay').classList.remove('show');
+      cpTargetMemberId = null;
+      cpEditingPlanId = null;
+      cpIsReinstatement = false;
+    }
+
+    // ===== 期間と開始日から終了日を自動算出（手動上書き可） =====
+    // 「開始日 + N月 - 1日」が終了日（例：4/1開始 2ヶ月 → 5/31終了）
+    function cpAutoCalcEndDate() {
+      const monthsStr = document.getElementById('cp-months').value;
+      const startStr = document.getElementById('cp-startDate').value;
+      const endEl = document.getElementById('cp-endDate');
+      if (!monthsStr || !startStr || !endEl) return;
+      const months = parseInt(monthsStr, 10);
+      if (!Number.isFinite(months) || months <= 0) return;
+      const start = new Date(startStr);
+      if (Number.isNaN(start.getTime())) return;
+      const end = new Date(start.getFullYear(), start.getMonth() + months, start.getDate());
+      // 1日マイナスして「最終日」とする
+      end.setDate(end.getDate() - 1);
+      const yyyy = end.getFullYear();
+      const mm = String(end.getMonth() + 1).padStart(2, '0');
+      const dd = String(end.getDate()).padStart(2, '0');
+      endEl.value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    // ===== 継続プランを保存（新規 or 編集） =====
+    function saveContinuationPlan() {
+      if (!cpTargetMemberId) return;
+      const m = members.find(x => x.id === cpTargetMemberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+
+      const planType = document.getElementById('cp-planType').value.trim();
+      const monthsStr = document.getElementById('cp-months').value;
+      const startDate = document.getElementById('cp-startDate').value.trim();
+      const endDate = document.getElementById('cp-endDate').value.trim();
+      const note = document.getElementById('cp-note').value.trim();
+
+      // 必須チェック
+      if (!planType) { alert('プラン種類を選択してください。'); return; }
+      if (!monthsStr) { alert('期間を選択してください。'); return; }
+      if (!startDate) { alert('開始日を入力してください。'); return; }
+      if (!endDate)   { alert('終了日を入力してください。'); return; }
+
+      const months = parseInt(monthsStr, 10);
+      if (!Number.isFinite(months) || months < 1 || months > 6) {
+        alert('期間は1〜6ヶ月の範囲で選択してください。');
+        return;
+      }
+
+      // 開始日 < 終了日 のチェック
+      if (startDate >= endDate) {
+        alert('終了日は開始日より後の日付を指定してください。');
+        return;
+      }
+
+      // continuationPlans 配列を初期化（未定義の会員に備える）
+      if (!Array.isArray(m.continuationPlans)) m.continuationPlans = [];
+
+      if (cpEditingPlanId) {
+        // 編集モード：既存プランを上書き
+        const idx = m.continuationPlans.findIndex(p => p.id === cpEditingPlanId);
+        if (idx === -1) { alert('編集対象の継続プランが見つかりません。'); return; }
+        m.continuationPlans[idx] = {
+          ...m.continuationPlans[idx],
+          planType, months, startDate, endDate, note
+        };
+      } else {
+        // 新規モード
+        m.continuationPlans.push({
+          id: 'CP' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          planType, months, startDate, endDate, note,
+          createdAt: Date.now()
+        });
+      }
+
+      // 開始日昇順で並び替え
+      m.continuationPlans.sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : 0));
+
+      // 卒業予定日 反映チェックがオンなら、会員の graduateDate を上書き
+      let graduateUpdated = false;
+      const applyToGraduate = document.getElementById('cp-applyGraduateDate').checked;
+      if (applyToGraduate) {
+        m.graduateDate = endDate;
+        graduateUpdated = true;
+        // 編集パネルが開いていれば、卒業予定日入力欄も同期して更新
+        const emGraduateEl = document.getElementById('em-graduateDate');
+        if (emGraduateEl) emGraduateEl.value = endDate;
+      }
+
+      // ===== 再入会モードの場合：ステータスを自動変更 =====
+      let statusChanged = false;
+      let newStatus = '';
+      if (cpIsReinstatement) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const startDateObj = new Date(startDate); startDateObj.setHours(0, 0, 0, 0);
+        // 開始日が未来 → 「再入学手続き中」、今日以前 → 「継続中」
+        newStatus = (startDateObj > today) ? '再入学手続き中' : '継続中';
+        m.status = newStatus;
+        statusChanged = true;
+        // 編集パネルのステータスプルダウンも同期
+        const emStatusEl = document.getElementById('em-status');
+        if (emStatusEl) emStatusEl.value = newStatus;
+      }
+
+      saveAddedMembersToStorage();
+
+      // 編集パネルが開いていれば履歴を再描画
+      if (typeof renderContinuationPlanHistory === 'function') {
+        try { renderContinuationPlanHistory(cpTargetMemberId); } catch (e) {}
+      }
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+      if (typeof renderKarteList === 'function') renderKarteList();
+
+      let msg = cpEditingPlanId ? '継続プランを更新しました。' : '継続プランを登録しました。';
+      if (graduateUpdated) msg += `\n\n卒業予定日を ${endDate} に更新しました。`;
+      if (statusChanged) {
+        msg += `\n\n🔄 再入会処理が完了しました。\nステータスを「${newStatus}」に変更しました。`;
+        if (newStatus === '再入学手続き中') {
+          msg += `\n（再入会日 ${startDate} になると自動的に「継続中」へ切り替わります）`;
+        }
+      }
+      // 再入会モードの場合、編集パネル全体を再描画してバナーを消す
+      const wasReinstatement = cpIsReinstatement;
+      closeContinuationPlanModal();
+      if (wasReinstatement && typeof openMemberPanel === 'function') {
+        openMemberPanel(m.id);
+      }
+      alert(msg);
+    }
+
+    // ===== 継続プランを削除 =====
+    function deleteContinuationPlan() {
+      if (!cpTargetMemberId || !cpEditingPlanId) return;
+      const m = members.find(x => x.id === cpTargetMemberId);
+      if (!m) return;
+
+      if (!confirm('この継続プランを削除します。よろしいですか？')) return;
+
+      m.continuationPlans = (m.continuationPlans || []).filter(p => p.id !== cpEditingPlanId);
+      saveAddedMembersToStorage();
+
+      if (typeof renderContinuationPlanHistory === 'function') {
+        try { renderContinuationPlanHistory(cpTargetMemberId); } catch (e) {}
+      }
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+
+      closeContinuationPlanModal();
+      alert('継続プランを削除しました。');
+    }
+
+    // ===== 編集パネル：継続プラン履歴セクションを描画 =====
+    function renderContinuationPlanHistory(memberId) {
+      const container = document.getElementById('em-continuation-plans-body');
+      if (!container) return;
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+
+      const list = Array.isArray(m.continuationPlans) ? m.continuationPlans : [];
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px; background:#F8F9FA; border-radius:6px;">継続プランの履歴はまだありません</div>`;
+        return;
+      }
+
+      // テーブル表示（プラン種類・期間・開始日〜終了日・備考・編集ボタン）
+      const rows = list.map(p => `
+        <tr>
+          <td style="padding:8px; font-size:12px;">${p.planType}</td>
+          <td style="padding:8px; font-size:12px; text-align:center;">${p.months}ヶ月</td>
+          <td style="padding:8px; font-size:11px; color:#555;">${p.startDate} 〜 ${p.endDate}</td>
+          <td style="padding:8px; font-size:11px; color:#666;">${(p.note || '').slice(0, 40)}${(p.note || '').length > 40 ? '…' : ''}</td>
+          <td style="padding:8px; text-align:center;">
+            <button class="action-btn" onclick="openContinuationPlanModal('${m.id}', '${p.id}')">編集</button>
+          </td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <table style="width:100%; font-size:12px; border-collapse:collapse;">
+          <thead>
+            <tr style="background:#ECF0F1;">
+              <th style="padding:6px 8px; text-align:left; font-size:11px;">プラン種類</th>
+              <th style="padding:6px 8px; text-align:center; font-size:11px; width:70px;">期間</th>
+              <th style="padding:6px 8px; text-align:left; font-size:11px;">開始日 〜 終了日</th>
+              <th style="padding:6px 8px; text-align:left; font-size:11px;">備考</th>
+              <th style="padding:6px 8px; text-align:center; font-size:11px; width:60px;">操作</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    // ========================================
+    // ===== B-2 休会管理（Phase 3） =====
+    // ========================================
+
+    let spTargetMemberId = null;  // 休会モーダルが対象としている会員ID
+
+    // 日付差分（日数）：(b - a) + 1。例：4/1〜4/30 → 30日
+    function diffDaysInclusive(aStr, bStr) {
+      const a = new Date(aStr); a.setHours(0, 0, 0, 0);
+      const b = new Date(bStr); b.setHours(0, 0, 0, 0);
+      return Math.floor((b - a) / 86400000) + 1;
+    }
+
+    // 日付に日数を加算してYYYY-MM-DD文字列で返す
+    function addDays(dateStr, days) {
+      const d = new Date(dateStr); d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + days);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // ===== 休会設定モーダルを開く =====
+    function openSuspensionModal(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+
+      spTargetMemberId = memberId;
+
+      document.getElementById('sp-member-info').innerHTML = `
+        対象会員：<strong>${m.name}</strong> さん（${m.id}）<br>
+        現在の卒業予定日：<strong>${m.graduateDate || '未設定'}</strong>
+      `;
+
+      document.getElementById('sp-form').reset();
+      document.getElementById('sp-preview').style.display = 'none';
+
+      document.getElementById('sp-overlay').classList.add('show');
+    }
+
+    function closeSuspensionModal() {
+      document.getElementById('sp-overlay').classList.remove('show');
+      spTargetMemberId = null;
+    }
+
+    // ===== 入力時のプレビュー（休会日数と新卒業予定日） =====
+    function spUpdatePreview() {
+      const from = document.getElementById('sp-from').value;
+      const until = document.getElementById('sp-until').value;
+      const preview = document.getElementById('sp-preview');
+      const content = document.getElementById('sp-preview-content');
+      if (!from || !until) { preview.style.display = 'none'; return; }
+      if (from >= until) {
+        preview.style.display = '';
+        content.innerHTML = '⚠️ 休会終了日は休会開始日より後の日付を指定してください。';
+        return;
+      }
+      const m = members.find(x => x.id === spTargetMemberId);
+      if (!m) return;
+      const days = diffDaysInclusive(from, until);
+      let html = `休会日数：<strong>${days}日</strong>`;
+      if (days < 14) html += '（⚠️ 最短2週間=14日以上必要）';
+      else if (days > 92) html += '（⚠️ 最長3ヶ月=92日以内）';
+      if (m.graduateDate) {
+        const newGrad = addDays(m.graduateDate, days);
+        html += `<br>新卒業予定日：<strong>${m.graduateDate} → ${newGrad}</strong>`;
+      }
+      preview.style.display = '';
+      content.innerHTML = html;
+    }
+
+    // ===== 休会を設定（保存） =====
+    function saveSuspension() {
+      if (!spTargetMemberId) return;
+      const m = members.find(x => x.id === spTargetMemberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+
+      const from = document.getElementById('sp-from').value;
+      const until = document.getElementById('sp-until').value;
+
+      if (!from)  { alert('休会開始日を入力してください。'); return; }
+      if (!until) { alert('休会終了日を入力してください。'); return; }
+      if (from >= until) { alert('休会終了日は休会開始日より後の日付を指定してください。'); return; }
+
+      const days = diffDaysInclusive(from, until);
+      if (days < 14) { alert('休会期間は最短2週間（14日以上）必要です。'); return; }
+      if (days > 92) { alert('休会期間は最長3ヶ月（92日以内）です。'); return; }
+
+      // 休会前の値を退避（解除時の復元用）
+      m.preSuspendStatus = m.status || '';
+      m.preSuspendGraduateDate = m.graduateDate || '';
+
+      // 休会期間を保存
+      m.suspendedFrom = from;
+      m.suspendedUntil = until;
+
+      // 卒業予定日を休会日数分延長
+      if (m.graduateDate) {
+        m.graduateDate = addDays(m.graduateDate, days);
+      }
+
+      // 当日 ≤ 休会開始日 ≤ 今日 の場合は即座にステータス「休会中」に変更
+      // 休会開始日が未来なら、autoUpdateMemberStatuses が当日に切り替える
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const fromDate = new Date(from); fromDate.setHours(0, 0, 0, 0);
+      if (fromDate <= today) {
+        m.status = '休会中';
+      }
+
+      saveAddedMembersToStorage();
+
+      // 編集パネルが開いていれば再描画
+      if (typeof renderSuspensionSection === 'function') {
+        try { renderSuspensionSection(spTargetMemberId); } catch (e) {}
+      }
+      // 卒業予定日入力欄の同期
+      const emGraduateEl = document.getElementById('em-graduateDate');
+      if (emGraduateEl && m.graduateDate) emGraduateEl.value = m.graduateDate;
+      // ステータスプルダウンの同期
+      const emStatusEl = document.getElementById('em-status');
+      if (emStatusEl && m.status) emStatusEl.value = m.status;
+
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+      if (typeof renderKarteList === 'function') renderKarteList();
+
+      closeSuspensionModal();
+      alert(`休会を設定しました。\n期間：${from} 〜 ${until}（${days}日間）\n卒業予定日：${m.graduateDate}`);
+    }
+
+    // ===== 休会を解除（早期解除も対応：実際に休んだ日数だけ卒業予定日に残す） =====
+    function releaseSuspension(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      if (!m.suspendedFrom || !m.suspendedUntil) {
+        alert('この会員は休会設定されていません。');
+        return;
+      }
+
+      if (!confirm(`「${m.name}」さんの休会を解除します。\n\n休会期間：${m.suspendedFrom} 〜 ${m.suspendedUntil}\n\nよろしいですか？`)) return;
+
+      // 実際に休んだ日数を計算（解除日 = 今日 or 休会終了日のうち早い方）
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const fromDate = new Date(m.suspendedFrom); fromDate.setHours(0, 0, 0, 0);
+      const untilDate = new Date(m.suspendedUntil); untilDate.setHours(0, 0, 0, 0);
+
+      let actualDays;
+      if (today < fromDate) {
+        // 休会開始前に解除 → 0日
+        actualDays = 0;
+      } else if (today > untilDate) {
+        // 休会終了後（実質期間満了）→ 全日数
+        actualDays = diffDaysInclusive(m.suspendedFrom, m.suspendedUntil);
+      } else {
+        // 休会期間中の早期解除 → 休会開始日〜今日の日数
+        actualDays = diffDaysInclusive(m.suspendedFrom, today.toISOString().slice(0, 10));
+      }
+
+      // 卒業予定日を「元の卒業予定日 + 実際に休んだ日数」に再計算
+      if (m.preSuspendGraduateDate) {
+        m.graduateDate = (actualDays > 0)
+          ? addDays(m.preSuspendGraduateDate, actualDays)
+          : m.preSuspendGraduateDate;
+      }
+
+      // ステータスを元に戻す
+      if (m.preSuspendStatus) {
+        m.status = m.preSuspendStatus;
+      }
+
+      // 休会データをクリア
+      delete m.suspendedFrom;
+      delete m.suspendedUntil;
+      delete m.preSuspendStatus;
+      delete m.preSuspendGraduateDate;
+
+      saveAddedMembersToStorage();
+
+      if (typeof renderSuspensionSection === 'function') {
+        try { renderSuspensionSection(memberId); } catch (e) {}
+      }
+      const emGraduateEl = document.getElementById('em-graduateDate');
+      if (emGraduateEl && m.graduateDate) emGraduateEl.value = m.graduateDate;
+      const emStatusEl = document.getElementById('em-status');
+      if (emStatusEl && m.status) emStatusEl.value = m.status;
+
+      if (typeof renderMembersTable === 'function') renderMembersTable();
+      if (typeof renderKarteList === 'function') renderKarteList();
+
+      alert(`休会を解除しました。\n実際の休会日数：${actualDays}日\n卒業予定日：${m.graduateDate || '未設定'}`);
+    }
+
+    // ===== 編集パネル：休会管理セクションを描画 =====
+    function renderSuspensionSection(memberId) {
+      const container = document.getElementById('em-suspension-body');
+      if (!container) return;
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+
+      const isSuspended = !!(m.suspendedFrom && m.suspendedUntil);
+
+      if (!isSuspended) {
+        container.innerHTML = `
+          <div style="padding:14px; text-align:center; color:#999; font-size:12px; background:#F8F9FA; border-radius:6px; margin-bottom:8px;">現在は休会していません</div>
+          <button type="button" class="secondary-btn" onclick="openSuspensionModal(editingMemberId)" style="width:100%;">💤 休会を設定する</button>
+        `;
+        return;
+      }
+
+      // 休会中：残り日数等を表示
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const fromDate = new Date(m.suspendedFrom); fromDate.setHours(0, 0, 0, 0);
+      const untilDate = new Date(m.suspendedUntil); untilDate.setHours(0, 0, 0, 0);
+      let stateLabel = '';
+      if (today < fromDate) {
+        const daysToStart = Math.floor((fromDate - today) / 86400000);
+        stateLabel = `<span style="color:#2E86C1;">📅 ${daysToStart}日後に休会開始予定</span>`;
+      } else if (today >= fromDate && today <= untilDate) {
+        const daysToResume = Math.floor((untilDate - today) / 86400000);
+        stateLabel = `<span style="color:#B7791F;">🟡 現在休会中（あと${daysToResume + 1}日で再開予定）</span>`;
+      } else {
+        stateLabel = `<span style="color:#7F8C8D;">休会期間が過ぎています</span>`;
+      }
+
+      const totalDays = diffDaysInclusive(m.suspendedFrom, m.suspendedUntil);
+      const preGrad = m.preSuspendGraduateDate || '-';
+
+      container.innerHTML = `
+        <div style="background:#FFF8E1; border:1px solid #F5B041; border-radius:6px; padding:12px 14px; font-size:13px; margin-bottom:8px;">
+          <div style="font-weight:700; margin-bottom:6px;">${stateLabel}</div>
+          <div style="color:#555; font-size:12px; line-height:1.6;">
+            期間：<strong>${m.suspendedFrom} 〜 ${m.suspendedUntil}</strong>（${totalDays}日間）<br>
+            卒業予定日：<strong>${m.graduateDate || '-'}</strong> <span style="color:#999;">(休会前：${preGrad})</span>
+          </div>
+        </div>
+        <button type="button" class="secondary-btn" onclick="releaseSuspension(editingMemberId)" style="width:100%;">✅ 休会を解除する</button>
+      `;
     }
 
     // ===== 仮パスワード再発行（2段階確認＋新パスワード表示モーダル） =====
@@ -4573,20 +5868,64 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     })();
 
     // ===== ステータス自動遷移（日付ベース） =====
-    // ルール（手動保護対象は更新しない）：
+    // ルール：
+    //   【休会期間】suspendedFrom ≦ 今日 ≦ suspendedUntil → 「休会中」（preSuspendStatus に元ステータス退避）
+    //   【休会終了】suspendedUntil < 今日 → 元ステータスへ復帰、休会データクリア
+    //   【その他】手動保護対象（途中退会）はスキップ
     //   - 受講開始日が未来 or 未設定 → 「入学手続き中」
     //   - 受講開始日 ≦ 今日 < 卒業予定日 → 「受講中」
     //   - 卒業予定日 ≦ 今日 → 「卒業」
-    //   - 「休会中」「途中退会」は手動値を保護（自動更新しない）
     function autoUpdateMemberStatuses() {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const PROTECTED = ['休会中', '途中退会'];
+      const PROTECTED = ['途中退会'];
       let changed = false;
 
       members.forEach(m => {
+        // ===== 休会期間の処理（最優先） =====
+        if (m.suspendedFrom && m.suspendedUntil) {
+          if (todayStr >= m.suspendedFrom && todayStr <= m.suspendedUntil) {
+            // 休会期間中：ステータスを「休会中」に
+            if (m.status !== '休会中') {
+              // 念のため preSuspendStatus を保存（手動でステータス変更されていた場合に備える）
+              if (!m.preSuspendStatus) m.preSuspendStatus = m.status || '受講中';
+              m.status = '休会中';
+              changed = true;
+            }
+            return; // 休会中はその他の判定をスキップ
+          }
+          if (todayStr > m.suspendedUntil) {
+            // 休会期間が過ぎている：元ステータスに復帰し、休会データをクリア
+            if (m.preSuspendStatus) {
+              m.status = m.preSuspendStatus;
+            }
+            delete m.suspendedFrom;
+            delete m.suspendedUntil;
+            delete m.preSuspendStatus;
+            delete m.preSuspendGraduateDate;
+            changed = true;
+            // 復帰後、続けて通常の判定へ進む
+          }
+          // todayStr < suspendedFrom（休会開始前）はスキップして通常判定
+        }
+
         // 手動保護対象はスキップ
         if (PROTECTED.includes(m.status)) return;
+
+        // ===== 再入学手続き中の処理 =====
+        // 最新の継続プラン開始日が今日以前なら「継続中」に自動切替
+        if (m.status === '再入学手続き中') {
+          const plans = Array.isArray(m.continuationPlans) ? m.continuationPlans : [];
+          if (plans.length > 0) {
+            // 最新（=最も後）の開始日を持つ継続プランを取得
+            const latestPlan = [...plans].sort((a, b) => (a.startDate < b.startDate ? 1 : -1))[0];
+            if (latestPlan && latestPlan.startDate && latestPlan.startDate <= todayStr) {
+              m.status = '継続中';
+              changed = true;
+            }
+          }
+          return; // 再入学手続き中はその他の判定をスキップ（卒業日判定で「卒業」に戻ってしまうのを防ぐ）
+        }
 
         // 期待ステータスを判定
         let expected;
@@ -4598,6 +5937,19 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           expected = '卒業';
         }
 
+        // 「継続中」のステータスは自動で「卒業」に戻さないように保護
+        // （継続プラン期間中に卒業予定日が過ぎる構造のため、自動判定では「卒業」になってしまう）
+        if (m.status === '継続中') {
+          // 最新の継続プラン終了日が今日以降なら継続中を維持
+          const plans = Array.isArray(m.continuationPlans) ? m.continuationPlans : [];
+          if (plans.length > 0) {
+            const latestPlan = [...plans].sort((a, b) => (a.endDate < b.endDate ? 1 : -1))[0];
+            if (latestPlan && latestPlan.endDate && latestPlan.endDate >= todayStr) {
+              return; // 継続中を維持
+            }
+          }
+        }
+
         if (expected && m.status !== expected) {
           m.status = expected;
           changed = true;
@@ -4607,7 +5959,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       if (changed) {
         try {
           localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
-          console.log('🔄 ステータス自動更新：', members.filter(m => !PROTECTED.includes(m.status)).length, '名チェック完了');
+          console.log('🔄 ステータス自動更新：', members.length, '名チェック完了');
         } catch (e) { console.warn('ステータス自動更新の保存失敗', e); }
       }
     }
@@ -5143,6 +6495,33 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       document.getElementById('new-member-form').reset();
       // 担当者プルダウン（コンサルタント / CS）を最新スタッフから生成
       nmPopulateStaffSelects();
+      // オリエン担当者プルダウン（Coachのみ）を最新スタッフから生成
+      nmPopulateOrientStaff();
+      // IELTSプルダウン（0.0〜9.0、0.5刻み）を生成
+      nmPopulateIeltsScores();
+
+      // 在住国の連動：海外用テキスト欄を非表示にリセット
+      const overseasWrap = document.getElementById('nm-residence-overseas-wrap');
+      if (overseasWrap) overseasWrap.style.display = 'none';
+
+      // 渡航先：都市プルダウンを初期状態（非活性）にリセット
+      const cityEl = document.getElementById('nm-travelCity');
+      if (cityEl) {
+        cityEl.innerHTML = '<option value="">先に国を選択してください</option>';
+        cityEl.disabled = true;
+      }
+
+      // 渡航時期：最小日付を明日に設定（未来日のみ選択可）
+      const travelDateEl = document.getElementById('nm-travelDate');
+      if (travelDateEl) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const yyyy = tomorrow.getFullYear();
+        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const dd = String(tomorrow.getDate()).padStart(2, '0');
+        travelDateEl.min = `${yyyy}-${mm}-${dd}`;
+      }
+
       document.getElementById('new-member-overlay').classList.add('show');
     }
 
@@ -5180,6 +6559,97 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const elCs = document.getElementById('nm-cs');
       if (elC) elC.innerHTML = buildOptions(consultants, selectedConsultant);
       if (elCs) elCs.innerHTML = buildOptions(css, selectedCs);
+    }
+
+    // ===== オリエン担当者プルダウン生成（role=Coach のみ） =====
+    function nmPopulateOrientStaff(selectedName = '') {
+      let all = [];
+      try {
+        const stored = localStorage.getItem('staffList_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) all = parsed;
+        }
+      } catch (e) {}
+      if (typeof staffData !== 'undefined' && Array.isArray(staffData)) {
+        staffData.forEach(s => {
+          if (!all.find(x => (x.email || '').toLowerCase() === (s.email || '').toLowerCase())) all.push(s);
+        });
+      }
+      const coaches = all.filter(s => s.role === 'Coach');
+      const opts = ['<option value="">選択してください</option>'];
+      coaches.forEach(s => {
+        const sel = (selectedName === s.name) ? ' selected' : '';
+        opts.push(`<option value="${s.name}"${sel}>${s.name}</option>`);
+      });
+      const el = document.getElementById('nm-orientStaff');
+      if (el) el.innerHTML = opts.join('');
+    }
+
+    // ===== 渡航先：国→都市マスター =====
+    const NM_TRAVEL_CITIES = {
+      'オーストラリア': ['シドニー', 'メルボルン', 'ブリスベン', 'ゴールドコースト', 'パース', 'アデレード', 'ケアンズ'],
+      'カナダ':         ['トロント', 'バンクーバー', 'モントリオール', 'カルガリー', 'オタワ', 'ビクトリア'],
+      'イギリス':       ['ロンドン', 'マンチェスター', 'エディンバラ', 'ブライトン', 'オックスフォード', 'ケンブリッジ'],
+      'ニュージーランド': ['オークランド', 'ウェリントン', 'クライストチャーチ', 'クイーンズタウン'],
+      'フィリピン':     ['セブ', 'マニラ', 'バギオ', 'クラーク', 'ドゥマゲテ']
+    };
+
+    // ===== 国の選択変更時：都市プルダウンを書き換え =====
+    function nmOnCountryChange() {
+      const country = document.getElementById('nm-travelCountry').value;
+      const cityEl = document.getElementById('nm-travelCity');
+      if (!cityEl) return;
+
+      // 「未決定」 or 未選択 → 都市は選択不可
+      if (!country || country === '未決定') {
+        cityEl.innerHTML = '<option value="">先に国を選択してください</option>';
+        cityEl.disabled = true;
+        cityEl.value = '';
+        return;
+      }
+
+      // 「その他」 → 都市プルダウンには「その他」のみ
+      if (country === 'その他') {
+        cityEl.innerHTML = '<option value="">選択してください</option><option value="その他">その他</option>';
+        cityEl.disabled = false;
+        return;
+      }
+
+      // 通常国 → マスターから都市リストを生成（末尾に「その他」も追加）
+      const cities = NM_TRAVEL_CITIES[country] || [];
+      const opts = ['<option value="">選択してください</option>'];
+      cities.forEach(c => opts.push(`<option value="${c}">${c}</option>`));
+      opts.push('<option value="その他">その他</option>');
+      cityEl.innerHTML = opts.join('');
+      cityEl.disabled = false;
+    }
+
+    // ===== 入学時の在住国の選択変更時：海外なら国名入力欄を表示 =====
+    function nmOnResidenceChange() {
+      const v = document.getElementById('nm-residence').value;
+      const wrap = document.getElementById('nm-residence-overseas-wrap');
+      const input = document.getElementById('nm-residenceOverseas');
+      if (!wrap || !input) return;
+      if (v === '海外') {
+        wrap.style.display = '';
+      } else {
+        wrap.style.display = 'none';
+        input.value = '';
+      }
+    }
+
+    // ===== IELTSスコアプルダウン生成（0.0〜9.0、0.5刻み） =====
+    function nmPopulateIeltsScores(selectedScore = '') {
+      const el = document.getElementById('nm-scoreIelts');
+      if (!el) return;
+      const opts = ['<option value="">選択してください</option>'];
+      for (let v = 0; v <= 9.0 + 1e-9; v += 0.5) {
+        const s = v.toFixed(1);
+        const sel = (selectedScore === s) ? ' selected' : '';
+        opts.push(`<option value="${s}"${sel}>${s}</option>`);
+      }
+      el.innerHTML = opts.join('');
     }
 
     // 入会プランから期間（月数）を取得
@@ -5267,11 +6737,70 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
       // ===== 任意項目 =====
       const enrollmentDate = (document.getElementById('nm-enrollmentDate').value || '').trim();
+      const orientStaff = (document.getElementById('nm-orientStaff').value || '').trim();
       const startDate = (document.getElementById('nm-startDate').value || '').trim();
       const graduateDate = (document.getElementById('nm-graduateDate').value || '').trim();
       const coachLearningGoal = (document.getElementById('nm-coachLearningGoal').value || '').trim();
       const nickname = (document.getElementById('nm-nickname').value || '').trim();
       const note = (document.getElementById('nm-note').value || '').trim();
+
+      // 1-末. 職業
+      const occupation = (document.getElementById('nm-occupation').value || '').trim();
+      const occupationNote = (document.getElementById('nm-occupationNote').value || '').trim();
+
+      // 5. 在住・渡航情報
+      const residence = (document.getElementById('nm-residence').value || '').trim();
+      const residenceOverseas = (document.getElementById('nm-residenceOverseas').value || '').trim();
+      // 在住国「海外」を選択した場合は国名入力が必須
+      if (residence === '海外' && !residenceOverseas) {
+        alert('在住国で「海外」を選択した場合は、海外の国名を入力してください。');
+        document.getElementById('nm-residenceOverseas').focus();
+        return;
+      }
+      const travelCountry = (document.getElementById('nm-travelCountry').value || '').trim();
+      const travelCity = (document.getElementById('nm-travelCity').value || '').trim();
+      const travelDate = (document.getElementById('nm-travelDate').value || '').trim();
+      // 渡航時期は未来日のみ許可（min属性でも制御済みだが念のためサーバ側相当のチェック）
+      if (travelDate) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const td = new Date(travelDate); td.setHours(0, 0, 0, 0);
+        if (td <= today) {
+          alert('渡航時期は明日以降の日付を選択してください。');
+          document.getElementById('nm-travelDate').focus();
+          return;
+        }
+      }
+      const travelReason = (document.getElementById('nm-travelReason').value || '').trim();
+      const travelNote = (document.getElementById('nm-travelNote').value || '').trim();
+
+      // 6. 直近の英語スコア（全て任意・未入力はキー自体を作らず非表示判定に利用）
+      const toeicLRStr = (document.getElementById('nm-scoreToeicLR').value || '').trim();
+      const toeicSWStr = (document.getElementById('nm-scoreToeicSW').value || '').trim();
+      const toeflStr   = (document.getElementById('nm-scoreToefl').value || '').trim();
+      const ieltsStr   = (document.getElementById('nm-scoreIelts').value || '').trim();
+      const eikenStr   = (document.getElementById('nm-scoreEiken').value || '').trim();
+      const otherStr   = (document.getElementById('nm-scoreOther').value || '').trim();
+      // 数値検定の範囲チェック（入力時のみ）
+      const englishScores = {};
+      if (toeicLRStr) {
+        const v = parseInt(toeicLRStr, 10);
+        if (!Number.isFinite(v) || v < 10 || v > 990) { alert('TOEIC L&Rは10〜990の範囲で入力してください。'); document.getElementById('nm-scoreToeicLR').focus(); return; }
+        englishScores.toeicLR = v;
+      }
+      if (toeicSWStr) {
+        const v = parseInt(toeicSWStr, 10);
+        if (!Number.isFinite(v) || v < 0 || v > 400) { alert('TOEIC S&Wは0〜400の範囲で入力してください。'); document.getElementById('nm-scoreToeicSW').focus(); return; }
+        englishScores.toeicSW = v;
+      }
+      if (toeflStr) {
+        const v = parseInt(toeflStr, 10);
+        if (!Number.isFinite(v) || v < 0 || v > 120) { alert('TOEFL iBTは0〜120の範囲で入力してください。'); document.getElementById('nm-scoreToefl').focus(); return; }
+        englishScores.toefl = v;
+      }
+      if (ieltsStr) englishScores.ielts = ieltsStr;
+      if (eikenStr) englishScores.eiken = eikenStr;
+      // その他検定名・スコアは1つの自由入力欄に統合（入力時のみ保存）
+      if (otherStr) englishScores.other = otherStr;
 
       // ID重複チェック
       if (members.find(m => m.id === id)) {
@@ -5330,9 +6859,12 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         gender,                       // 性別（男性 / 女性 / その他）
         birthDate, email,
         phone,                        // 電話番号
+        occupation,                   // 職業（プルダウン9択）
+        occupationNote,               // 職業 備考（その他選択時の詳細など）
         plan,                         // 入会プラン
         status,                       // ステータス
         enrollmentDate,               // 入学日(オリエンテーション実施日)、任意
+        orientStaff,                  // オリエン担当者（role=Coach のスタッフ名）、任意
         startDate,                    // 受講開始日(初回コーチング日)、任意
         graduateDate,                 // 卒業予定日（自動算出 + 手動上書き可）、任意
         currentClass, initialClass,
@@ -5340,6 +6872,16 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         consultant,                   // 担当コンサルタント
         cs,                           // 担当CS
         dailyTargetMinutes,           // 1日の目標学習時間（分）— 達成率の分母として使用
+        // 在住・渡航情報（Sec5）
+        residence,                    // 入学時の在住国（日本 / 海外 / 未入力）
+        residenceOverseas,            // 海外選択時の国名（自由入力・必須）
+        travelCountry,                // 渡航先（国）：5カ国 / その他 / 未決定
+        travelCity,                   // 渡航先（都市）：国に連動 / その他 / 未決定時は空
+        travelDate,                   // 渡航時期（未来日）
+        travelReason,                 // 渡航理由（語学学校 等）
+        travelNote,                   // 在住・渡航 備考
+        // 直近の英語スコア（Sec6）：入力した検定のみキーが存在
+        englishScores,                // { toeicLR?, toeicSW?, toefl?, ielts?, eiken?, other?:{name,value}, note? }
         note,
         coachLearningGoal,
         // ===== ログイン認証用（プロトタイプのためプレーンテキスト保存） =====
