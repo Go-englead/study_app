@@ -2703,6 +2703,71 @@
     </div>
   </div>
 
+  <!-- ===== コーチング記録 入力モーダル（B-1 MVP） ===== -->
+  <div class="center-modal-overlay" id="cr-overlay" onclick="closeCoachingRecordModal()">
+    <div class="center-modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+      <div class="center-modal-header">
+        <div class="panel-title" id="cr-modal-title">＋ コーチングを記録する</div>
+        <button class="panel-close" onclick="closeCoachingRecordModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div id="cr-member-info" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:10px 12px; border-radius:6px; font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;"></div>
+
+        <form id="cr-form" onsubmit="return false;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">実施日 <span style="color:var(--color-error);">*</span></label>
+              <input type="date" class="form-input" id="cr-date" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">担当コーチ <span style="color:var(--color-text-muted); font-weight:normal; font-size:11px;">(ログイン中コーチ・自動)</span></label>
+              <input type="text" class="form-input" id="cr-coachName" readonly style="background:#f4f6f8; cursor:not-allowed;">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">タイプ <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="cr-type" required onchange="crOnTypeChange()">
+                <option value="">選択してください</option>
+                <option value="オリエンテーション">オリエンテーション</option>
+                <option value="初回コーチング">初回コーチング</option>
+                <option value="通常コーチング">通常コーチング</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+            <div class="form-group" id="cr-coachingNumber-wrap" style="display:none;">
+              <label class="form-label">コーチング回数 <span style="color:var(--color-error);">*</span></label>
+              <select class="form-input" id="cr-coachingNumber" disabled style="background:#f4f6f8; cursor:not-allowed;">
+                <!-- JSで2〜20回目を生成・記録に基づき自動設定（変更不可） -->
+              </select>
+              <div style="font-size:11px; color:#2980B9; margin-top:4px;">
+                💡 こちらのコーチング回数は記録をもとに自動で設定されます（変更不可）。
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">振り返り・テスト結果 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="cr-review" rows="4" placeholder="例：キクタン Day1〜30 / 80%合格／前月比+15点 など" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">引き継ぎ事項 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="cr-handover" rows="4" placeholder="例：次月はDay31〜60へ進む／シャドーイング導入予定／パーソナリティ：◯◯ など" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:space-between; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" id="cr-delete-btn" onclick="deleteCoachingRecord()" style="display:none; color:var(--color-error); border-color:var(--color-error);">🗑 この記録を削除</button>
+        <div style="display:flex; gap:8px; margin-left:auto;">
+          <button class="secondary-btn" onclick="closeCoachingRecordModal()">キャンセル</button>
+          <button class="primary-btn" onclick="saveCoachingRecord()">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 学習記録 入力モーダル（admin.html / index.html 共用想定） ===== -->
   <div class="center-modal-overlay" id="log-entry-overlay" onclick="closeLogEntryModal()">
     <div class="center-modal center-modal-lg" onclick="event.stopPropagation()" style="max-width: 560px;">
@@ -3494,7 +3559,23 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       document.getElementById('karte-modal-overlay').classList.remove('show');
     }
 
-    // ===== 要フォローカード描画（5枚） =====
+    // ===== 最終コーチング（初回・通常）からの経過日数を取得 =====
+    // オリエンテーション・その他は除外。初回コーチングまたは通常コーチングのみ集計
+    // コーチング未実施なら null を返す
+    function getLastCoachingDaysAgo(m) {
+      const records = Array.isArray(m.coachingRecords) ? m.coachingRecords : [];
+      const valid = records.filter(r =>
+        (r.type === '初回コーチング' || r.type === '通常コーチング') && r.date
+      );
+      if (valid.length === 0) return null;
+      // 最新の実施日を取得（日付降順ソートで先頭）
+      const dates = valid.map(r => r.date).sort((a, b) => a < b ? 1 : -1);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const latest = new Date(dates[0]); latest.setHours(0, 0, 0, 0);
+      return Math.floor((today - latest) / 86400000);
+    }
+
+    // ===== 要フォローカード描画（6枚） =====
     function renderFollowUpCards() {
       const grid = document.getElementById('follow-up-grid');
 
@@ -3504,6 +3585,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const rateUnder50 = members.filter(m => m.rate <= 50);
       const rateUnder30 = members.filter(m => m.rate <= 30);
       const rateZero = members.filter(m => m.rate === 0 || (!m.recentLogs || m.recentLogs.length === 0));
+      // ★ 45日以上コーチング未参加（初回/通常コーチングを1回以上実施した会員が対象）
+      const noCoaching45 = members.filter(m => {
+        const days = getLastCoachingDaysAgo(m);
+        return days !== null && days >= 45;
+      });
 
       function buildCard(title, list, renderDetail, colorClass) {
         const count = list.length;
@@ -3538,7 +3624,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         buildCard('達成率30%以下', rateUnder30,
           m => `達成率: ${m.rate}%`, 'red') +
         buildCard('達成率0%・未記録', rateZero,
-          m => '', 'red');
+          m => '', 'red') +
+        buildCard('45日以上コーチング未参加', noCoaching45,
+          m => `最終: ${getLastCoachingDaysAgo(m)}日前`, 'red');
 
       // ===== 未入力リマインドカード3枚（入学日／受講開始日／卒業予定日） =====
       // 受講継続中（入学手続き中／受講中／休会中）のみ対象、卒業／途中退会は除外
@@ -4793,6 +4881,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       if (applyToGraduate) {
         m.graduateDate = endDate;
         graduateUpdated = true;
+        // 休会中の場合、preSuspendGraduateDate も同期して更新
+        // （これがないと休会解除時に古い卒業日に戻ってしまう）
+        if (m.suspendedFrom && m.suspendedUntil && m.preSuspendGraduateDate !== undefined) {
+          m.preSuspendGraduateDate = endDate;
+        }
         // 編集パネルが開いていれば、卒業予定日入力欄も同期して更新
         const emGraduateEl = document.getElementById('em-graduateDate');
         if (emGraduateEl) emGraduateEl.value = endDate;
@@ -5875,6 +5968,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     //   - 受講開始日が未来 or 未設定 → 「入学手続き中」
     //   - 受講開始日 ≦ 今日 < 卒業予定日 → 「受講中」
     //   - 卒業予定日 ≦ 今日 → 「卒業」
+    //   - 「継続中」会員は最新の継続プラン終了日が未来なら維持（卒業日が過ぎても保護）
+    //   - 「再入学手続き中」会員は最新継続プラン開始日 ≦ 今日 → 「継続中」、継続プランが空なら通常判定にフォールバック
     function autoUpdateMemberStatuses() {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -5907,6 +6002,10 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             // 復帰後、続けて通常の判定へ進む
           }
           // todayStr < suspendedFrom（休会開始前）はスキップして通常判定
+        } else if (m.status === '休会中') {
+          // 【フォールバック③】手動で「休会中」に変更されたが suspendedFrom が無い会員
+          // → 通常判定で再計算（受講中/卒業など）
+          // 何もせず、下の通常判定へ進む
         }
 
         // 手動保護対象はスキップ
@@ -5916,15 +6015,20 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         // 最新の継続プラン開始日が今日以前なら「継続中」に自動切替
         if (m.status === '再入学手続き中') {
           const plans = Array.isArray(m.continuationPlans) ? m.continuationPlans : [];
-          if (plans.length > 0) {
+          // 有効な開始日を持つプランを抽出
+          const validPlans = plans.filter(p => p && p.startDate);
+          if (validPlans.length > 0) {
             // 最新（=最も後）の開始日を持つ継続プランを取得
-            const latestPlan = [...plans].sort((a, b) => (a.startDate < b.startDate ? 1 : -1))[0];
-            if (latestPlan && latestPlan.startDate && latestPlan.startDate <= todayStr) {
+            const latestPlan = [...validPlans].sort((a, b) => (a.startDate < b.startDate ? 1 : -1))[0];
+            if (latestPlan.startDate <= todayStr) {
               m.status = '継続中';
               changed = true;
             }
+            return; // プランあり：判定済み（継続中 or 再入学手続き中維持）
           }
-          return; // 再入学手続き中はその他の判定をスキップ（卒業日判定で「卒業」に戻ってしまうのを防ぐ）
+          // 【フォールバック②】継続プランが空 or 全て無効
+          // → 「再入学手続き中」から抜け出す。通常判定にフォールバック
+          // 何もせず、下の通常判定へ進む
         }
 
         // 期待ステータスを判定
@@ -5942,12 +6046,14 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         if (m.status === '継続中') {
           // 最新の継続プラン終了日が今日以降なら継続中を維持
           const plans = Array.isArray(m.continuationPlans) ? m.continuationPlans : [];
-          if (plans.length > 0) {
-            const latestPlan = [...plans].sort((a, b) => (a.endDate < b.endDate ? 1 : -1))[0];
-            if (latestPlan && latestPlan.endDate && latestPlan.endDate >= todayStr) {
+          const validPlans = plans.filter(p => p && p.endDate);
+          if (validPlans.length > 0) {
+            const latestPlan = [...validPlans].sort((a, b) => (a.endDate < b.endDate ? 1 : -1))[0];
+            if (latestPlan.endDate >= todayStr) {
               return; // 継続中を維持
             }
           }
+          // 全プラン終了 or プランなし → 通常判定（卒業など）に進む
         }
 
         if (expected && m.status !== expected) {
@@ -7004,6 +7110,423 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       if (html !== null) document.getElementById('karte-main').innerHTML = html;
     }
 
+    // ========================================
+    // ===== B-1 コーチング記録（MVP） =====
+    // ========================================
+    // データ構造：m.coachingRecords[] = [{ id, date, coachName, type, review, handover, createdAt }, ...]
+    // 権限：会員には絶対に見せない（共有モードでは表示しない・index.htmlにも実装しない）
+
+    let crTargetMemberId = null;
+    let crEditingId = null;
+    let crDefaultCoachingNumber = null;  // モーダル起動時に算出したデフォルト回数（警告判定の基準）
+
+    // ===== 指定タイプの記録があるかチェック =====
+    function hasCoachingRecordOfType(memberId, type, excludeId = null) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !Array.isArray(m.coachingRecords)) return false;
+      return m.coachingRecords.some(r => r.type === type && r.id !== excludeId);
+    }
+
+    // ===== 指定タイプの最初の記録を取得 =====
+    function getCoachingRecordOfType(memberId, type, excludeId = null) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !Array.isArray(m.coachingRecords)) return null;
+      return m.coachingRecords.find(r => r.type === type && r.id !== excludeId) || null;
+    }
+
+    // ===== 指定タイプの全記録を取得 =====
+    function getAllCoachingRecordsOfType(memberId, type, excludeId = null) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !Array.isArray(m.coachingRecords)) return [];
+      return m.coachingRecords.filter(r => r.type === type && r.id !== excludeId);
+    }
+
+    // ===== コーチング記録のバリデーション =====
+    // チェック1: 重複登録（オリエン・初回は1回のみ／通常は同一回数の重複不可）
+    // チェック2: タイプ順序制約（オリエン → 初回 → 通常）
+    // チェック3: 実施日順序（オリエン日 ≦ 初回日 ≦ 通常各回の日）
+    // 違反時はエラーメッセージを返す（OKなら null）
+    function validateCoachingRecord(memberId, newType, newDate, newCoachingNumber, excludeId = null) {
+
+      // ===== チェック1: 重複登録 =====
+      if (newType === 'オリエンテーション') {
+        if (hasCoachingRecordOfType(memberId, 'オリエンテーション', excludeId)) {
+          return 'オリエンテーションは既に登録されています。\n\nオリエンテーションは1回のみ登録可能です。既存の記録を編集してください。';
+        }
+      }
+      if (newType === '初回コーチング') {
+        if (hasCoachingRecordOfType(memberId, '初回コーチング', excludeId)) {
+          return '初回コーチングは既に登録されています。\n\n初回コーチングは1回のみ登録可能です。既存の記録を編集してください。';
+        }
+      }
+      if (newType === '通常コーチング' && newCoachingNumber) {
+        const allNormal = getAllCoachingRecordsOfType(memberId, '通常コーチング', excludeId);
+        if (allNormal.some(r => r.coachingNumber === newCoachingNumber)) {
+          return `${newCoachingNumber}回目の通常コーチングは既に登録されています。\n\n別の回数を選択するか、既存の記録を編集してください。`;
+        }
+      }
+
+      // ===== チェック2: タイプ順序制約 =====
+      if (newType === '初回コーチング') {
+        if (!hasCoachingRecordOfType(memberId, 'オリエンテーション', excludeId)) {
+          return 'オリエンテーションが完了していないので、初回コーチングは登録できません。\n\n先にオリエンテーションを登録してください。';
+        }
+      }
+      if (newType === '通常コーチング') {
+        const hasOrient = hasCoachingRecordOfType(memberId, 'オリエンテーション', excludeId);
+        const hasFirst = hasCoachingRecordOfType(memberId, '初回コーチング', excludeId);
+        if (!hasOrient && !hasFirst) {
+          return 'オリエンテーションと初回コーチングが完了していないので、通常コーチングは登録できません。\n\n先にオリエンテーション・初回コーチングを登録してください。';
+        }
+        if (!hasOrient) {
+          return 'オリエンテーションが完了していないので、通常コーチングは登録できません。\n\n先にオリエンテーションを登録してください。';
+        }
+        if (!hasFirst) {
+          return '初回コーチングが完了していないので、通常コーチングは登録できません。\n\n先に初回コーチングを登録してください。';
+        }
+      }
+
+      // ===== チェック3: 実施日順序 =====
+      if (newType === '初回コーチング' && newDate) {
+        const orient = getCoachingRecordOfType(memberId, 'オリエンテーション', excludeId);
+        if (orient && orient.date && newDate < orient.date) {
+          return `実施日の順序が正しくありません。\n\n初回コーチングの実施日（${newDate}）は、オリエンテーションの実施日（${orient.date}）以降である必要があります。\n\n実施日を修正してください。`;
+        }
+      }
+      if (newType === '通常コーチング' && newDate) {
+        const first = getCoachingRecordOfType(memberId, '初回コーチング', excludeId);
+        if (first && first.date && newDate < first.date) {
+          return `実施日の順序が正しくありません。\n\n通常コーチングの実施日（${newDate}）は、初回コーチングの実施日（${first.date}）以降である必要があります。\n\n実施日を修正してください。`;
+        }
+        // 通常コーチング N回目 → N-1回目より後である必要
+        if (newCoachingNumber && newCoachingNumber > 2) {
+          const allNormal = getAllCoachingRecordsOfType(memberId, '通常コーチング', excludeId);
+          const prev = allNormal.find(r => r.coachingNumber === newCoachingNumber - 1);
+          if (prev && prev.date && newDate < prev.date) {
+            return `実施日の順序が正しくありません。\n\n${newCoachingNumber}回目通常コーチングの実施日（${newDate}）は、${newCoachingNumber - 1}回目通常コーチング（${prev.date}）以降である必要があります。\n\n実施日を修正してください。`;
+          }
+        }
+        // 通常コーチング N回目 → N+1回目より前である必要（編集時のチェック）
+        if (newCoachingNumber) {
+          const allNormal = getAllCoachingRecordsOfType(memberId, '通常コーチング', excludeId);
+          const next = allNormal.find(r => r.coachingNumber === newCoachingNumber + 1);
+          if (next && next.date && newDate > next.date) {
+            return `実施日の順序が正しくありません。\n\n${newCoachingNumber}回目通常コーチングの実施日（${newDate}）は、${newCoachingNumber + 1}回目通常コーチング（${next.date}）以前である必要があります。\n\n実施日を修正してください。`;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // ===== 通常コーチングの次回回数を計算 =====
+    // 既存の通常コーチング記録から最大 coachingNumber を取得し +1 を返す
+    // 無ければ 2 を返す（初回コーチングは別タイプなので、通常コーチングは2回目から）
+    function getNextCoachingNumber(memberId, excludeRecordId = null) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !Array.isArray(m.coachingRecords)) return 2;
+      const normalRecords = m.coachingRecords.filter(r =>
+        r.type === '通常コーチング' &&
+        typeof r.coachingNumber === 'number' &&
+        r.id !== excludeRecordId
+      );
+      if (normalRecords.length === 0) return 2;
+      const maxNum = Math.max(...normalRecords.map(r => r.coachingNumber));
+      return maxNum + 1;
+    }
+
+    // ===== コーチング回数プルダウンを生成（2〜20回目） =====
+    function crPopulateCoachingNumber(selectedNum = null) {
+      const el = document.getElementById('cr-coachingNumber');
+      if (!el) return;
+      const opts = [];
+      for (let n = 2; n <= 20; n++) {
+        const sel = (selectedNum === n) ? ' selected' : '';
+        opts.push(`<option value="${n}"${sel}>${n}回目</option>`);
+      }
+      el.innerHTML = opts.join('');
+    }
+
+    // ===== タイプ選択変更時：通常コーチングなら回数プルダウン表示 =====
+    // 通常コーチングの回数は変更不可（自動設定）
+    function crOnTypeChange() {
+      const type = document.getElementById('cr-type').value;
+      const wrap = document.getElementById('cr-coachingNumber-wrap');
+      if (!wrap) return;
+      if (type === '通常コーチング') {
+        wrap.style.display = '';
+        // 編集モードでなければ、デフォルト値を最新+1にセット
+        if (!crEditingId) {
+          const nextNum = getNextCoachingNumber(crTargetMemberId);
+          crDefaultCoachingNumber = nextNum;
+          crPopulateCoachingNumber(nextNum);
+        }
+      } else {
+        wrap.style.display = 'none';
+        crDefaultCoachingNumber = null;
+      }
+    }
+
+    // ===== コーチング記録モーダルを開く =====
+    // recordId が null なら新規追加、指定があれば編集モード
+    function openCoachingRecordModal(memberId, recordId = null) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+
+      // ログイン中のCoachを取得（変更不可）
+      let loginCoachName = '';
+      try {
+        const cur = JSON.parse(sessionStorage.getItem('currentStaff') || '{}');
+        loginCoachName = cur.name || '';
+      } catch (e) {}
+      if (!loginCoachName) {
+        alert('ログイン情報が取得できません。再ログインしてください。');
+        return;
+      }
+
+      crTargetMemberId = memberId;
+      crEditingId = recordId;
+      crDefaultCoachingNumber = null;  // モーダル起動時にリセット
+
+      document.getElementById('cr-member-info').innerHTML = `
+        対象会員：<strong>${m.name}</strong> さん（${m.id}）
+      `;
+
+      const isEdit = !!recordId;
+      document.getElementById('cr-modal-title').textContent = isEdit ? '✏️ コーチング記録を編集' : '＋ コーチングを記録する';
+      document.getElementById('cr-delete-btn').style.display = isEdit ? '' : 'none';
+
+      document.getElementById('cr-form').reset();
+
+      // 担当コーチをログイン中の名前で固定
+      document.getElementById('cr-coachName').value = loginCoachName;
+
+      // 実施日：未来日選択を禁止するため max 属性を今日に設定
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('cr-date').max = todayStr;
+
+      // コーチング回数プルダウンを初期化（2〜20回目を生成し、回数枠は一旦非表示）
+      crPopulateCoachingNumber();
+      document.getElementById('cr-coachingNumber-wrap').style.display = 'none';
+
+      if (isEdit) {
+        const rec = (m.coachingRecords || []).find(r => r.id === recordId);
+        if (rec) {
+          document.getElementById('cr-date').value = rec.date || '';
+          // 担当コーチは記録時のものを表示（編集時も変更不可）
+          document.getElementById('cr-coachName').value = rec.coachName || loginCoachName;
+          document.getElementById('cr-type').value = rec.type || '';
+          document.getElementById('cr-review').value = rec.review || '';
+          document.getElementById('cr-handover').value = rec.handover || '';
+          // 通常コーチングなら回数枠を表示し、保存済み回数を選択（編集モードでも変更不可）
+          if (rec.type === '通常コーチング') {
+            document.getElementById('cr-coachingNumber-wrap').style.display = '';
+            crDefaultCoachingNumber = rec.coachingNumber || getNextCoachingNumber(memberId, recordId);
+            crPopulateCoachingNumber(rec.coachingNumber || crDefaultCoachingNumber);
+          }
+        }
+      } else {
+        // 新規モード：実施日のデフォルトを今日に
+        document.getElementById('cr-date').value = todayStr;
+      }
+
+      document.getElementById('cr-overlay').classList.add('show');
+    }
+
+    function closeCoachingRecordModal() {
+      document.getElementById('cr-overlay').classList.remove('show');
+      crTargetMemberId = null;
+      crEditingId = null;
+    }
+
+    // ===== コーチング記録を保存 =====
+    function saveCoachingRecord() {
+      if (!crTargetMemberId) return;
+      const m = members.find(x => x.id === crTargetMemberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+
+      const date = document.getElementById('cr-date').value.trim();
+      const coachName = document.getElementById('cr-coachName').value.trim();
+      const type = document.getElementById('cr-type').value.trim();
+      const review = document.getElementById('cr-review').value.trim();
+      const handover = document.getElementById('cr-handover').value.trim();
+
+      if (!date) { alert('実施日を入力してください。'); return; }
+      // 未来日チェック（max属性のフォールバック）
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const inputDate = new Date(date); inputDate.setHours(0, 0, 0, 0);
+      if (inputDate > today) { alert('実施日は本日以前の日付を選択してください。'); return; }
+      if (!coachName) { alert('担当コーチが取得できません。再ログインしてください。'); return; }
+      if (!type) { alert('タイプを選択してください。'); return; }
+
+      // 通常コーチングの場合は回数を取得（バリデーションの前に必要）
+      let coachingNumber = null;
+      if (type === '通常コーチング') {
+        const numStr = document.getElementById('cr-coachingNumber').value;
+        coachingNumber = parseInt(numStr, 10);
+        if (!Number.isFinite(coachingNumber) || coachingNumber < 2) {
+          alert('コーチング回数を選択してください。');
+          return;
+        }
+      }
+
+      // 包括バリデーション（重複・順序制約・実施日順序）
+      const validationError = validateCoachingRecord(crTargetMemberId, type, date, coachingNumber, crEditingId);
+      if (validationError) { alert(validationError); return; }
+
+      if (!Array.isArray(m.coachingRecords)) m.coachingRecords = [];
+
+      if (crEditingId) {
+        const idx = m.coachingRecords.findIndex(r => r.id === crEditingId);
+        if (idx === -1) { alert('編集対象の記録が見つかりません。'); return; }
+        const updated = {
+          ...m.coachingRecords[idx],
+          date, coachName, type, review, handover
+        };
+        // タイプによって coachingNumber を更新／削除
+        if (type === '通常コーチング') {
+          updated.coachingNumber = coachingNumber;
+        } else {
+          delete updated.coachingNumber;
+        }
+        m.coachingRecords[idx] = updated;
+      } else {
+        const newRec = {
+          id: 'CR' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          date, coachName, type, review, handover,
+          createdAt: Date.now()
+        };
+        if (type === '通常コーチング') {
+          newRec.coachingNumber = coachingNumber;
+        }
+        m.coachingRecords.push(newRec);
+      }
+
+      // 日付降順（新しい順）で並び替え
+      m.coachingRecords.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+      saveAddedMembersToStorage();
+
+      // カルテを再描画して履歴を反映
+      if (typeof renderKarteMain === 'function') {
+        try { renderKarteMain(crTargetMemberId); } catch (e) {}
+      }
+
+      const msg = crEditingId ? 'コーチング記録を更新しました。' : 'コーチング記録を登録しました。';
+      closeCoachingRecordModal();
+      alert(msg);
+    }
+
+    // ===== コーチング記録を削除 =====
+    function deleteCoachingRecord() {
+      if (!crTargetMemberId || !crEditingId) return;
+      const m = members.find(x => x.id === crTargetMemberId);
+      if (!m) return;
+
+      if (!confirm('このコーチング記録を削除します。よろしいですか？')) return;
+
+      m.coachingRecords = (m.coachingRecords || []).filter(r => r.id !== crEditingId);
+      saveAddedMembersToStorage();
+
+      if (typeof renderKarteMain === 'function') {
+        try { renderKarteMain(crTargetMemberId); } catch (e) {}
+      }
+
+      closeCoachingRecordModal();
+      alert('コーチング記録を削除しました。');
+    }
+
+    // ===== カルテ：コーチング記録履歴カードを生成（共有モードでは出さない） =====
+    function buildCoachingRecordsCard(m) {
+      // 共有モードの場合は何も出さない（会員に絶対見せない）
+      // isShareMode は変数（boolean）として 9072行付近で定義されている
+      if (typeof isShareMode !== 'undefined' && isShareMode) return '';
+
+      const records = Array.isArray(m.coachingRecords) ? m.coachingRecords : [];
+
+      if (records.length === 0) {
+        return `
+          <div class="card share-hide">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🎓 コーチング記録</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="padding:14px; text-align:center; color:#999; font-size:12px; background:#F8F9FA; border-radius:6px;">コーチング記録はまだありません</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // タイプ別バッジ色
+      const typeColorMap = {
+        'オリエンテーション': { bg: '#F5EEF8', fg: '#8E44AD' },  // 紫
+        '初回コーチング':     { bg: '#E8F8F0', fg: '#27AE60' },  // 緑
+        '通常コーチング':     { bg: '#EAF2F8', fg: '#2E86C1' },  // 青
+        'その他':             { bg: '#ECEFF1', fg: '#7F8C8D' }   // グレー
+      };
+
+      // 実施回の表示ロジック
+      // 初回コーチング → "1回目"、通常コーチング → "N回目"、その他 → "-"
+      const sessionLabel = (r) => {
+        if (r.type === '初回コーチング') return '1回目';
+        if (r.type === '通常コーチング' && r.coachingNumber) return `${r.coachingNumber}回目`;
+        return '-';
+      };
+
+      // テーブル表示
+      const rows = records.map(r => {
+        const reviewSnip = (r.review || '').slice(0, 30);
+        const handoverSnip = (r.handover || '').slice(0, 30);
+        const c = typeColorMap[r.type] || { bg: '#F4F6F8', fg: '#999' };
+        return `
+          <tr>
+            <td style="padding:8px; font-size:12px; white-space:nowrap;">${r.date || '-'}</td>
+            <td style="padding:8px; font-size:12px;"><span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:11px; padding:2px 8px; border-radius:10px; white-space:nowrap;">${r.type || '-'}</span></td>
+            <td style="padding:8px; font-size:12px; text-align:center; white-space:nowrap; color:#555;">${sessionLabel(r)}</td>
+            <td style="padding:8px; font-size:12px; white-space:nowrap;">${r.coachName || '-'}</td>
+            <td style="padding:8px; font-size:11px; color:#666;">${reviewSnip}${(r.review || '').length > 30 ? '…' : ''}</td>
+            <td style="padding:8px; font-size:11px; color:#666;">${handoverSnip}${(r.handover || '').length > 30 ? '…' : ''}</td>
+            <td style="padding:8px; text-align:center;">
+              <button class="action-btn" onclick="openCoachingRecordModal('${m.id}', '${r.id}')">編集</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <div class="card share-hide">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🎓 コーチング記録</div>
+              <div class="card-sub">${records.length}件</div>
+            </div>
+          </div>
+          <div class="card-body" style="overflow-x:auto;">
+            <table style="width:100%; font-size:12px; border-collapse:collapse;">
+              <thead>
+                <tr style="background:#ECF0F1;">
+                  <th style="padding:6px 8px; text-align:left; font-size:11px;">実施日</th>
+                  <th style="padding:6px 8px; text-align:left; font-size:11px;">タイプ</th>
+                  <th style="padding:6px 8px; text-align:center; font-size:11px; width:70px;">実施回</th>
+                  <th style="padding:6px 8px; text-align:left; font-size:11px;">担当</th>
+                  <th style="padding:6px 8px; text-align:left; font-size:11px;">振り返り</th>
+                  <th style="padding:6px 8px; text-align:left; font-size:11px;">引き継ぎ</th>
+                  <th style="padding:6px 8px; text-align:center; font-size:11px; width:60px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
     // カルテのHTML文字列を生成（カルテ画面・モーダル共用）
     function buildKarteHtml(memberId) {
       const m = members.find(x => x.id === memberId);
@@ -7137,6 +7660,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
               <div class="profile-learning-goal-label">学習目標・目的</div>
               <div class="profile-learning-goal-text">${m.coachLearningGoal || '（未設定）'}</div>
             </div>
+            <!-- B-1：コーチング記録ボタン（共有モードでは非表示） -->
+            <button class="primary-btn share-hide" onclick="openCoachingRecordModal('${m.id}', null)" style="margin-left:auto; white-space:nowrap; align-self:flex-start;">＋ コーチングを記録</button>
           </div>
           <div class="profile-grid">
             <div class="profile-item">
@@ -7165,6 +7690,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             </div>
           </div>
         </div>
+
+        <!-- B-1：コーチング記録履歴カード（共有モードでは非表示） -->
+        ${buildCoachingRecordsCard(m)}
 
         <!-- 今月の学習状況 -->
         <div class="card">
