@@ -1038,6 +1038,28 @@
   </div>
 </div>
 
+<!-- ===== コーチング予約リマインダーバナー（前回コーチングから30日経過時に表示） ===== -->
+<!-- 全タブ共通で表示。「予約完了」を押すと、新しいコーチング記録が追加されるまで再表示しない -->
+<div id="coaching-reminder-banner" style="display:none; background:linear-gradient(90deg, #FFF8E1 0%, #FEF5E7 100%); border-bottom:2px solid #F39C12; padding:14px 16px;">
+  <div style="max-width:480px; margin:0 auto;">
+    <!-- メッセージ部分 -->
+    <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;">
+      <span style="font-size:22px; line-height:1;">📅</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:14px; font-weight:700; color:#7E5109; line-height:1.4;">次回のコーチング予約の時期になりました</div>
+        <div id="coaching-reminder-detail" style="font-size:11px; color:#9A6B14; margin-top:2px;"></div>
+      </div>
+    </div>
+    <!-- ボタン部分（横並び・等幅・同じ高さ） -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <a href="https://www.jicoo.com/t/tabiken/e/monthlycoaching" target="_blank" rel="noopener" style="background:#F39C12; color:#fff; text-decoration:none; padding:10px 12px; border-radius:6px; font-size:13px; font-weight:700; box-shadow:0 2px 6px rgba(243,156,18,0.25); display:flex; align-items:center; justify-content:center; height:40px; box-sizing:border-box;" onmouseover="this.style.background='#E67E22'" onmouseout="this.style.background='#F39C12'">📅 コーチングを予約する</a>
+      <button onclick="dismissCoachingReminder()" style="background:#fff; color:#7E5109; border:1.5px solid #F39C12; border-radius:6px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; height:40px; box-sizing:border-box;" onmouseover="this.style.background='#FFF8E1'" onmouseout="this.style.background='#fff'">✅ 予約完了</button>
+    </div>
+    <!-- 注意書き（ボタン下に控えめに） -->
+    <div style="text-align:right; font-size:10px; color:#9A6B14; margin-top:4px;">※「予約完了」を押すとこのリマインドは表示されません</div>
+  </div>
+</div>
+
 <!-- ===== 日付選択モーダル（カレンダーから） ===== -->
 <div id="cal-day-overlay" onclick="closeCalDayModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; padding:20px;">
   <div onclick="event.stopPropagation()" style="background:#fff; border-radius:12px; max-width:380px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
@@ -2035,6 +2057,106 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     const fullEl = document.getElementById('member-name-full');
     if (fullEl) fullEl.textContent = `${nameForAvatar} 様`;
   })();
+
+  // ========================================
+  // ===== コーチング予約リマインダー =====
+  // ========================================
+  // 仕様：
+  //   - 前回コーチング（初回/通常）から30日以上経過したら、画面上部にバナーを表示
+  //   - オリエンテーション・その他は対象外
+  //   - 「予約完了」を押すと、その時点の最新コーチング記録IDを localStorage に保存
+  //   - 同じIDの場合はそれ以降表示しない（次の新しい記録が追加されたら再度表示判定）
+  //   - 全タブで共通表示
+
+  // ===== 最新の初回/通常コーチング記録を取得 =====
+  function getLatestEffectiveCoaching(member) {
+    if (!member || !Array.isArray(member.coachingRecords)) return null;
+    const valid = member.coachingRecords.filter(r =>
+      (r.type === '初回コーチング' || r.type === '通常コーチング') && r.date
+    );
+    if (valid.length === 0) return null;
+    // 日付降順（新しい順）でソートして先頭を返す
+    return [...valid].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))[0];
+  }
+
+  // ===== コーチング予約リマインダーバナーの表示判定 =====
+  function checkCoachingReminder() {
+    let member = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) member = JSON.parse(stored);
+    } catch (e) {}
+    if (!member || !member.id) return;
+
+    // 最新の会員データを localStorage から取得（admin.html で更新されているため）
+    let fullMember = null;
+    try {
+      const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+      fullMember = allMembers.find(x => x.id === member.id);
+    } catch (e) {}
+    if (!fullMember) return;
+
+    // 最新の初回/通常コーチング記録を取得
+    const latest = getLatestEffectiveCoaching(fullMember);
+    if (!latest) return;  // 1度もコーチング実施なし → 表示しない
+
+    // 30日以上経過しているか
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const latestDate = new Date(latest.date); latestDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today - latestDate) / 86400000);
+    if (diffDays < 30) return;  // 30日未満 → 表示しない
+
+    // dismissed されていないか（同じコーチング記録IDなら表示しない）
+    const dismissedKey = `coachingReminderDismissed_${member.id}`;
+    const dismissedId = localStorage.getItem(dismissedKey);
+    if (dismissedId === latest.id) return;
+
+    // 表示する
+    const banner = document.getElementById('coaching-reminder-banner');
+    const detail = document.getElementById('coaching-reminder-detail');
+    if (!banner) return;
+    if (detail) {
+      const typeLabel = (latest.type === '通常コーチング' && latest.coachingNumber)
+        ? `通常コーチング ${latest.coachingNumber}回目`
+        : latest.type;
+      detail.textContent = `前回のコーチング: ${latest.date}（${diffDays}日前 / ${typeLabel}）`;
+    }
+    banner.style.display = '';
+  }
+
+  // ===== 「予約完了」ボタン：このリマインドを今後表示しない =====
+  function dismissCoachingReminder() {
+    let member = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) member = JSON.parse(stored);
+    } catch (e) {}
+    if (!member || !member.id) return;
+
+    let fullMember = null;
+    try {
+      const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+      fullMember = allMembers.find(x => x.id === member.id);
+    } catch (e) {}
+    if (!fullMember) return;
+
+    const latest = getLatestEffectiveCoaching(fullMember);
+    if (latest) {
+      // 最新コーチング記録IDを保存（次の新しい記録が追加されるまで非表示）
+      localStorage.setItem(`coachingReminderDismissed_${member.id}`, latest.id);
+    }
+
+    // バナー非表示
+    const banner = document.getElementById('coaching-reminder-banner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  // ページ読み込み完了後にリマインダー判定を実行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkCoachingReminder);
+  } else {
+    checkCoachingReminder();
+  }
 
   // ===== 初期化（CSVロード後にレンダリング） =====
   // ※ 旧 renderRecordTextbookList は「記録」セクション削除に伴い不要となったため呼び出さない

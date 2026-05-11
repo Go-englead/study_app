@@ -2748,13 +2748,18 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">振り返り・テスト結果 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-            <textarea class="form-input" id="cr-review" rows="4" placeholder="例：キクタン Day1〜30 / 80%合格／前月比+15点 など" style="resize:vertical; font-family:inherit;"></textarea>
+            <label class="form-label">この1ヶ月間の振り返り <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="cr-monthlyReview" rows="3" placeholder="例：会員様からヒアリングした学習進捗・取り組み状況・困っていた点 など" style="resize:vertical; font-family:inherit;"></textarea>
           </div>
 
           <div class="form-group">
-            <label class="form-label">引き継ぎ事項 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-            <textarea class="form-input" id="cr-handover" rows="4" placeholder="例：次月はDay31〜60へ進む／シャドーイング導入予定／パーソナリティ：◯◯ など" style="resize:vertical; font-family:inherit;"></textarea>
+            <label class="form-label">コーチからのアドバイス <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="cr-coachAdvice" rows="3" placeholder="例：次月の学習方針／改善ポイント／推奨アプローチ など" style="resize:vertical; font-family:inherit;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">その他質問・補足 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+            <textarea class="form-input" id="cr-otherNotes" rows="3" placeholder="例：会員様からの追加質問／パーソナリティメモ／特筆事項 など" style="resize:vertical; font-family:inherit;"></textarea>
           </div>
         </form>
       </div>
@@ -2764,6 +2769,61 @@
           <button class="secondary-btn" onclick="closeCoachingRecordModal()">キャンセル</button>
           <button class="primary-btn" onclick="saveCoachingRecord()">保存</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== コーチング記録 閲覧モーダル（B-1 拡張：詳細閲覧専用） ===== -->
+  <div class="center-modal-overlay" id="cr-view-overlay" onclick="closeCoachingRecordViewModal()">
+    <div class="center-modal" onclick="event.stopPropagation()" style="max-width: 960px; width: 90vw;">
+      <div class="center-modal-header">
+        <div class="panel-title">👁 コーチング記録 詳細</div>
+        <button class="panel-close" onclick="closeCoachingRecordViewModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 85vh; overflow-y: auto; padding: 24px 28px;">
+        <div id="cr-view-member-info" style="background:#F8F9FA; border-left:4px solid var(--color-primary); padding:10px 12px; border-radius:6px; font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;"></div>
+
+        <!-- 基本情報グリッド -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+          <div>
+            <div style="font-size:11px; color:#888; font-weight:700; margin-bottom:4px;">実施日</div>
+            <div id="cr-view-date" style="font-size:14px; color:#333;">-</div>
+          </div>
+          <div>
+            <div style="font-size:11px; color:#888; font-weight:700; margin-bottom:4px;">担当コーチ</div>
+            <div id="cr-view-coachName" style="font-size:14px; color:#333;">-</div>
+          </div>
+          <div>
+            <div style="font-size:11px; color:#888; font-weight:700; margin-bottom:4px;">タイプ</div>
+            <div id="cr-view-type" style="font-size:14px;">-</div>
+          </div>
+          <div>
+            <div style="font-size:11px; color:#888; font-weight:700; margin-bottom:4px;">実施回</div>
+            <div id="cr-view-session" style="font-size:14px; color:#333;">-</div>
+          </div>
+        </div>
+
+        <!-- この1ヶ月間の振り返り（全文・改行保持） -->
+        <div style="margin-bottom:18px;">
+          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">この1ヶ月間の振り返り</div>
+          <div id="cr-view-monthlyReview" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+        </div>
+
+        <!-- コーチからのアドバイス（全文・改行保持） -->
+        <div style="margin-bottom:18px;">
+          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">コーチからのアドバイス</div>
+          <div id="cr-view-coachAdvice" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+        </div>
+
+        <!-- その他質問・補足（全文・改行保持） -->
+        <div>
+          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">その他質問・補足</div>
+          <div id="cr-view-otherNotes" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+        </div>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" onclick="closeCoachingRecordViewModal()">閉じる</button>
+        <button class="primary-btn" id="cr-view-edit-btn" onclick="crViewSwitchToEdit()">✏️ 編集する</button>
       </div>
     </div>
   </div>
@@ -7320,8 +7380,10 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           // 担当コーチは記録時のものを表示（編集時も変更不可）
           document.getElementById('cr-coachName').value = rec.coachName || loginCoachName;
           document.getElementById('cr-type').value = rec.type || '';
-          document.getElementById('cr-review').value = rec.review || '';
-          document.getElementById('cr-handover').value = rec.handover || '';
+          // 新フィールド優先、旧データ（review/handover）も読み取れるように互換
+          document.getElementById('cr-monthlyReview').value = rec.monthlyReview || rec.review || '';
+          document.getElementById('cr-coachAdvice').value = rec.coachAdvice || rec.handover || '';
+          document.getElementById('cr-otherNotes').value = rec.otherNotes || '';
           // 通常コーチングなら回数枠を表示し、保存済み回数を選択（編集モードでも変更不可）
           if (rec.type === '通常コーチング') {
             document.getElementById('cr-coachingNumber-wrap').style.display = '';
@@ -7352,8 +7414,9 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const date = document.getElementById('cr-date').value.trim();
       const coachName = document.getElementById('cr-coachName').value.trim();
       const type = document.getElementById('cr-type').value.trim();
-      const review = document.getElementById('cr-review').value.trim();
-      const handover = document.getElementById('cr-handover').value.trim();
+      const monthlyReview = document.getElementById('cr-monthlyReview').value.trim();
+      const coachAdvice = document.getElementById('cr-coachAdvice').value.trim();
+      const otherNotes = document.getElementById('cr-otherNotes').value.trim();
 
       if (!date) { alert('実施日を入力してください。'); return; }
       // 未来日チェック（max属性のフォールバック）
@@ -7385,8 +7448,12 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         if (idx === -1) { alert('編集対象の記録が見つかりません。'); return; }
         const updated = {
           ...m.coachingRecords[idx],
-          date, coachName, type, review, handover
+          date, coachName, type,
+          monthlyReview, coachAdvice, otherNotes
         };
+        // 旧フィールド（review/handover）が残っている場合はクリア
+        delete updated.review;
+        delete updated.handover;
         // タイプによって coachingNumber を更新／削除
         if (type === '通常コーチング') {
           updated.coachingNumber = coachingNumber;
@@ -7397,7 +7464,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       } else {
         const newRec = {
           id: 'CR' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-          date, coachName, type, review, handover,
+          date, coachName, type,
+          monthlyReview, coachAdvice, otherNotes,
           createdAt: Date.now()
         };
         if (type === '通常コーチング') {
@@ -7440,6 +7508,85 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       alert('コーチング記録を削除しました。');
     }
 
+    // ========================================
+    // ===== B-1 拡張：コーチング記録 閲覧モーダル =====
+    // ========================================
+
+    let crViewTargetMemberId = null;
+    let crViewTargetRecordId = null;
+
+    // ===== コーチング記録 閲覧モーダルを開く =====
+    function openCoachingRecordViewModal(memberId, recordId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) { alert('会員が見つかりません。'); return; }
+      const rec = (m.coachingRecords || []).find(r => r.id === recordId);
+      if (!rec) { alert('対象のコーチング記録が見つかりません。'); return; }
+
+      crViewTargetMemberId = memberId;
+      crViewTargetRecordId = recordId;
+
+      // 会員情報
+      document.getElementById('cr-view-member-info').innerHTML = `
+        対象会員：<strong>${m.name}</strong> さん（${m.id}）
+      `;
+
+      // 基本情報
+      document.getElementById('cr-view-date').textContent = rec.date || '-';
+      document.getElementById('cr-view-coachName').textContent = rec.coachName || '-';
+
+      // タイプ（バッジで色付き）
+      const typeColorMap = {
+        'オリエンテーション': { bg: '#F5EEF8', fg: '#8E44AD' },
+        '初回コーチング':     { bg: '#E8F8F0', fg: '#27AE60' },
+        '通常コーチング':     { bg: '#EAF2F8', fg: '#2E86C1' },
+        'その他':             { bg: '#ECEFF1', fg: '#7F8C8D' }
+      };
+      const c = typeColorMap[rec.type] || { bg: '#F4F6F8', fg: '#999' };
+      document.getElementById('cr-view-type').innerHTML =
+        `<span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:12px; padding:3px 10px; border-radius:10px;">${rec.type || '-'}</span>`;
+
+      // 実施回
+      let sessionLabel = '-';
+      if (rec.type === '初回コーチング') sessionLabel = '1回目';
+      else if (rec.type === '通常コーチング' && rec.coachingNumber) sessionLabel = `${rec.coachingNumber}回目`;
+      document.getElementById('cr-view-session').textContent = sessionLabel;
+
+      // 自由記述3項目（新フィールド優先、旧データ review/handover も読み取れる互換）
+      const monthlyReviewEl = document.getElementById('cr-view-monthlyReview');
+      const coachAdviceEl = document.getElementById('cr-view-coachAdvice');
+      const otherNotesEl = document.getElementById('cr-view-otherNotes');
+      const setText = (el, val) => {
+        if (val) {
+          el.textContent = val;
+          el.style.color = '#333';
+        } else {
+          el.textContent = '（記入なし）';
+          el.style.color = '#bbb';
+        }
+      };
+      setText(monthlyReviewEl, rec.monthlyReview || rec.review || '');
+      setText(coachAdviceEl, rec.coachAdvice || rec.handover || '');
+      setText(otherNotesEl, rec.otherNotes || '');
+
+      document.getElementById('cr-view-overlay').classList.add('show');
+    }
+
+    function closeCoachingRecordViewModal() {
+      document.getElementById('cr-view-overlay').classList.remove('show');
+      crViewTargetMemberId = null;
+      crViewTargetRecordId = null;
+    }
+
+    // ===== 閲覧モーダルから編集モーダルへ切替 =====
+    function crViewSwitchToEdit() {
+      const memberId = crViewTargetMemberId;
+      const recordId = crViewTargetRecordId;
+      closeCoachingRecordViewModal();
+      if (memberId && recordId) {
+        openCoachingRecordModal(memberId, recordId);
+      }
+    }
+
     // ===== カルテ：コーチング記録履歴カードを生成（共有モードでは出さない） =====
     function buildCoachingRecordsCard(m) {
       // 共有モードの場合は何も出さない（会員に絶対見せない）
@@ -7479,10 +7626,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         return '-';
       };
 
-      // テーブル表示
+      // テーブル表示（一覧はシンプルに：日付・タイプ・実施回・担当・操作のみ。詳細は閲覧モーダルで）
       const rows = records.map(r => {
-        const reviewSnip = (r.review || '').slice(0, 30);
-        const handoverSnip = (r.handover || '').slice(0, 30);
         const c = typeColorMap[r.type] || { bg: '#F4F6F8', fg: '#999' };
         return `
           <tr>
@@ -7490,9 +7635,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             <td style="padding:8px; font-size:12px;"><span style="background:${c.bg}; color:${c.fg}; font-weight:700; font-size:11px; padding:2px 8px; border-radius:10px; white-space:nowrap;">${r.type || '-'}</span></td>
             <td style="padding:8px; font-size:12px; text-align:center; white-space:nowrap; color:#555;">${sessionLabel(r)}</td>
             <td style="padding:8px; font-size:12px; white-space:nowrap;">${r.coachName || '-'}</td>
-            <td style="padding:8px; font-size:11px; color:#666;">${reviewSnip}${(r.review || '').length > 30 ? '…' : ''}</td>
-            <td style="padding:8px; font-size:11px; color:#666;">${handoverSnip}${(r.handover || '').length > 30 ? '…' : ''}</td>
-            <td style="padding:8px; text-align:center;">
+            <td style="padding:8px; text-align:center; white-space:nowrap;">
+              <button class="action-btn" onclick="openCoachingRecordViewModal('${m.id}', '${r.id}')" style="margin-right:4px;">👁 閲覧</button>
               <button class="action-btn" onclick="openCoachingRecordModal('${m.id}', '${r.id}')">編集</button>
             </td>
           </tr>
@@ -7515,9 +7659,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
                   <th style="padding:6px 8px; text-align:left; font-size:11px;">タイプ</th>
                   <th style="padding:6px 8px; text-align:center; font-size:11px; width:70px;">実施回</th>
                   <th style="padding:6px 8px; text-align:left; font-size:11px;">担当</th>
-                  <th style="padding:6px 8px; text-align:left; font-size:11px;">振り返り</th>
-                  <th style="padding:6px 8px; text-align:left; font-size:11px;">引き継ぎ</th>
-                  <th style="padding:6px 8px; text-align:center; font-size:11px; width:60px;">操作</th>
+                  <th style="padding:6px 8px; text-align:center; font-size:11px; width:140px;">操作</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
