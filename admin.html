@@ -2730,6 +2730,7 @@
               <label class="form-label">タイプ <span style="color:var(--color-error);">*</span></label>
               <select class="form-input" id="cr-type" required onchange="crOnTypeChange()">
                 <option value="">選択してください</option>
+                <option value="教材選定">教材選定</option>
                 <option value="オリエンテーション">オリエンテーション</option>
                 <option value="初回コーチング">初回コーチング</option>
                 <option value="通常コーチング">通常コーチング</option>
@@ -2747,19 +2748,54 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">この1ヶ月間の振り返り <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-            <textarea class="form-input" id="cr-monthlyReview" rows="3" placeholder="例：会員様からヒアリングした学習進捗・取り組み状況・困っていた点 など" style="resize:vertical; font-family:inherit;"></textarea>
+          <!-- 教材選定セクション（タイプ「教材選定」時のみ表示） -->
+          <div id="cr-textbookSelection-section" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">選定した教材 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <div id="cr-selectedTextbooks-list" style="margin-bottom:8px;">
+                <!-- 選択済み教材が動的に追加される（JSで管理） -->
+              </div>
+              <button type="button" class="secondary-btn" onclick="openTextbookPickerModal()" style="width:100%;">＋ 教材を追加</button>
+              <div style="font-size:11px; color:var(--color-text-muted); margin-top:6px;">
+                💡 PROGOS結果に基づいて初期教材を選定してください。検索・カテゴリ絞り込みで素早く選択できます。
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">共有事項 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <textarea class="form-input" id="cr-sharedNote" rows="3" placeholder="例：ネイティブキャンプ導入時期、特記事項 など" style="resize:vertical; font-family:inherit;"></textarea>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">コーチからのアドバイス <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-            <textarea class="form-input" id="cr-coachAdvice" rows="3" placeholder="例：次月の学習方針／改善ポイント／推奨アプローチ など" style="resize:vertical; font-family:inherit;"></textarea>
+          <!-- テスト内容セクション（初回・通常コーチング時のみ表示） -->
+          <div id="cr-testContent-section" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">テスト内容（教材ごと）</label>
+              <div id="cr-testContent-list" style="margin-bottom:8px;">
+                <!-- JSで動的生成（教材選定で登録された教材を一覧化） -->
+              </div>
+              <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">
+                💡 教材選定で登録された教材が一覧表示されます。「実施済み」を選択すると詳細欄が展開されます。
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">その他質問・補足 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
-            <textarea class="form-input" id="cr-otherNotes" rows="3" placeholder="例：会員様からの追加質問／パーソナリティメモ／特筆事項 など" style="resize:vertical; font-family:inherit;"></textarea>
+          <!-- 自由記述3項目セクション（教材選定以外のタイプで表示） -->
+          <div id="cr-freeText-section">
+            <div class="form-group">
+              <label class="form-label">この1ヶ月間の振り返り <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <textarea class="form-input" id="cr-monthlyReview" rows="3" placeholder="例：会員様からヒアリングした学習進捗・取り組み状況・困っていた点 など" style="resize:vertical; font-family:inherit;"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">コーチからのアドバイス <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <textarea class="form-input" id="cr-coachAdvice" rows="3" placeholder="例：次月の学習方針／改善ポイント／推奨アプローチ など" style="resize:vertical; font-family:inherit;"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">その他質問・補足 <span style="color:var(--color-text-muted); font-weight:normal;">(任意)</span></label>
+              <textarea class="form-input" id="cr-otherNotes" rows="3" placeholder="例：会員様からの追加質問／パーソナリティメモ／特筆事項 など" style="resize:vertical; font-family:inherit;"></textarea>
+            </div>
           </div>
         </form>
       </div>
@@ -2803,27 +2839,79 @@
           </div>
         </div>
 
-        <!-- この1ヶ月間の振り返り（全文・改行保持） -->
-        <div style="margin-bottom:18px;">
-          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">この1ヶ月間の振り返り</div>
-          <div id="cr-view-monthlyReview" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+        <!-- 自由記述3項目セクション（教材選定以外で表示） -->
+        <div id="cr-view-freeText-section">
+          <!-- この1ヶ月間の振り返り（全文・改行保持） -->
+          <div style="margin-bottom:18px;">
+            <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">この1ヶ月間の振り返り</div>
+            <div id="cr-view-monthlyReview" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+          </div>
+
+          <!-- コーチからのアドバイス（全文・改行保持） -->
+          <div style="margin-bottom:18px;">
+            <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">コーチからのアドバイス</div>
+            <div id="cr-view-coachAdvice" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+          </div>
+
+          <!-- その他質問・補足（全文・改行保持） -->
+          <div>
+            <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">その他質問・補足</div>
+            <div id="cr-view-otherNotes" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+          </div>
         </div>
 
-        <!-- コーチからのアドバイス（全文・改行保持） -->
-        <div style="margin-bottom:18px;">
-          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">コーチからのアドバイス</div>
-          <div id="cr-view-coachAdvice" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+        <!-- 教材選定セクション（教材選定タイプの時のみ表示） -->
+        <div id="cr-view-textbookSelection-section" style="display:none;">
+          <div style="margin-bottom:18px;">
+            <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">選定した教材</div>
+            <div id="cr-view-selectedTextbooks" style="font-size:13px; color:#333; min-height:30px;">-</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">共有事項</div>
+            <div id="cr-view-sharedNote" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+          </div>
         </div>
 
-        <!-- その他質問・補足（全文・改行保持） -->
-        <div>
-          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">その他質問・補足</div>
-          <div id="cr-view-otherNotes" style="font-size:13px; color:#333; line-height:1.7; white-space:pre-wrap; min-height:30px;">-</div>
+        <!-- テスト内容セクション（初回・通常コーチング時のみ表示） -->
+        <div id="cr-view-testContent-section" style="display:none; margin-top:18px;">
+          <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">テスト内容（教材ごと）</div>
+          <div id="cr-view-textbookTests" style="font-size:13px; color:#333; min-height:30px;">-</div>
         </div>
       </div>
       <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
         <button class="secondary-btn" onclick="closeCoachingRecordViewModal()">閉じる</button>
         <button class="primary-btn" id="cr-view-edit-btn" onclick="crViewSwitchToEdit()">✏️ 編集する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 教材選択モーダル（B-1 Phase B：教材選定タイプから呼び出し） ===== -->
+  <div class="center-modal-overlay" id="cr-textbook-picker-overlay" onclick="closeTextbookPickerModal()">
+    <div class="center-modal" onclick="event.stopPropagation()" style="max-width: 720px; width: 90vw;">
+      <div class="center-modal-header">
+        <div class="panel-title">📚 教材を選択</div>
+        <button class="panel-close" onclick="closeTextbookPickerModal()">×</button>
+      </div>
+      <div class="center-modal-body" style="max-height: 75vh; overflow-y: auto; padding: 16px 20px;">
+        <!-- 検索 + カテゴリフィルタ -->
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:8px; margin-bottom:12px;">
+          <input type="text" class="form-input" id="cr-tp-search" placeholder="🔍 教材名で検索..." oninput="renderTextbookPickerList()">
+          <select class="form-input" id="cr-tp-category" onchange="renderTextbookPickerList()">
+            <option value="">すべてのカテゴリ</option>
+            <!-- JSで動的生成 -->
+          </select>
+        </div>
+
+        <!-- 件数表示 -->
+        <div id="cr-tp-count" style="font-size:11px; color:#888; margin-bottom:8px;">-</div>
+
+        <!-- 教材一覧（カードリスト） -->
+        <div id="cr-tp-list" style="display:flex; flex-direction:column; gap:6px;">
+          <!-- JSで動的生成 -->
+        </div>
+      </div>
+      <div class="center-modal-footer" style="display:flex; justify-content:flex-end; padding:12px 20px; border-top:1px solid var(--color-border);">
+        <button class="secondary-btn" onclick="closeTextbookPickerModal()">閉じる</button>
       </div>
     </div>
   </div>
@@ -7209,6 +7297,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     function validateCoachingRecord(memberId, newType, newDate, newCoachingNumber, excludeId = null) {
 
       // ===== チェック1: 重複登録 =====
+      if (newType === '教材選定') {
+        if (hasCoachingRecordOfType(memberId, '教材選定', excludeId)) {
+          return '教材選定は既に登録されています。\n\n教材選定は1回のみ登録可能です。既存の記録を編集してください。';
+        }
+      }
       if (newType === 'オリエンテーション') {
         if (hasCoachingRecordOfType(memberId, 'オリエンテーション', excludeId)) {
           return 'オリエンテーションは既に登録されています。\n\nオリエンテーションは1回のみ登録可能です。既存の記録を編集してください。';
@@ -7307,24 +7400,281 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       el.innerHTML = opts.join('');
     }
 
-    // ===== タイプ選択変更時：通常コーチングなら回数プルダウン表示 =====
-    // 通常コーチングの回数は変更不可（自動設定）
+    // ===== タイプ選択変更時：UIを切替 =====
+    // - 通常コーチング → コーチング回数プルダウン表示
+    // - 教材選定 → 教材選定セクション表示、自由記述3項目セクション非表示
+    // - 初回・通常コーチング → テスト内容セクション表示（教材選定の教材を反映）
+    // - その他 → 自由記述3項目セクションのみ
     function crOnTypeChange() {
       const type = document.getElementById('cr-type').value;
-      const wrap = document.getElementById('cr-coachingNumber-wrap');
-      if (!wrap) return;
-      if (type === '通常コーチング') {
-        wrap.style.display = '';
-        // 編集モードでなければ、デフォルト値を最新+1にセット
-        if (!crEditingId) {
-          const nextNum = getNextCoachingNumber(crTargetMemberId);
-          crDefaultCoachingNumber = nextNum;
-          crPopulateCoachingNumber(nextNum);
+      const numberWrap = document.getElementById('cr-coachingNumber-wrap');
+      const textbookSection = document.getElementById('cr-textbookSelection-section');
+      const freeTextSection = document.getElementById('cr-freeText-section');
+      const testContentSection = document.getElementById('cr-testContent-section');
+
+      // コーチング回数プルダウンの表示制御
+      if (numberWrap) {
+        if (type === '通常コーチング') {
+          numberWrap.style.display = '';
+          if (!crEditingId) {
+            const nextNum = getNextCoachingNumber(crTargetMemberId);
+            crDefaultCoachingNumber = nextNum;
+            crPopulateCoachingNumber(nextNum);
+          }
+        } else {
+          numberWrap.style.display = 'none';
+          crDefaultCoachingNumber = null;
         }
-      } else {
-        wrap.style.display = 'none';
-        crDefaultCoachingNumber = null;
       }
+
+      // 教材選定 vs 自由記述3項目セクションの切替
+      if (type === '教材選定') {
+        if (textbookSection) textbookSection.style.display = '';
+        if (freeTextSection) freeTextSection.style.display = 'none';
+        if (testContentSection) testContentSection.style.display = 'none';
+      } else {
+        if (textbookSection) textbookSection.style.display = 'none';
+        if (freeTextSection) freeTextSection.style.display = '';
+
+        // 初回コーチング・通常コーチング時のみテスト内容セクションを表示
+        if (testContentSection) {
+          if (type === '初回コーチング' || type === '通常コーチング') {
+            testContentSection.style.display = '';
+            // 編集モードでなければ、教材選定の教材から空のテスト記録を生成
+            if (!crEditingId) {
+              crInitializeTestContentFromTextbookSelection(crTargetMemberId);
+            }
+          } else {
+            testContentSection.style.display = 'none';
+          }
+        }
+      }
+    }
+
+    // ========================================
+    // ===== 教材選定セクション（Phase B） =====
+    // ========================================
+    // 編集中のコーチング記録モーダル内で、選択済み教材を一時保持する配列
+    // 構造：[{ textbookId, note }, ...]
+    let crSelectedTextbooks = [];
+
+    // ===== 選択済み教材リストの描画 =====
+    function renderSelectedTextbooksList() {
+      const container = document.getElementById('cr-selectedTextbooks-list');
+      if (!container) return;
+      if (crSelectedTextbooks.length === 0) {
+        container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px; background:#F8F9FA; border-radius:6px; margin-bottom:8px;">教材がまだ選択されていません</div>`;
+        return;
+      }
+      const items = crSelectedTextbooks.map((entry, idx) => {
+        const tb = (typeof getTextbook === 'function') ? getTextbook(entry.textbookId) : { name: entry.textbookId, category: '-' };
+        const cat = tb.category || '-';
+        return `
+          <div style="background:#fff; border:1px solid #E5E7EB; border-radius:6px; padding:10px 12px; margin-bottom:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:700; color:#333;">${tb.name}</div>
+                <div style="font-size:11px; color:#888; margin-top:2px;">${cat}</div>
+              </div>
+              <button type="button" onclick="removeSelectedTextbook(${idx})" style="background:#fff; color:#E74C3C; border:1px solid #E74C3C; border-radius:4px; padding:3px 8px; font-size:11px; cursor:pointer; white-space:nowrap;">🗑 削除</button>
+            </div>
+            <input type="text" value="${(entry.note || '').replace(/"/g, '&quot;')}" oninput="updateSelectedTextbookNote(${idx}, this.value)" placeholder="メモ（トレーニング方法・範囲などを記載）" style="width:100%; padding:6px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+          </div>
+        `;
+      }).join('');
+      container.innerHTML = items;
+    }
+
+    // ===== 選択済み教材の削除 =====
+    function removeSelectedTextbook(idx) {
+      if (idx < 0 || idx >= crSelectedTextbooks.length) return;
+      crSelectedTextbooks.splice(idx, 1);
+      renderSelectedTextbooksList();
+    }
+
+    // ===== 選択済み教材のメモ更新 =====
+    function updateSelectedTextbookNote(idx, value) {
+      if (idx < 0 || idx >= crSelectedTextbooks.length) return;
+      crSelectedTextbooks[idx].note = value;
+    }
+
+    // ===== 教材選択モーダルを開く =====
+    function openTextbookPickerModal() {
+      // カテゴリプルダウンを最新のtextbooksから生成（カテゴリの重複排除 + ソート）
+      const categories = Array.from(new Set((textbooks || []).map(t => t.category).filter(Boolean))).sort();
+      const catSel = document.getElementById('cr-tp-category');
+      if (catSel) {
+        const opts = ['<option value="">すべてのカテゴリ</option>'];
+        categories.forEach(c => opts.push(`<option value="${c}">${c}</option>`));
+        catSel.innerHTML = opts.join('');
+        catSel.value = '';
+      }
+      // 検索ボックスをクリア
+      const searchEl = document.getElementById('cr-tp-search');
+      if (searchEl) searchEl.value = '';
+
+      renderTextbookPickerList();
+      document.getElementById('cr-textbook-picker-overlay').classList.add('show');
+    }
+
+    function closeTextbookPickerModal() {
+      document.getElementById('cr-textbook-picker-overlay').classList.remove('show');
+    }
+
+    // ===== 教材選択モーダル：教材一覧の絞り込み描画 =====
+    function renderTextbookPickerList() {
+      const list = document.getElementById('cr-tp-list');
+      const countEl = document.getElementById('cr-tp-count');
+      if (!list) return;
+      const keyword = (document.getElementById('cr-tp-search').value || '').trim().toLowerCase();
+      const category = (document.getElementById('cr-tp-category').value || '');
+      const selectedIds = crSelectedTextbooks.map(s => s.textbookId);
+
+      let filtered = (textbooks || []).filter(t => {
+        if (category && t.category !== category) return false;
+        if (keyword && !(t.name || '').toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+
+      if (countEl) {
+        countEl.textContent = `${filtered.length}件 / 全${(textbooks || []).length}件中`;
+      }
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="padding:24px; text-align:center; color:#999; font-size:13px;">該当する教材が見つかりません</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(t => {
+        const isSelected = selectedIds.includes(t.id);
+        const btnStyle = isSelected
+          ? 'background:#ECEFF1; color:#7F8C8D; border:1px solid #BDC3C7; cursor:not-allowed;'
+          : 'background:var(--color-primary); color:#fff; border:1px solid var(--color-primary); cursor:pointer;';
+        const btnLabel = isSelected ? '✓ 選択済み' : '＋ 選択';
+        const onclick = isSelected ? '' : `onclick="addSelectedTextbook('${t.id}')"`;
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border:1px solid #E5E7EB; border-radius:6px; gap:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:600; color:#333;">${t.name}</div>
+              <div style="font-size:11px; color:#888; margin-top:2px;">${t.category || '-'}</div>
+            </div>
+            <button type="button" ${onclick} style="${btnStyle} border-radius:4px; padding:6px 12px; font-size:12px; font-weight:700; white-space:nowrap;" ${isSelected ? 'disabled' : ''}>${btnLabel}</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== 教材選択モーダル：教材を選択リストに追加 =====
+    function addSelectedTextbook(textbookId) {
+      // 重複チェック
+      if (crSelectedTextbooks.some(s => s.textbookId === textbookId)) return;
+      crSelectedTextbooks.push({ textbookId, note: '' });
+      renderSelectedTextbooksList();
+      renderTextbookPickerList();  // モーダル内の「選択済み」表示も更新
+    }
+
+    // ========================================
+    // ===== テスト内容セクション（Phase C） =====
+    // ========================================
+    // 編集中のテスト記録を一時保持する配列
+    // 構造：[{ textbookId, testStatus, range, format, score, note }, ...]
+    let crTextbookTests = [];
+
+    // ===== 会員の最新「教材選定」記録から教材リストを取得 =====
+    function getMemberSelectedTextbooks(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !Array.isArray(m.coachingRecords)) return [];
+      // 「教材選定」タイプの記録を取得（1人につき1件のみのはず）
+      const selectionRec = m.coachingRecords.find(r => r.type === '教材選定');
+      if (!selectionRec || !Array.isArray(selectionRec.selectedTextbooks)) return [];
+      return selectionRec.selectedTextbooks;  // [{ textbookId, note }, ...]
+    }
+
+    // ===== 教材選定の教材から、空のテスト記録を初期化 =====
+    function crInitializeTestContentFromTextbookSelection(memberId) {
+      const selected = getMemberSelectedTextbooks(memberId);
+      crTextbookTests = selected.map(t => ({
+        textbookId: t.textbookId,
+        testStatus: '未選択',
+        range: '',
+        format: '',
+        score: '',
+        note: ''
+      }));
+      renderTestContentList();
+    }
+
+    // ===== テスト内容リストの描画 =====
+    function renderTestContentList() {
+      const container = document.getElementById('cr-testContent-list');
+      if (!container) return;
+
+      if (crTextbookTests.length === 0) {
+        container.innerHTML = `
+          <div style="padding:14px; text-align:center; color:#999; font-size:12px; background:#FFF8E1; border:1px dashed #F39C12; border-radius:6px;">
+            ⚠️ 教材が登録されていません。<br>
+            先に「教材選定」タイプで教材を登録してください。
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = crTextbookTests.map((entry, idx) => {
+        const tb = (typeof getTextbook === 'function') ? getTextbook(entry.textbookId) : { name: entry.textbookId, category: '-' };
+        const isImplemented = entry.testStatus === '実施済み';
+        // 実施済み時のみ表示する詳細欄
+        const detailHtml = isImplemented ? `
+          <div style="margin-top:10px; padding:10px; background:#F8F9FA; border-radius:4px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">範囲</label>
+              <input type="text" value="${(entry.range || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'range', this.value)" placeholder="例：全範囲、Day1〜30" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">形式</label>
+              <input type="text" value="${(entry.format || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'format', this.value)" placeholder="例：筆記、口頭" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">点数</label>
+              <input type="text" value="${(entry.score || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'score', this.value)" placeholder="例：80点、合格" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">備考</label>
+              <input type="text" value="${(entry.note || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'note', this.value)" placeholder="例：発音注意" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            </div>
+          </div>
+        ` : '';
+
+        return `
+          <div style="background:#fff; border:1px solid #E5E7EB; border-radius:6px; padding:10px 12px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:700; color:#333;">📖 ${tb.name}</div>
+                <div style="font-size:11px; color:#888; margin-top:2px;">${tb.category || '-'}</div>
+              </div>
+              <select onchange="updateTestStatus(${idx}, this.value)" style="padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px; background:#fff; min-width:100px;">
+                <option value="未選択" ${entry.testStatus === '未選択' ? 'selected' : ''}>未選択</option>
+                <option value="未実施" ${entry.testStatus === '未実施' ? 'selected' : ''}>未実施</option>
+                <option value="実施済み" ${entry.testStatus === '実施済み' ? 'selected' : ''}>実施済み</option>
+              </select>
+            </div>
+            ${detailHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== テスト実施状況プルダウンの onchange =====
+    function updateTestStatus(idx, value) {
+      if (idx < 0 || idx >= crTextbookTests.length) return;
+      crTextbookTests[idx].testStatus = value;
+      // ステータス変更で詳細欄の表示が変わるため、全体を再描画
+      renderTestContentList();
+    }
+
+    // ===== テスト詳細フィールド（範囲・形式・点数・備考）の更新 =====
+    function updateTestField(idx, field, value) {
+      if (idx < 0 || idx >= crTextbookTests.length) return;
+      crTextbookTests[idx][field] = value;
     }
 
     // ===== コーチング記録モーダルを開く =====
@@ -7373,6 +7723,19 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       crPopulateCoachingNumber();
       document.getElementById('cr-coachingNumber-wrap').style.display = 'none';
 
+      // 教材選定セクションのリセット
+      crSelectedTextbooks = [];
+      const sharedNoteEl = document.getElementById('cr-sharedNote');
+      if (sharedNoteEl) sharedNoteEl.value = '';
+      document.getElementById('cr-textbookSelection-section').style.display = 'none';
+      document.getElementById('cr-freeText-section').style.display = '';
+      renderSelectedTextbooksList();
+
+      // テスト内容セクションのリセット
+      crTextbookTests = [];
+      document.getElementById('cr-testContent-section').style.display = 'none';
+      renderTestContentList();
+
       if (isEdit) {
         const rec = (m.coachingRecords || []).find(r => r.id === recordId);
         if (rec) {
@@ -7389,6 +7752,52 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             document.getElementById('cr-coachingNumber-wrap').style.display = '';
             crDefaultCoachingNumber = rec.coachingNumber || getNextCoachingNumber(memberId, recordId);
             crPopulateCoachingNumber(rec.coachingNumber || crDefaultCoachingNumber);
+          }
+          // 教材選定タイプの場合：選択教材リストと共有事項を復元 + セクション切替
+          if (rec.type === '教材選定') {
+            crSelectedTextbooks = Array.isArray(rec.selectedTextbooks)
+              ? rec.selectedTextbooks.map(t => ({ textbookId: t.textbookId, note: t.note || '' }))
+              : [];
+            if (sharedNoteEl) sharedNoteEl.value = rec.sharedNote || '';
+            renderSelectedTextbooksList();
+            document.getElementById('cr-textbookSelection-section').style.display = '';
+            document.getElementById('cr-freeText-section').style.display = 'none';
+          }
+          // 初回・通常コーチングタイプの場合：テスト記録を復元 + セクション表示
+          if (rec.type === '初回コーチング' || rec.type === '通常コーチング') {
+            // 教材選定の最新教材リストを基準にしつつ、保存済みのテスト記録があればそれを使う
+            const selectedFromMaster = getMemberSelectedTextbooks(memberId);
+            const savedTests = Array.isArray(rec.textbookTests) ? rec.textbookTests : [];
+            // 教材選定の教材順をベースに、保存済みテスト記録があればマージ
+            crTextbookTests = selectedFromMaster.map(sel => {
+              const saved = savedTests.find(t => t.textbookId === sel.textbookId);
+              return saved ? {
+                textbookId: sel.textbookId,
+                testStatus: saved.testStatus || '未選択',
+                range: saved.range || '',
+                format: saved.format || '',
+                score: saved.score || '',
+                note: saved.note || ''
+              } : {
+                textbookId: sel.textbookId,
+                testStatus: '未選択', range: '', format: '', score: '', note: ''
+              };
+            });
+            // 保存済みのテスト記録に、教材選定にない教材があった場合（=過去に追加された教材）も保持
+            savedTests.forEach(saved => {
+              if (!crTextbookTests.some(t => t.textbookId === saved.textbookId)) {
+                crTextbookTests.push({
+                  textbookId: saved.textbookId,
+                  testStatus: saved.testStatus || '未選択',
+                  range: saved.range || '',
+                  format: saved.format || '',
+                  score: saved.score || '',
+                  note: saved.note || ''
+                });
+              }
+            });
+            renderTestContentList();
+            document.getElementById('cr-testContent-section').style.display = '';
           }
         }
       } else {
@@ -7417,6 +7826,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const monthlyReview = document.getElementById('cr-monthlyReview').value.trim();
       const coachAdvice = document.getElementById('cr-coachAdvice').value.trim();
       const otherNotes = document.getElementById('cr-otherNotes').value.trim();
+      const sharedNote = (document.getElementById('cr-sharedNote') || {}).value || '';
+      // 教材選定の選択済み教材は crSelectedTextbooks（配列）に保持されている
 
       if (!date) { alert('実施日を入力してください。'); return; }
       // 未来日チェック（max属性のフォールバック）
@@ -7448,28 +7859,74 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         if (idx === -1) { alert('編集対象の記録が見つかりません。'); return; }
         const updated = {
           ...m.coachingRecords[idx],
-          date, coachName, type,
-          monthlyReview, coachAdvice, otherNotes
+          date, coachName, type
         };
         // 旧フィールド（review/handover）が残っている場合はクリア
         delete updated.review;
         delete updated.handover;
-        // タイプによって coachingNumber を更新／削除
-        if (type === '通常コーチング') {
-          updated.coachingNumber = coachingNumber;
-        } else {
+        // タイプによってフィールドを切替
+        if (type === '教材選定') {
+          // 教材選定タイプ：選択教材リスト + 共有事項を保存、自由記述3項目はクリア
+          updated.selectedTextbooks = crSelectedTextbooks.map(t => ({ textbookId: t.textbookId, note: t.note || '' }));
+          updated.sharedNote = sharedNote;
+          delete updated.monthlyReview;
+          delete updated.coachAdvice;
+          delete updated.otherNotes;
           delete updated.coachingNumber;
+        } else {
+          // それ以外：自由記述3項目を保存、教材選定フィールドはクリア
+          updated.monthlyReview = monthlyReview;
+          updated.coachAdvice = coachAdvice;
+          updated.otherNotes = otherNotes;
+          delete updated.selectedTextbooks;
+          delete updated.sharedNote;
+          if (type === '通常コーチング') {
+            updated.coachingNumber = coachingNumber;
+          } else {
+            delete updated.coachingNumber;
+          }
+          // 初回・通常コーチング：テスト記録を保存
+          if (type === '初回コーチング' || type === '通常コーチング') {
+            updated.textbookTests = crTextbookTests.map(t => ({
+              textbookId: t.textbookId,
+              testStatus: t.testStatus || '未選択',
+              range: t.range || '',
+              format: t.format || '',
+              score: t.score || '',
+              note: t.note || ''
+            }));
+          } else {
+            delete updated.textbookTests;
+          }
         }
         m.coachingRecords[idx] = updated;
       } else {
         const newRec = {
           id: 'CR' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
           date, coachName, type,
-          monthlyReview, coachAdvice, otherNotes,
           createdAt: Date.now()
         };
-        if (type === '通常コーチング') {
-          newRec.coachingNumber = coachingNumber;
+        if (type === '教材選定') {
+          newRec.selectedTextbooks = crSelectedTextbooks.map(t => ({ textbookId: t.textbookId, note: t.note || '' }));
+          newRec.sharedNote = sharedNote;
+        } else {
+          newRec.monthlyReview = monthlyReview;
+          newRec.coachAdvice = coachAdvice;
+          newRec.otherNotes = otherNotes;
+          if (type === '通常コーチング') {
+            newRec.coachingNumber = coachingNumber;
+          }
+          // 初回・通常コーチング：テスト記録を保存
+          if (type === '初回コーチング' || type === '通常コーチング') {
+            newRec.textbookTests = crTextbookTests.map(t => ({
+              textbookId: t.textbookId,
+              testStatus: t.testStatus || '未選択',
+              range: t.range || '',
+              format: t.format || '',
+              score: t.score || '',
+              note: t.note || ''
+            }));
+          }
         }
         m.coachingRecords.push(newRec);
       }
@@ -7536,6 +7993,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
       // タイプ（バッジで色付き）
       const typeColorMap = {
+        '教材選定':           { bg: '#FEF9E7', fg: '#B7950B' },  // アンバー
         'オリエンテーション': { bg: '#F5EEF8', fg: '#8E44AD' },
         '初回コーチング':     { bg: '#E8F8F0', fg: '#27AE60' },
         '通常コーチング':     { bg: '#EAF2F8', fg: '#2E86C1' },
@@ -7551,11 +8009,13 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       else if (rec.type === '通常コーチング' && rec.coachingNumber) sessionLabel = `${rec.coachingNumber}回目`;
       document.getElementById('cr-view-session').textContent = sessionLabel;
 
-      // 自由記述3項目（新フィールド優先、旧データ review/handover も読み取れる互換）
-      const monthlyReviewEl = document.getElementById('cr-view-monthlyReview');
-      const coachAdviceEl = document.getElementById('cr-view-coachAdvice');
-      const otherNotesEl = document.getElementById('cr-view-otherNotes');
+      // タイプ別にセクションを切替
+      const viewFreeText = document.getElementById('cr-view-freeText-section');
+      const viewTextbook = document.getElementById('cr-view-textbookSelection-section');
+      const viewTestContent = document.getElementById('cr-view-testContent-section');
+
       const setText = (el, val) => {
+        if (!el) return;
         if (val) {
           el.textContent = val;
           el.style.color = '#333';
@@ -7564,9 +8024,87 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           el.style.color = '#bbb';
         }
       };
-      setText(monthlyReviewEl, rec.monthlyReview || rec.review || '');
-      setText(coachAdviceEl, rec.coachAdvice || rec.handover || '');
-      setText(otherNotesEl, rec.otherNotes || '');
+
+      if (rec.type === '教材選定') {
+        // 教材選定セクションを表示、自由記述セクションを非表示、テスト内容セクションも非表示
+        if (viewFreeText) viewFreeText.style.display = 'none';
+        if (viewTextbook) viewTextbook.style.display = '';
+        if (viewTestContent) viewTestContent.style.display = 'none';
+
+        // 選択教材リスト表示
+        const tbListEl = document.getElementById('cr-view-selectedTextbooks');
+        const list = Array.isArray(rec.selectedTextbooks) ? rec.selectedTextbooks : [];
+        if (list.length === 0) {
+          tbListEl.innerHTML = '<span style="color:#bbb;">（選択教材なし）</span>';
+        } else {
+          tbListEl.innerHTML = list.map(entry => {
+            const tb = (typeof getTextbook === 'function') ? getTextbook(entry.textbookId) : { name: entry.textbookId, category: '-' };
+            const noteHtml = entry.note ? `<div style="font-size:11px; color:#666; margin-top:2px;">📝 ${entry.note.replace(/</g, '&lt;')}</div>` : '';
+            return `
+              <div style="background:#fff; border:1px solid #E5E7EB; border-radius:6px; padding:8px 12px; margin-bottom:6px;">
+                <div style="font-weight:700; color:#333; font-size:13px;">${tb.name}</div>
+                <div style="font-size:11px; color:#888;">${tb.category || '-'}</div>
+                ${noteHtml}
+              </div>
+            `;
+          }).join('');
+        }
+
+        // 共有事項表示
+        setText(document.getElementById('cr-view-sharedNote'), rec.sharedNote || '');
+      } else {
+        // 自由記述セクションを表示、教材選定セクションを非表示
+        if (viewFreeText) viewFreeText.style.display = '';
+        if (viewTextbook) viewTextbook.style.display = 'none';
+
+        // 自由記述3項目（新フィールド優先、旧データ review/handover も読み取れる互換）
+        setText(document.getElementById('cr-view-monthlyReview'), rec.monthlyReview || rec.review || '');
+        setText(document.getElementById('cr-view-coachAdvice'), rec.coachAdvice || rec.handover || '');
+        setText(document.getElementById('cr-view-otherNotes'), rec.otherNotes || '');
+
+        // 初回・通常コーチング：テスト内容セクションを表示
+        if (rec.type === '初回コーチング' || rec.type === '通常コーチング') {
+          if (viewTestContent) viewTestContent.style.display = '';
+          const testListEl = document.getElementById('cr-view-textbookTests');
+          const tests = Array.isArray(rec.textbookTests) ? rec.textbookTests : [];
+          if (tests.length === 0) {
+            testListEl.innerHTML = '<span style="color:#bbb;">（テスト記録なし）</span>';
+          } else {
+            // ステータスバッジ色
+            const statusColor = (s) => {
+              if (s === '実施済み') return { bg: '#E8F8F0', fg: '#27AE60' };
+              if (s === '未実施') return { bg: '#FEF5E7', fg: '#B7791F' };
+              return { bg: '#ECEFF1', fg: '#7F8C8D' };  // 未選択
+            };
+            testListEl.innerHTML = tests.map(t => {
+              const tb = (typeof getTextbook === 'function') ? getTextbook(t.textbookId) : { name: t.textbookId, category: '-' };
+              const c = statusColor(t.testStatus);
+              const detail = (t.testStatus === '実施済み') ? `
+                <div style="margin-top:8px; padding:8px 10px; background:#F8F9FA; border-radius:4px; display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
+                  <div><span style="color:#888; font-size:11px;">範囲：</span>${t.range || '<span style="color:#bbb;">-</span>'}</div>
+                  <div><span style="color:#888; font-size:11px;">形式：</span>${t.format || '<span style="color:#bbb;">-</span>'}</div>
+                  <div><span style="color:#888; font-size:11px;">点数：</span>${t.score || '<span style="color:#bbb;">-</span>'}</div>
+                  <div><span style="color:#888; font-size:11px;">備考：</span>${t.note || '<span style="color:#bbb;">-</span>'}</div>
+                </div>
+              ` : '';
+              return `
+                <div style="background:#fff; border:1px solid #E5E7EB; border-radius:6px; padding:10px 12px; margin-bottom:6px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-weight:700; color:#333; font-size:13px;">📖 ${tb.name}</div>
+                      <div style="font-size:11px; color:#888; margin-top:2px;">${tb.category || '-'}</div>
+                    </div>
+                    <span style="background:${c.bg}; color:${c.fg}; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; white-space:nowrap;">${t.testStatus || '未選択'}</span>
+                  </div>
+                  ${detail}
+                </div>
+              `;
+            }).join('');
+          }
+        } else {
+          if (viewTestContent) viewTestContent.style.display = 'none';
+        }
+      }
 
       document.getElementById('cr-view-overlay').classList.add('show');
     }
