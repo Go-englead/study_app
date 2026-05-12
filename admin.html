@@ -2772,10 +2772,23 @@
             <div class="form-group">
               <label class="form-label">テスト内容（教材ごと）</label>
               <div id="cr-testContent-list" style="margin-bottom:8px;">
-                <!-- JSで動的生成（教材選定で登録された教材を一覧化） -->
+                <!-- JSで動的生成（教材選定で登録された教材を一覧化、卒業教材は除外） -->
+              </div>
+              <button type="button" class="secondary-btn" onclick="openTextbookPickerModal('newTextbook')" style="width:100%;">＋ 新教材を追加</button>
+              <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">
+                💡 教材選定で登録された教材が一覧表示されます。「実施済み」を選択すると詳細欄と次回ステータスが展開されます。<br>
+                💡 卒業した教材の代わりに新しい教材を追加する場合は「＋ 新教材を追加」をクリックしてください（教材選定リストにも反映されます）。
+              </div>
+            </div>
+
+            <!-- 卒業教材一覧（参考表示・編集不可、過去のコーチング記録から自動集計） -->
+            <div class="form-group" id="cr-graduatedTextbooks-wrap" style="display:none;">
+              <label class="form-label" style="color:#B7950B;">🎓 卒業教材一覧 <span style="color:var(--color-text-muted); font-weight:normal;">(参考表示)</span></label>
+              <div id="cr-graduatedTextbooks-list" style="background:#FFF8E1; border:1px solid #F5B041; border-radius:6px; padding:10px 12px;">
+                <!-- JSで動的生成 -->
               </div>
               <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">
-                💡 教材選定で登録された教材が一覧表示されます。「実施済み」を選択すると詳細欄が展開されます。
+                💡 過去のコーチング記録で「卒業」となった教材です。テスト対象からは自動的に除外されます。
               </div>
             </div>
           </div>
@@ -2876,6 +2889,12 @@
         <div id="cr-view-testContent-section" style="display:none; margin-top:18px;">
           <div style="font-size:12px; color:#888; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #ECF0F1;">テスト内容（教材ごと）</div>
           <div id="cr-view-textbookTests" style="font-size:13px; color:#333; min-height:30px;">-</div>
+
+          <!-- 卒業教材一覧（参考表示・編集不可） -->
+          <div id="cr-view-graduatedTextbooks-wrap" style="display:none; margin-top:14px;">
+            <div style="font-size:12px; color:#B7950B; font-weight:700; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #F5B041;">🎓 卒業教材一覧 <span style="color:#888; font-weight:normal; font-size:11px;">(参考表示)</span></div>
+            <div id="cr-view-graduatedTextbooks" style="background:#FFF8E1; border:1px solid #F5B041; border-radius:6px; padding:10px 12px;"></div>
+          </div>
         </div>
       </div>
       <div class="center-modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--color-border);">
@@ -7469,6 +7488,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       const items = crSelectedTextbooks.map((entry, idx) => {
         const tb = (typeof getTextbook === 'function') ? getTextbook(entry.textbookId) : { name: entry.textbookId, category: '-' };
         const cat = tb.category || '-';
+        const dailyGoal = (entry.dailyGoalMinutes != null && entry.dailyGoalMinutes !== '') ? entry.dailyGoalMinutes : '';
         return `
           <div style="background:#fff; border:1px solid #E5E7EB; border-radius:6px; padding:10px 12px; margin-bottom:6px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;">
@@ -7478,7 +7498,13 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
               </div>
               <button type="button" onclick="removeSelectedTextbook(${idx})" style="background:#fff; color:#E74C3C; border:1px solid #E74C3C; border-radius:4px; padding:3px 8px; font-size:11px; cursor:pointer; white-space:nowrap;">🗑 削除</button>
             </div>
-            <input type="text" value="${(entry.note || '').replace(/"/g, '&quot;')}" oninput="updateSelectedTextbookNote(${idx}, this.value)" placeholder="メモ（トレーニング方法・範囲などを記載）" style="width:100%; padding:6px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            <!-- 日目標 -->
+            <div style="margin-bottom:6px;">
+              <label style="display:block; font-size:11px; color:#566573; margin-bottom:2px;">日目標（分）</label>
+              <input type="number" value="${dailyGoal}" oninput="updateSelectedTextbookField(${idx}, 'dailyGoalMinutes', this.value)" placeholder="例：45" min="0" max="1440" step="5" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            </div>
+            <!-- メモ -->
+            <input type="text" value="${(entry.note || '').replace(/"/g, '&quot;')}" oninput="updateSelectedTextbookField(${idx}, 'note', this.value)" placeholder="メモ（トレーニング方法・範囲などを記載）" style="width:100%; padding:6px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
           </div>
         `;
       }).join('');
@@ -7492,14 +7518,49 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       renderSelectedTextbooksList();
     }
 
-    // ===== 選択済み教材のメモ更新 =====
-    function updateSelectedTextbookNote(idx, value) {
+    // ===== 選択済み教材のフィールド更新（汎用：note/weeklyGoalHours/dailyGoalMinutes） =====
+    function updateSelectedTextbookField(idx, field, value) {
       if (idx < 0 || idx >= crSelectedTextbooks.length) return;
-      crSelectedTextbooks[idx].note = value;
+      // 数値フィールドは数値変換、空なら null
+      if (field === 'weeklyGoalHours' || field === 'dailyGoalMinutes') {
+        const num = parseFloat(value);
+        crSelectedTextbooks[idx][field] = (value === '' || isNaN(num)) ? null : num;
+      } else {
+        crSelectedTextbooks[idx][field] = value;
+      }
     }
 
+    // ===== 旧関数の互換維持（既存の onclick から呼ばれる場合に備える） =====
+    function updateSelectedTextbookNote(idx, value) {
+      updateSelectedTextbookField(idx, 'note', value);
+    }
+
+    // 教材選択モーダルのモード
+    // 'selection' : 教材選定タイプ用（crSelectedTextbooks に追加）
+    // 'newTextbook': 初回・通常コーチングから新教材追加（教材選定の記録 + crTextbookTests に追加）
+    let crTextbookPickerMode = 'selection';
+
     // ===== 教材選択モーダルを開く =====
-    function openTextbookPickerModal() {
+    function openTextbookPickerModal(mode = 'selection') {
+      crTextbookPickerMode = mode;
+
+      // モードに応じてタイトルを切り替え
+      const titleEl = document.querySelector('#cr-textbook-picker-overlay .panel-title');
+      if (titleEl) {
+        titleEl.textContent = (mode === 'newTextbook') ? '📚 新教材を追加' : '📚 教材を選択';
+      }
+
+      // 「新教材追加」モード時は、教材選定の記録があるかチェック
+      if (mode === 'newTextbook') {
+        const m = members.find(x => x.id === crTargetMemberId);
+        const hasSelection = m && Array.isArray(m.coachingRecords)
+          && m.coachingRecords.some(r => r.type === '教材選定');
+        if (!hasSelection) {
+          alert('「教材選定」タイプの記録が登録されていません。\n\n先に「教材選定」タイプで初期教材を登録してから新教材を追加してください。');
+          return;
+        }
+      }
+
       // カテゴリプルダウンを最新のtextbooksから生成（カテゴリの重複排除 + ソート）
       const categories = Array.from(new Set((textbooks || []).map(t => t.category).filter(Boolean))).sort();
       const catSel = document.getElementById('cr-tp-category');
@@ -7519,6 +7580,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
     function closeTextbookPickerModal() {
       document.getElementById('cr-textbook-picker-overlay').classList.remove('show');
+      crTextbookPickerMode = 'selection';  // モードをデフォルトに戻す
     }
 
     // ===== 教材選択モーダル：教材一覧の絞り込み描画 =====
@@ -7528,7 +7590,18 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       if (!list) return;
       const keyword = (document.getElementById('cr-tp-search').value || '').trim().toLowerCase();
       const category = (document.getElementById('cr-tp-category').value || '');
-      const selectedIds = crSelectedTextbooks.map(s => s.textbookId);
+
+      // モードに応じて「選択済み」判定の対象を切り替え
+      let selectedIds = [];
+      if (crTextbookPickerMode === 'newTextbook') {
+        // 新教材追加モード：現在のテスト記録に含まれる教材 + 卒業教材は再選択不可
+        selectedIds = crTextbookTests.map(t => t.textbookId);
+        const graduatedIds = getGraduatedTextbookIds(crTargetMemberId, crEditingId);
+        selectedIds = Array.from(new Set([...selectedIds, ...graduatedIds]));
+      } else {
+        // 教材選定モード：crSelectedTextbooks に含まれる教材
+        selectedIds = crSelectedTextbooks.map(s => s.textbookId);
+      }
 
       let filtered = (textbooks || []).filter(t => {
         if (category && t.category !== category) return false;
@@ -7564,13 +7637,61 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       }).join('');
     }
 
-    // ===== 教材選択モーダル：教材を選択リストに追加 =====
+    // ===== 教材選択モーダル：教材を追加（モードによって挙動を分岐） =====
     function addSelectedTextbook(textbookId) {
-      // 重複チェック
-      if (crSelectedTextbooks.some(s => s.textbookId === textbookId)) return;
-      crSelectedTextbooks.push({ textbookId, note: '' });
-      renderSelectedTextbooksList();
-      renderTextbookPickerList();  // モーダル内の「選択済み」表示も更新
+      if (crTextbookPickerMode === 'newTextbook') {
+        // 新教材追加モード：教材選定リストとテスト記録の両方に追加
+        addNewTextbookToTest(textbookId);
+      } else {
+        // 教材選定モード：crSelectedTextbooks に追加
+        if (crSelectedTextbooks.some(s => s.textbookId === textbookId)) return;
+        crSelectedTextbooks.push({ textbookId, note: '' });
+        renderSelectedTextbooksList();
+        renderTextbookPickerList();
+      }
+    }
+
+    // ===== 新教材を追加（初回・通常コーチング時の「＋ 新教材を追加」処理） =====
+    // 1. 現在のテスト記録（crTextbookTests）に追加
+    // 2. 教材選定の記録（m.coachingRecords の '教材選定'）にも永続的に追加
+    // 3. 即時 localStorage 保存
+    function addNewTextbookToTest(textbookId) {
+      // 重複チェック（テスト記録）
+      if (crTextbookTests.some(t => t.textbookId === textbookId)) {
+        alert('この教材は既にテスト対象に含まれています。');
+        return;
+      }
+      // 卒業教材かチェック（卒業教材は復活させない方針：ここで弾く）
+      const graduatedIds = getGraduatedTextbookIds(crTargetMemberId, crEditingId);
+      if (graduatedIds.includes(textbookId)) {
+        alert('この教材は既に卒業しています。\n継続させたい場合は、過去のコーチング記録を編集して「卒業」を「継続」に変更してください。');
+        return;
+      }
+
+      // 1. 教材選定の記録に追加（localStorage 永続化）
+      const m = members.find(x => x.id === crTargetMemberId);
+      if (m && Array.isArray(m.coachingRecords)) {
+        const selectionRec = m.coachingRecords.find(r => r.type === '教材選定');
+        if (selectionRec) {
+          if (!Array.isArray(selectionRec.selectedTextbooks)) selectionRec.selectedTextbooks = [];
+          if (!selectionRec.selectedTextbooks.some(t => t.textbookId === textbookId)) {
+            selectionRec.selectedTextbooks.push({ textbookId, note: '' });
+          }
+          saveAddedMembersToStorage();
+        }
+      }
+
+      // 2. 現在のコーチング記録のテスト対象に追加
+      crTextbookTests.push({
+        textbookId,
+        testStatus: '未選択',
+        range: '', format: '', score: '', note: '',
+        nextStatus: '未選択'
+      });
+
+      // 3. UIを再描画
+      renderTestContentList();
+      renderTextbookPickerList();  // モーダル内も「選択済み」表示に更新
     }
 
     // ========================================
@@ -7590,17 +7711,54 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       return selectionRec.selectedTextbooks;  // [{ textbookId, note }, ...]
     }
 
-    // ===== 教材選定の教材から、空のテスト記録を初期化 =====
+    // ===== 教材ごとの最新 nextStatus を集計 =====
+    // 戻り値：{ textbookId: '卒業' | '継続' | '未選択', ... }
+    // 過去のコーチング記録（初回・通常）から、各教材の最新の nextStatus を取得
+    // excludeRecordId を指定すると、そのレコードを除外して集計（編集中の記録を除く）
+    function getTextbookLatestStatuses(memberId, excludeRecordId = null) {
+      const m = members.find(x => x.id === memberId);
+      if (!m || !Array.isArray(m.coachingRecords)) return {};
+      // 初回・通常コーチングを日付降順（新しい順）でソート
+      const records = m.coachingRecords
+        .filter(r => (r.type === '初回コーチング' || r.type === '通常コーチング') && r.id !== excludeRecordId)
+        .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+      const result = {};
+      // 新しい順にレコードを走査し、各教材の最初に出現する nextStatus を採用
+      records.forEach(rec => {
+        const tests = Array.isArray(rec.textbookTests) ? rec.textbookTests : [];
+        tests.forEach(t => {
+          if (!result.hasOwnProperty(t.textbookId)) {
+            result[t.textbookId] = t.nextStatus || '未選択';
+          }
+        });
+      });
+      return result;
+    }
+
+    // ===== 卒業教材IDリストを取得 =====
+    function getGraduatedTextbookIds(memberId, excludeRecordId = null) {
+      const statuses = getTextbookLatestStatuses(memberId, excludeRecordId);
+      return Object.keys(statuses).filter(id => statuses[id] === '卒業');
+    }
+
+    // ===== 教材選定の教材から、空のテスト記録を初期化（卒業教材を除外） =====
     function crInitializeTestContentFromTextbookSelection(memberId) {
       const selected = getMemberSelectedTextbooks(memberId);
-      crTextbookTests = selected.map(t => ({
-        textbookId: t.textbookId,
-        testStatus: '未選択',
-        range: '',
-        format: '',
-        score: '',
-        note: ''
-      }));
+      // 卒業済み教材IDを取得（編集中レコード以外の過去記録から）
+      const graduatedIds = getGraduatedTextbookIds(memberId, crEditingId);
+      // 卒業教材を除外して、現役教材のみを対象とする
+      crTextbookTests = selected
+        .filter(t => !graduatedIds.includes(t.textbookId))
+        .map(t => ({
+          textbookId: t.textbookId,
+          testStatus: '未選択',
+          range: '',
+          format: '',
+          score: '',
+          note: '',
+          nextStatus: '未選択'
+        }));
       renderTestContentList();
     }
 
@@ -7624,22 +7782,34 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         const isImplemented = entry.testStatus === '実施済み';
         // 実施済み時のみ表示する詳細欄
         const detailHtml = isImplemented ? `
-          <div style="margin-top:10px; padding:10px; background:#F8F9FA; border-radius:4px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <div>
-              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">範囲</label>
-              <input type="text" value="${(entry.range || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'range', this.value)" placeholder="例：全範囲、Day1〜30" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+          <div style="margin-top:10px; padding:10px; background:#F8F9FA; border-radius:4px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+              <div>
+                <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">範囲</label>
+                <input type="text" value="${(entry.range || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'range', this.value)" placeholder="例：全範囲、Day1〜30" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+              </div>
+              <div>
+                <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">形式</label>
+                <input type="text" value="${(entry.format || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'format', this.value)" placeholder="例：筆記、口頭" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+              </div>
+              <div>
+                <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">点数</label>
+                <input type="text" value="${(entry.score || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'score', this.value)" placeholder="例:80点、合格" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+              </div>
+              <div>
+                <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">備考</label>
+                <input type="text" value="${(entry.note || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'note', this.value)" placeholder="例：発音注意" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+              </div>
             </div>
-            <div>
-              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">形式</label>
-              <input type="text" value="${(entry.format || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'format', this.value)" placeholder="例：筆記、口頭" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
-            </div>
-            <div>
-              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">点数</label>
-              <input type="text" value="${(entry.score || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'score', this.value)" placeholder="例：80点、合格" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
-            </div>
-            <div>
-              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">備考</label>
-              <input type="text" value="${(entry.note || '').replace(/"/g, '&quot;')}" oninput="updateTestField(${idx}, 'note', this.value)" placeholder="例：発音注意" style="width:100%; padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px;">
+            <!-- 次回ステータス（Phase D 追加） -->
+            <div style="padding-top:8px; border-top:1px dashed #D5D8DC;">
+              <label style="display:block; font-size:11px; font-weight:700; color:#566573; margin-bottom:4px;">📌 次回ステータス</label>
+              <select onchange="updateTestField(${idx}, 'nextStatus', this.value)" style="padding:5px 8px; border:1px solid #D5D8DC; border-radius:4px; font-size:12px; background:#fff; min-width:120px;">
+                <option value="未選択" ${(entry.nextStatus || '未選択') === '未選択' ? 'selected' : ''}>未選択</option>
+                <option value="継続" ${entry.nextStatus === '継続' ? 'selected' : ''}>継続</option>
+                <option value="卒業" ${entry.nextStatus === '卒業' ? 'selected' : ''}>🎓 卒業</option>
+              </select>
+              <span style="font-size:11px; color:#888; margin-left:8px;">「卒業」を選ぶと、次回からテスト対象外となり卒業教材一覧に移動します</span>
             </div>
           </div>
         ` : '';
@@ -7671,10 +7841,37 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       renderTestContentList();
     }
 
-    // ===== テスト詳細フィールド（範囲・形式・点数・備考）の更新 =====
+    // ===== テスト詳細フィールド（範囲・形式・点数・備考・nextStatus）の更新 =====
     function updateTestField(idx, field, value) {
       if (idx < 0 || idx >= crTextbookTests.length) return;
       crTextbookTests[idx][field] = value;
+    }
+
+    // ===== 卒業教材一覧の描画（入力モーダル内、参考表示） =====
+    function renderGraduatedTextbooksList(memberId) {
+      const wrap = document.getElementById('cr-graduatedTextbooks-wrap');
+      const container = document.getElementById('cr-graduatedTextbooks-list');
+      if (!wrap || !container) return;
+
+      const graduatedIds = getGraduatedTextbookIds(memberId, crEditingId);
+      if (graduatedIds.length === 0) {
+        wrap.style.display = 'none';
+        return;
+      }
+      wrap.style.display = '';
+      container.innerHTML = graduatedIds.map(tbId => {
+        const tb = (typeof getTextbook === 'function') ? getTextbook(tbId) : { name: tbId, category: '-' };
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px dashed #F5B041;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; font-weight:700; color:#7E5109;">🎓 ${tb.name}</div>
+              <div style="font-size:11px; color:#9A6B14;">${tb.category || '-'}</div>
+            </div>
+            <span style="background:#fff; color:#B7950B; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid #F5B041;">卒業</span>
+          </div>
+        `;
+      }).join('').replace(/border-bottom:1px dashed #F5B041;([^<]*)$/, '$1');  // 最終行の罫線を削除（無視されてもOK）
+      // 上記置換は単純化のため省略可。各行罫線でも見栄え問題なし
     }
 
     // ===== コーチング記録モーダルを開く =====
@@ -7735,6 +7932,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       crTextbookTests = [];
       document.getElementById('cr-testContent-section').style.display = 'none';
       renderTestContentList();
+      // 卒業教材一覧の描画（モーダルを開いた時点で必ず最新化）
+      renderGraduatedTextbooksList(memberId);
 
       if (isEdit) {
         const rec = (m.coachingRecords || []).find(r => r.id === recordId);
@@ -7756,7 +7955,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           // 教材選定タイプの場合：選択教材リストと共有事項を復元 + セクション切替
           if (rec.type === '教材選定') {
             crSelectedTextbooks = Array.isArray(rec.selectedTextbooks)
-              ? rec.selectedTextbooks.map(t => ({ textbookId: t.textbookId, note: t.note || '' }))
+              ? rec.selectedTextbooks.map(t => ({
+                  textbookId: t.textbookId,
+                  note: t.note || '',
+                  dailyGoalMinutes: (t.dailyGoalMinutes != null) ? t.dailyGoalMinutes : null
+                }))
               : [];
             if (sharedNoteEl) sharedNoteEl.value = rec.sharedNote || '';
             renderSelectedTextbooksList();
@@ -7768,31 +7971,37 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
             // 教材選定の最新教材リストを基準にしつつ、保存済みのテスト記録があればそれを使う
             const selectedFromMaster = getMemberSelectedTextbooks(memberId);
             const savedTests = Array.isArray(rec.textbookTests) ? rec.textbookTests : [];
-            // 教材選定の教材順をベースに、保存済みテスト記録があればマージ
-            crTextbookTests = selectedFromMaster.map(sel => {
-              const saved = savedTests.find(t => t.textbookId === sel.textbookId);
-              return saved ? {
-                textbookId: sel.textbookId,
-                testStatus: saved.testStatus || '未選択',
-                range: saved.range || '',
-                format: saved.format || '',
-                score: saved.score || '',
-                note: saved.note || ''
-              } : {
-                textbookId: sel.textbookId,
-                testStatus: '未選択', range: '', format: '', score: '', note: ''
-              };
-            });
+            // 編集中のレコード「以外」の卒業教材IDを取得（自分自身は卒業対象から除外）
+            const graduatedIds = getGraduatedTextbookIds(memberId, recordId);
+            // 教材選定の教材順をベースに、卒業教材を除外しつつ保存済みテスト記録があればマージ
+            crTextbookTests = selectedFromMaster
+              .filter(sel => !graduatedIds.includes(sel.textbookId))
+              .map(sel => {
+                const saved = savedTests.find(t => t.textbookId === sel.textbookId);
+                return saved ? {
+                  textbookId: sel.textbookId,
+                  testStatus: saved.testStatus || '未選択',
+                  range: saved.range || '',
+                  format: saved.format || '',
+                  score: saved.score || '',
+                  note: saved.note || '',
+                  nextStatus: saved.nextStatus || '未選択'
+                } : {
+                  textbookId: sel.textbookId,
+                  testStatus: '未選択', range: '', format: '', score: '', note: '', nextStatus: '未選択'
+                };
+              });
             // 保存済みのテスト記録に、教材選定にない教材があった場合（=過去に追加された教材）も保持
             savedTests.forEach(saved => {
-              if (!crTextbookTests.some(t => t.textbookId === saved.textbookId)) {
+              if (!crTextbookTests.some(t => t.textbookId === saved.textbookId) && !graduatedIds.includes(saved.textbookId)) {
                 crTextbookTests.push({
                   textbookId: saved.textbookId,
                   testStatus: saved.testStatus || '未選択',
                   range: saved.range || '',
                   format: saved.format || '',
                   score: saved.score || '',
-                  note: saved.note || ''
+                  note: saved.note || '',
+                  nextStatus: saved.nextStatus || '未選択'
                 });
               }
             });
@@ -7867,7 +8076,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         // タイプによってフィールドを切替
         if (type === '教材選定') {
           // 教材選定タイプ：選択教材リスト + 共有事項を保存、自由記述3項目はクリア
-          updated.selectedTextbooks = crSelectedTextbooks.map(t => ({ textbookId: t.textbookId, note: t.note || '' }));
+          updated.selectedTextbooks = crSelectedTextbooks.map(t => ({
+            textbookId: t.textbookId,
+            note: t.note || '',
+            dailyGoalMinutes: (t.dailyGoalMinutes != null && t.dailyGoalMinutes !== '') ? Number(t.dailyGoalMinutes) : null
+          }));
           updated.sharedNote = sharedNote;
           delete updated.monthlyReview;
           delete updated.coachAdvice;
@@ -7885,7 +8098,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           } else {
             delete updated.coachingNumber;
           }
-          // 初回・通常コーチング：テスト記録を保存
+          // 初回・通常コーチング：テスト記録を保存（nextStatus含む）
           if (type === '初回コーチング' || type === '通常コーチング') {
             updated.textbookTests = crTextbookTests.map(t => ({
               textbookId: t.textbookId,
@@ -7893,7 +8106,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
               range: t.range || '',
               format: t.format || '',
               score: t.score || '',
-              note: t.note || ''
+              note: t.note || '',
+              nextStatus: t.nextStatus || '未選択'
             }));
           } else {
             delete updated.textbookTests;
@@ -7916,7 +8130,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           if (type === '通常コーチング') {
             newRec.coachingNumber = coachingNumber;
           }
-          // 初回・通常コーチング：テスト記録を保存
+          // 初回・通常コーチング：テスト記録を保存（nextStatus含む）
           if (type === '初回コーチング' || type === '通常コーチング') {
             newRec.textbookTests = crTextbookTests.map(t => ({
               textbookId: t.textbookId,
@@ -7924,7 +8138,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
               range: t.range || '',
               format: t.format || '',
               score: t.score || '',
-              note: t.note || ''
+              note: t.note || '',
+              nextStatus: t.nextStatus || '未選択'
             }));
           }
         }
@@ -8039,11 +8254,21 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         } else {
           tbListEl.innerHTML = list.map(entry => {
             const tb = (typeof getTextbook === 'function') ? getTextbook(entry.textbookId) : { name: entry.textbookId, category: '-' };
-            const noteHtml = entry.note ? `<div style="font-size:11px; color:#666; margin-top:2px;">📝 ${entry.note.replace(/</g, '&lt;')}</div>` : '';
+            const noteHtml = entry.note ? `<div style="font-size:11px; color:#666; margin-top:4px;">📝 ${entry.note.replace(/</g, '&lt;')}</div>` : '';
+            // 目標時間表示（日目標が入力されていれば表示）
+            const hasGoal = (entry.dailyGoalMinutes != null && entry.dailyGoalMinutes !== '');
+            const goalHtml = hasGoal ? `
+              <div style="margin-top:4px;">
+                <span style="background:#E8F8F0; color:#27AE60; padding:2px 8px; border-radius:10px; font-weight:700; font-size:11px;">
+                  ⏱ 日目標：${entry.dailyGoalMinutes}分
+                </span>
+              </div>
+            ` : '';
             return `
               <div style="background:#fff; border:1px solid #E5E7EB; border-radius:6px; padding:8px 12px; margin-bottom:6px;">
                 <div style="font-weight:700; color:#333; font-size:13px;">${tb.name}</div>
                 <div style="font-size:11px; color:#888;">${tb.category || '-'}</div>
+                ${goalHtml}
                 ${noteHtml}
               </div>
             `;
@@ -8076,9 +8301,16 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
               if (s === '未実施') return { bg: '#FEF5E7', fg: '#B7791F' };
               return { bg: '#ECEFF1', fg: '#7F8C8D' };  // 未選択
             };
+            // 次回ステータスバッジ色
+            const nextStatusBadge = (ns) => {
+              if (ns === '卒業') return `<span style="background:#FEF9E7; color:#B7950B; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; white-space:nowrap; border:1px solid #F5B041;">🎓 卒業</span>`;
+              if (ns === '継続') return `<span style="background:#EAF2F8; color:#2980B9; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; white-space:nowrap;">継続</span>`;
+              return '';  // 未選択は表示しない
+            };
             testListEl.innerHTML = tests.map(t => {
               const tb = (typeof getTextbook === 'function') ? getTextbook(t.textbookId) : { name: t.textbookId, category: '-' };
               const c = statusColor(t.testStatus);
+              const nsBadge = (t.testStatus === '実施済み' && t.nextStatus && t.nextStatus !== '未選択') ? nextStatusBadge(t.nextStatus) : '';
               const detail = (t.testStatus === '実施済み') ? `
                 <div style="margin-top:8px; padding:8px 10px; background:#F8F9FA; border-radius:4px; display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
                   <div><span style="color:#888; font-size:11px;">範囲：</span>${t.range || '<span style="color:#bbb;">-</span>'}</div>
@@ -8094,12 +8326,42 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
                       <div style="font-weight:700; color:#333; font-size:13px;">📖 ${tb.name}</div>
                       <div style="font-size:11px; color:#888; margin-top:2px;">${tb.category || '-'}</div>
                     </div>
-                    <span style="background:${c.bg}; color:${c.fg}; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; white-space:nowrap;">${t.testStatus || '未選択'}</span>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                      <span style="background:${c.bg}; color:${c.fg}; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; white-space:nowrap;">${t.testStatus || '未選択'}</span>
+                      ${nsBadge}
+                    </div>
                   </div>
                   ${detail}
                 </div>
               `;
             }).join('');
+          }
+
+          // 卒業教材一覧の表示（過去のコーチング記録から集計、編集中レコード自身も含めて最新状態を確認）
+          const gradWrap = document.getElementById('cr-view-graduatedTextbooks-wrap');
+          const gradList = document.getElementById('cr-view-graduatedTextbooks');
+          // 閲覧中の記録自体は除外せず、その時点での卒業教材を表示
+          // （閲覧時は履歴の一場面として、その時点で卒業していた教材を見たいケースもある）
+          // → ここでは「現時点での」卒業教材を見せる方針：除外なしで集計
+          const graduatedIds = getGraduatedTextbookIds(crViewTargetMemberId);
+          if (gradWrap && gradList) {
+            if (graduatedIds.length === 0) {
+              gradWrap.style.display = 'none';
+            } else {
+              gradWrap.style.display = '';
+              gradList.innerHTML = graduatedIds.map(tbId => {
+                const tb = (typeof getTextbook === 'function') ? getTextbook(tbId) : { name: tbId, category: '-' };
+                return `
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px dashed #F5B041;">
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-size:13px; font-weight:700; color:#7E5109;">🎓 ${tb.name}</div>
+                      <div style="font-size:11px; color:#9A6B14;">${tb.category || '-'}</div>
+                    </div>
+                    <span style="background:#fff; color:#B7950B; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid #F5B041;">卒業</span>
+                  </div>
+                `;
+              }).join('');
+            }
           }
         } else {
           if (viewTestContent) viewTestContent.style.display = 'none';

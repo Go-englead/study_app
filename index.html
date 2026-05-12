@@ -1141,27 +1141,37 @@
     ⚠️ これはサンプル画面です。実際のデータは表示されません。
   </div>
 
-  <!-- ===== 上段：ストリーク + 出国カウントダウン（2カラム並列） ===== -->
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-
-    <!-- ストリーク（連続学習日数）カード -->
-    <div id="streak-card" style="background:linear-gradient(135deg, #FF6B35 0%, #F39C12 100%); color:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 4px 12px rgba(243,156,18,0.25); display:flex; align-items:center; justify-content:space-between; gap:14px;">
-      <div style="display:flex; align-items:center; gap:14px;">
-        <div id="streak-icon" style="font-size:42px; line-height:1;">🔥</div>
-        <div>
-          <div style="font-size:11px; opacity:0.9; letter-spacing:0.05em; margin-bottom:2px;">連続学習日数</div>
-          <div style="display:flex; align-items:baseline; gap:6px;">
-            <span id="streak-count" style="font-size:34px; font-weight:800; line-height:1;">0</span>
-            <span style="font-size:14px; opacity:0.9;">日</span>
-          </div>
+  <!-- ===== 上段：連続学習日数（フル幅）===== -->
+  <div id="streak-card" style="background:linear-gradient(135deg, #FF6B35 0%, #F39C12 100%); color:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 4px 12px rgba(243,156,18,0.25); display:flex; align-items:center; justify-content:space-between; gap:14px;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div id="streak-icon" style="font-size:42px; line-height:1;">🔥</div>
+      <div>
+        <div style="font-size:11px; opacity:0.9; letter-spacing:0.05em; margin-bottom:2px;">連続学習日数</div>
+        <div style="display:flex; align-items:baseline; gap:6px;">
+          <span id="streak-count" style="font-size:34px; font-weight:800; line-height:1;">0</span>
+          <span style="font-size:14px; opacity:0.9;">日</span>
         </div>
       </div>
-      <div id="streak-status" style="text-align:right; font-size:12px; line-height:1.5;"></div>
+    </div>
+    <div id="streak-status" style="text-align:right; font-size:12px; line-height:1.5;"></div>
+  </div>
+
+  <!-- ===== 中段：卒業まで + 出国まで（2カラム並列） ===== -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+    <!-- 卒業カウントダウン -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-label">🎓 卒業まで</div>
+      <div>
+        <span class="countdown-num">85</span>
+        <span class="countdown-unit">日</span>
+      </div>
+      <div class="countdown-dest">2026年7月8日 卒業予定</div>
     </div>
 
     <!-- 出国カウントダウン -->
     <div class="card" style="margin-bottom:0;">
-      <div class="card-label">出国まで</div>
+      <div class="card-label">✈️ 出国まで</div>
       <div>
         <span class="countdown-num">127</span>
         <span class="countdown-unit">日</span>
@@ -1261,10 +1271,16 @@
     </div>
   </div>
 
-  <!-- 教材進捗（CSVから動的生成） -->
+  <!-- 教材進捗（教材選定で登録された現役教材を動的表示） -->
   <div class="card">
     <div class="card-label">教材の進捗</div>
     <div id="home-textbook-progress"></div>
+  </div>
+
+  <!-- 卒業した教材（蓄積表示・コーチング記録で「卒業」になった教材） -->
+  <div class="card" id="home-graduated-textbooks-card" style="display:none;">
+    <div class="card-label">🎓 卒業した教材</div>
+    <div id="home-graduated-textbooks"></div>
   </div>
 
   <!-- ※ 旧「+ 今日の学習を記録する」ボタンは削除済み。
@@ -1886,22 +1902,148 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     { tbId: 'T05', overallProgress: 18, weeklyRate: 8, weeklyGoalHours: 2, dailyGoalMinutes: 20, todayMinutes: 0, weekMinutes: 10, monthMinutes: 100, monthlyRate: 35, achievedToday: false }
   ];
 
-  // ===== レンダリング：ホーム画面の教材進捗 =====
+  // ===== ヘルパー：ログイン中会員のデータをlocalStorageから取得 =====
+  function getCurrentMemberFull() {
+    let member = null;
+    try {
+      const stored = sessionStorage.getItem('currentMember');
+      if (stored) member = JSON.parse(stored);
+    } catch (e) {}
+    if (!member || !member.id) return null;
+    try {
+      const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+      return allMembers.find(x => x.id === member.id) || null;
+    } catch (e) {}
+    return null;
+  }
+
+  // ===== ヘルパー：教材選定の selectedTextbooks を取得 =====
+  function getMemberSelectedTextbooksHome(fullMember) {
+    if (!fullMember || !Array.isArray(fullMember.coachingRecords)) return [];
+    const rec = fullMember.coachingRecords.find(r => r.type === '教材選定');
+    if (!rec || !Array.isArray(rec.selectedTextbooks)) return [];
+    return rec.selectedTextbooks;
+  }
+
+  // ===== ヘルパー：卒業教材ID一覧を取得（admin側ロジックと同等） =====
+  function getGraduatedTextbookIdsHome(fullMember) {
+    if (!fullMember || !Array.isArray(fullMember.coachingRecords)) return [];
+    const records = fullMember.coachingRecords
+      .filter(r => (r.type === '初回コーチング' || r.type === '通常コーチング'))
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    const result = {};
+    records.forEach(rec => {
+      const tests = Array.isArray(rec.textbookTests) ? rec.textbookTests : [];
+      tests.forEach(t => {
+        if (!result.hasOwnProperty(t.textbookId)) {
+          result[t.textbookId] = t.nextStatus || '未選択';
+        }
+      });
+    });
+    return Object.keys(result).filter(id => result[id] === '卒業');
+  }
+
+  // ===== ヘルパー：今日の教材ごと学習時間を集計（learningLogs_v1） =====
+  function getTodayMinutesByTextbook(memberId) {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    let logs = [];
+    try {
+      logs = JSON.parse(localStorage.getItem('learningLogs_v1') || '[]');
+    } catch (e) {}
+    const result = {};
+    logs.forEach(l => {
+      if (l.memberId === memberId && l.date === todayStr) {
+        const tbId = l.textbookId || l.tb;
+        const min = (l.minutes != null) ? l.minutes : (l.duration || 0);
+        if (tbId) result[tbId] = (result[tbId] || 0) + min;
+      }
+    });
+    return result;
+  }
+
+  // ===== レンダリング：ホーム画面の教材進捗（教材選定の現役教材を表示） =====
   function renderHomeTextbookProgress() {
     const container = document.getElementById('home-textbook-progress');
     if (!container) return;
-    container.innerHTML = memberTextbookData.map(data => {
-      const tb = getTextbook(data.tbId);
+
+    const fullMember = getCurrentMemberFull();
+    if (!fullMember) {
+      container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px;">会員情報を取得できませんでした</div>`;
+      return;
+    }
+
+    const selected = getMemberSelectedTextbooksHome(fullMember);
+    const graduatedIds = getGraduatedTextbookIdsHome(fullMember);
+    // 卒業教材を除外
+    const activeTextbooks = selected.filter(t => !graduatedIds.includes(t.textbookId));
+
+    if (activeTextbooks.length === 0) {
+      container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px;">学習中の教材はまだ登録されていません<br><span style="font-size:11px;">コーチが教材を選定すると、ここに表示されます</span></div>`;
+      return;
+    }
+
+    // 今日の教材ごと学習時間
+    const todayMinutes = getTodayMinutesByTextbook(fullMember.id);
+
+    container.innerHTML = activeTextbooks.map(entry => {
+      const tb = getTextbook(entry.textbookId);
+      const dailyGoal = (entry.dailyGoalMinutes != null && entry.dailyGoalMinutes !== '') ? Number(entry.dailyGoalMinutes) : null;
+      const todayMin = todayMinutes[entry.textbookId] || 0;
+      // 達成率（今日の達成率：今日の学習時間 / 日目標）
+      let rate = 0;
+      if (dailyGoal && dailyGoal > 0) {
+        rate = Math.round((todayMin / dailyGoal) * 100);
+      }
+      const rateDisplay = (dailyGoal && dailyGoal > 0) ? `${Math.min(rate, 999)}%` : '-';
+      const goalHtml = (dailyGoal != null) ? `<span style="font-size:11px; color:#888;">日目標 ${dailyGoal}分 / 今日 ${todayMin}分</span>` : '';
+      const noteHtml = entry.note ? `<div style="font-size:11px; color:#666; margin-top:2px;">📝 ${(entry.note || '').replace(/</g, '&lt;')}</div>` : '';
       return `
-        <div class="textbook-row">
+        <div class="textbook-row" style="align-items:flex-start;">
           <div class="textbook-bar-side" style="background:${tb.color}"></div>
           <div class="textbook-info">
             <div class="textbook-name">${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</div>
-            <div class="textbook-track">
-              <div class="textbook-fill" style="width:${data.overallProgress}%; background:${tb.color}"></div>
+            ${goalHtml ? `<div style="margin-top:2px;">${goalHtml}</div>` : ''}
+            <div class="textbook-track" style="margin-top:4px;">
+              <div class="textbook-fill" style="width:${Math.min(rate, 100)}%; background:${tb.color}"></div>
             </div>
+            ${noteHtml}
           </div>
-          <span class="textbook-pct">${data.overallProgress}%</span>
+          <span class="textbook-pct">${rateDisplay}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== レンダリング：卒業した教材一覧 =====
+  function renderHomeGraduatedTextbooks() {
+    const card = document.getElementById('home-graduated-textbooks-card');
+    const container = document.getElementById('home-graduated-textbooks');
+    if (!card || !container) return;
+
+    const fullMember = getCurrentMemberFull();
+    if (!fullMember) {
+      card.style.display = 'none';
+      return;
+    }
+    const graduatedIds = getGraduatedTextbookIdsHome(fullMember);
+
+    if (graduatedIds.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = '';
+    container.innerHTML = graduatedIds.map(tbId => {
+      const tb = getTextbook(tbId);
+      return `
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px dashed #F5B041;">
+          <div style="font-size:18px;">🎓</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13px; font-weight:700; color:#7E5109;">${tb.name}</div>
+            <div style="font-size:11px; color:#9A6B14;">${tb.category || '-'}</div>
+          </div>
+          <span style="background:#FEF9E7; color:#B7950B; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid #F5B041;">卒業</span>
         </div>
       `;
     }).join('');
@@ -2162,6 +2304,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
   // ※ 旧 renderRecordTextbookList は「記録」セクション削除に伴い不要となったため呼び出さない
   loadTextbooks().then(() => {
     renderHomeTextbookProgress();
+    renderHomeGraduatedTextbooks();
     renderTextbookCards();
     renderAnalysisTextbookRates();
   });
