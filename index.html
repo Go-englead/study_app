@@ -2030,6 +2030,47 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     return sum > 0 ? sum : (fullMember.dailyTargetMinutes || 0);
   }
 
+  // ===== ヘルパー：今週の教材ごと学習時間を集計（日曜始まり） =====
+  function getWeekMinutesByTextbook(memberId) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    let logs = [];
+    try { logs = JSON.parse(localStorage.getItem('learningLogs_v1') || '[]'); } catch (e) {}
+    const result = {};
+    logs.forEach(l => {
+      if (l.memberId !== memberId || !l.date) return;
+      const ld = new Date(l.date); ld.setHours(0, 0, 0, 0);
+      if (ld >= weekStart && ld <= today) {
+        const tbId = l.textbookId || l.tb;
+        const min = (l.minutes != null) ? l.minutes : (l.duration || 0);
+        if (tbId) result[tbId] = (result[tbId] || 0) + min;
+      }
+    });
+    return result;
+  }
+
+  // ===== ヘルパー：今月の教材ごと学習時間を集計 =====
+  function getMonthMinutesByTextbook(memberId) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    monthStart.setHours(0, 0, 0, 0);
+    let logs = [];
+    try { logs = JSON.parse(localStorage.getItem('learningLogs_v1') || '[]'); } catch (e) {}
+    const result = {};
+    logs.forEach(l => {
+      if (l.memberId !== memberId || !l.date) return;
+      const ld = new Date(l.date); ld.setHours(0, 0, 0, 0);
+      if (ld >= monthStart && ld <= today) {
+        const tbId = l.textbookId || l.tb;
+        const min = (l.minutes != null) ? l.minutes : (l.duration || 0);
+        if (tbId) result[tbId] = (result[tbId] || 0) + min;
+      }
+    });
+    return result;
+  }
+
   // ===== ヘルパー：今日の教材ごと学習時間を集計（learningLogs_v1） =====
   function getTodayMinutesByTextbook(memberId) {
     const today = new Date();
@@ -2083,7 +2124,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         rate = Math.round((todayMin / dailyGoal) * 100);
       }
       const rateDisplay = (dailyGoal && dailyGoal > 0) ? `${Math.min(rate, 999)}%` : '-';
-      const goalHtml = (dailyGoal != null) ? `<span style="font-size:11px; color:#888;">日目標 ${dailyGoal}分 / 今日 ${todayMin}分</span>` : '';
+      const goalHtml = (dailyGoal != null) ? `<span style="font-size:11px; color:#888;">目標 ${dailyGoal}分 / 今日 ${todayMin}分</span>` : '';
       const noteHtml = entry.note ? `<div style="font-size:11px; color:#666; margin-top:2px;">📝 ${(entry.note || '').replace(/</g, '&lt;')}</div>` : '';
       return `
         <div class="textbook-row" style="align-items:flex-start;">
@@ -2136,41 +2177,75 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }).join('');
   }
 
-  // ===== レンダリング：教材タブのカード =====
+  // ===== レンダリング：教材タブのカード（教材選定から動的取得・卒業教材は除外） =====
   function renderTextbookCards() {
     const container = document.getElementById('textbook-card-list');
     if (!container) return;
-    container.innerHTML = memberTextbookData.map(data => {
-      const tb = getTextbook(data.tbId);
-      const ach = rateAchClass(data.weeklyRate);
+
+    const fullMember = getCurrentMemberFull();
+    if (!fullMember) {
+      container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px;">会員情報を取得できませんでした</div>`;
+      return;
+    }
+
+    const selected = getMemberSelectedTextbooksHome(fullMember);
+    const graduatedIds = getGraduatedTextbookIdsHome(fullMember);
+    const activeTextbooks = selected.filter(t => !graduatedIds.includes(t.textbookId));
+
+    if (activeTextbooks.length === 0) {
+      container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px;">学習中の教材はまだ登録されていません<br><span style="font-size:11px;">コーチが教材を選定すると、ここに表示されます</span></div>`;
+      return;
+    }
+
+    // 今日・今週・今月の教材ごと学習時間を集計
+    const todayMin = getTodayMinutesByTextbook(fullMember.id);
+    const weekMin = getWeekMinutesByTextbook(fullMember.id);
+    const monthMin = getMonthMinutesByTextbook(fullMember.id);
+
+    container.innerHTML = activeTextbooks.map(entry => {
+      const tb = getTextbook(entry.textbookId);
+      const dailyGoal = (entry.dailyGoalMinutes != null && entry.dailyGoalMinutes !== '') ? Number(entry.dailyGoalMinutes) : null;
+      const td = todayMin[entry.textbookId] || 0;
+      const wk = weekMin[entry.textbookId] || 0;
+      const mo = monthMin[entry.textbookId] || 0;
+      // 今週達成率：今週の合計 / (日目標 × 7)
+      let weeklyRate = 0;
+      if (dailyGoal && dailyGoal > 0) {
+        weeklyRate = Math.round((wk / (dailyGoal * 7)) * 100);
+      }
+      const ach = rateAchClass(weeklyRate);
+      // 今日達成バッジ（日目標を超えていれば達成）
+      const achievedToday = (dailyGoal && dailyGoal > 0) ? (td >= dailyGoal) : false;
+      // 日目標表示（未設定の場合は「-」）
+      const goalText = (dailyGoal != null) ? `目標：${dailyGoal}分` : '目標：未設定';
       return `
         <div class="textbook-card" style="margin-bottom: var(--space-4);">
           <div class="textbook-card-head">
             <div>
               <div class="textbook-card-name">${renderTextbookIcon(tb.iconUrl, 'medium')} ${tb.name}</div>
-              <div class="textbook-card-goal">週目標：${data.weeklyGoalHours}時間 / 日目標：${data.dailyGoalMinutes}分</div>
+              <div class="textbook-card-goal">${goalText}</div>
             </div>
-            <span class="badge ${data.achievedToday ? 'badge-achieved' : 'badge-not'}">${data.achievedToday ? '今日達成' : '未達成'}</span>
+            <span class="badge ${achievedToday ? 'badge-achieved' : 'badge-not'}">${achievedToday ? '今日達成' : '未達成'}</span>
           </div>
           <div class="goal-row">
             <span class="goal-label">今週達成率</span>
-            <span class="goal-val ach-text-${ach}">${data.weeklyRate}%</span>
+            <span class="goal-val ach-text-${ach}">${(dailyGoal && dailyGoal > 0) ? weeklyRate + '%' : '-'}</span>
           </div>
           <div class="progress-track">
-            <div class="progress-fill ach-${ach}" style="width:${data.weeklyRate}%"></div>
+            <div class="progress-fill ach-${ach}" style="width:${Math.min(weeklyRate, 100)}%"></div>
           </div>
           <div class="textbook-time-grid">
             <div class="textbook-time-cell">
               <div class="textbook-time-label">今日</div>
-              <div class="textbook-time-val">${formatMinutes(data.todayMinutes)}</div>
+              <div class="textbook-time-val">${formatMinutes(td)}</div>
             </div>
             <div class="textbook-time-cell">
               <div class="textbook-time-label">今週</div>
-              <div class="textbook-time-val">${formatMinutes(data.weekMinutes)}</div>
+              <div class="textbook-time-val">${formatMinutes(wk)}</div>
             </div>
             <div class="textbook-time-cell">
               <div class="textbook-time-label">今月</div>
-              <div class="textbook-time-val">${formatMinutes(data.monthMinutes)}</div>
+              <div class="textbook-time-val">${formatMinutes(mo)}</div>
             </div>
           </div>
         </div>
@@ -2178,23 +2253,52 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     }).join('');
   }
 
-  // ===== レンダリング：分析タブの教材ごと今月達成率 =====
+  // ===== レンダリング：分析タブの教材ごと今月達成率（教材選定から動的取得） =====
   function renderAnalysisTextbookRates() {
     const container = document.getElementById('analysis-textbook-rates');
     if (!container) return;
-    container.innerHTML = memberTextbookData.map(data => {
-      const tb = getTextbook(data.tbId);
-      const ach = rateAchClass(data.monthlyRate);
+
+    const fullMember = getCurrentMemberFull();
+    if (!fullMember) {
+      container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px;">会員情報を取得できませんでした</div>`;
+      return;
+    }
+
+    const selected = getMemberSelectedTextbooksHome(fullMember);
+    const graduatedIds = getGraduatedTextbookIdsHome(fullMember);
+    const activeTextbooks = selected.filter(t => !graduatedIds.includes(t.textbookId));
+
+    if (activeTextbooks.length === 0) {
+      container.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:12px;">学習中の教材はまだ登録されていません</div>`;
+      return;
+    }
+
+    // 今月の学習時間を集計 + 今月の日数（今日まで）
+    const monthMin = getMonthMinutesByTextbook(fullMember.id);
+    const today = new Date();
+    const daysSoFarInMonth = today.getDate();  // 1日〜今日まで
+
+    container.innerHTML = activeTextbooks.map(entry => {
+      const tb = getTextbook(entry.textbookId);
+      const dailyGoal = (entry.dailyGoalMinutes != null && entry.dailyGoalMinutes !== '') ? Number(entry.dailyGoalMinutes) : null;
+      const mo = monthMin[entry.textbookId] || 0;
+      // 今月達成率：今月の合計 / (日目標 × 今月の経過日数)
+      let monthlyRate = 0;
+      if (dailyGoal && dailyGoal > 0 && daysSoFarInMonth > 0) {
+        monthlyRate = Math.round((mo / (dailyGoal * daysSoFarInMonth)) * 100);
+      }
+      const ach = rateAchClass(monthlyRate);
+      const pctDisplay = (dailyGoal && dailyGoal > 0) ? monthlyRate + '%' : '-';
       return `
         <div class="textbook-row">
           <div class="textbook-bar-side ach-${ach}"></div>
           <div class="textbook-info">
             <div class="textbook-name">${renderTextbookIcon(tb.iconUrl, 'small')} ${tb.name}</div>
             <div class="textbook-track">
-              <div class="textbook-fill ach-${ach}" style="width:${data.monthlyRate}%"></div>
+              <div class="textbook-fill ach-${ach}" style="width:${Math.min(monthlyRate, 100)}%"></div>
             </div>
           </div>
-          <span class="textbook-pct ach-text-${ach}">${data.monthlyRate}%</span>
+          <span class="textbook-pct ach-text-${ach}">${pctDisplay}</span>
         </div>
       `;
     }).join('');
@@ -3191,7 +3295,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       titleEl.textContent = '目標未設定';
       titleEl.style.color = '#999';
       timeEl.textContent = `本日の学習時間：${totalMin} 分`;
-      helpEl.textContent = 'コーチに教材選定で「日目標（分）」を設定してもらうと、ここに今日の目標時間が表示されます。';
+      helpEl.textContent = 'コーチに教材選定で「目標（分）」を設定してもらうと、ここに今日の目標時間が表示されます。';
       return;
     }
 
