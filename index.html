@@ -2015,6 +2015,21 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     return Object.keys(result).filter(id => result[id] === '卒業');
   }
 
+  // ===== ヘルパー：会員の「今日の目標時間（分）」を取得 =====
+  // 教材選定の各教材の dailyGoalMinutes 合計を返す（卒業教材は除外）
+  // 教材選定が未登録 or 合計0なら、フォールバックで m.dailyTargetMinutes を使用
+  function getDailyGoalTotalForMember(fullMember) {
+    if (!fullMember) return 0;
+    const selected = getMemberSelectedTextbooksHome(fullMember);
+    const graduatedIds = getGraduatedTextbookIdsHome(fullMember);
+    const active = selected.filter(t => !graduatedIds.includes(t.textbookId));
+    const sum = active.reduce((s, t) => {
+      const min = (t.dailyGoalMinutes != null && t.dailyGoalMinutes !== '') ? Number(t.dailyGoalMinutes) : 0;
+      return s + (isNaN(min) ? 0 : min);
+    }, 0);
+    return sum > 0 ? sum : (fullMember.dailyTargetMinutes || 0);
+  }
+
   // ===== ヘルパー：今日の教材ごと学習時間を集計（learningLogs_v1） =====
   function getTodayMinutesByTextbook(memberId) {
     const today = new Date();
@@ -2573,7 +2588,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     // 自分の dailyTargetMinutes 取得
     const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
     const me = allMembers.find(m => m.id === cm.id);
-    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+    const target = getDailyGoalTotalForMember(me);
 
     const body = document.getElementById('cal-confirm-body');
 
@@ -2910,7 +2925,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     if (!cm || !cm.id) return;
     const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
     const me = allMembers.find(m => m.id === cm.id);
-    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+    const target = getDailyGoalTotalForMember(me);
     const myLogs = mlLoadLogs().filter(l => l.memberId === cm.id);
 
     const { year, month } = calCurrentMonth;
@@ -3010,7 +3025,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     if (!cm || !cm.id) return null;
     const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
     const me = allMembers.find(m => m.id === cm.id);
-    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+    const target = getDailyGoalTotalForMember(me);
     const logs = mlLoadLogs().filter(l => l.memberId === cm.id);
     return { target, logs };
   }
@@ -3155,7 +3170,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     // 自分の会員データから dailyTargetMinutes 取得
     const allMembers = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
     const me = allMembers.find(m => m.id === cm.id);
-    const target = (me && me.dailyTargetMinutes) ? me.dailyTargetMinutes : 0;
+    const target = getDailyGoalTotalForMember(me);
 
     // 今日の合計学習時間
     const today = new Date();
@@ -3176,7 +3191,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       titleEl.textContent = '目標未設定';
       titleEl.style.color = '#999';
       timeEl.textContent = `本日の学習時間：${totalMin} 分`;
-      helpEl.textContent = 'コーチに「1日の目標学習時間」の設定を依頼してください。';
+      helpEl.textContent = 'コーチに教材選定で「日目標（分）」を設定してもらうと、ここに今日の目標時間が表示されます。';
       return;
     }
 
