@@ -269,8 +269,18 @@
     }
 
     // フォールバック用インラインCSV（file:// でfetch失敗時に使用）
+    // ※ デモ環境用：実在の個人情報は含めない
     const fallbackStaffCSV = `id,name,role,iconUrl,meetUrl,groupContent,email,password
-MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
+MW001,コーチA,Coach,,,,coach_001@example.jp,coach001
+MW002,コーチB,Coach,,,,coach_002@example.jp,coach002
+MW003,コーチC,Coach,,,,coach_003@example.jp,coach003
+MW004,コーチD,Coach,,,,coach_004@example.jp,coach004
+MW005,コンサルA,Consultant,,,,consultant_001@example.jp,consultant001
+MW006,コンサルB,Consultant,,,,consultant_002@example.jp,consultant002
+MW007,コンサルC,Consultant,,,,consultant_003@example.jp,consultant003
+MW008,CS担当A,CS,,,,cs_001@example.jp,cs001
+MW009,CS担当B,CS,,,,cs_002@example.jp,cs002
+MW010,CS担当C,CS,,,,cs_003@example.jp,cs003`;
 
     // staff.csv ロード処理
     async function loadStaff() {
@@ -327,56 +337,7 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       const today = new Date();
       const addDays = (base, days) => { const d = new Date(base); d.setDate(d.getDate() + days); return d; };
 
-      // ===== デモ会員1名（既存・「会員でログイン」ボタン用） =====
-      if (!members.some(m => m.id === 'DEMO001')) {
-        const startDate = addDays(today, -60);
-        const graduateDate = addDays(today, 90);
-        const travelDate = addDays(today, 120);
-        members.push({
-          id: 'DEMO001',
-          name: 'デモ会員', initial: 'デ', nickname: 'demo',
-          lastNameKanji: 'デモ', firstNameKanji: '会員',
-          lastNameKana: 'デモ', firstNameKana: 'カイイン',
-          lastNameAlpha: 'Demo', firstNameAlpha: 'Member',
-          gender: '男性', birthDate: '2000-01-01', occupation: '会社員',
-          email: 'demo-member@example.com', phone: '090-0000-0000',
-          plan: '6ヶ月プラン', status: '受講中',
-          enrollmentDate: fmt(startDate), orientStaff: 'コーチA',
-          startDate: fmt(startDate), graduateDate: fmt(graduateDate),
-          currentClass: 'Lower-Intermediate', initialClass: 'Beginner',
-          nativecamp: '導入済み', consultant: 'コンサルA', cs: 'CS担当A',
-          dailyTargetMinutes: 90,
-          residence: '日本',
-          travelCountry: 'オーストラリア', travelCity: 'シドニー',
-          travelDate: fmt(travelDate), travelReason: '語学学校',
-          englishScores: { toeicLR: 600, ielts: '5.5' },
-          coachLearningGoal: 'IELTS 6.5 を半年で取得。ライティング強化を最優先。',
-          note: '',
-          password: 'demo123', requirePasswordChange: false,
-          weeklyGoalHours: 10, course: 'Lower-Intermediate',
-          rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
-          goalEnglish: '', departureDate: fmt(travelDate),
-          monthlyHours: 0, monthlyHoursCompare: 0,
-          streak: 0, streakCompare: 0,
-          weeklyRates: [0, 0, 0, 0],
-          textbookProgress: [], recentLogs: [], progos: [],
-          coachingRecords: [
-            {
-              id: 'CR_DEMO_1', date: fmt(startDate), coachName: 'コーチA',
-              type: '教材選定',
-              selectedTextbooks: [
-                { textbookId: 'T01', note: 'シャドーイング中心', dailyGoalMinutes: 30 },
-                { textbookId: 'T02', note: '通勤時間に取り組む', dailyGoalMinutes: 20 },
-                { textbookId: 'T03', note: 'Chapter 1から順に', dailyGoalMinutes: 40 }
-              ],
-              sharedNote: 'ネイティブキャンプ導入時期：受講開始2週目から',
-              createdAt: Date.now()
-            }
-          ]
-        });
-      }
-
-      // ===== 4名の追加デモ会員（見本一郎〜四郎） =====
+      // ===== 4名のデモ会員（見本一郎〜四郎） =====
       const demoStudents = [
         {
           id: '10001', name: '見本一郎', initial: '一', nickname: 'ichiro',
@@ -505,16 +466,16 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       window.location.href = 'admin.html';
     }
 
-    // ===== 会員でログイン（デモアカウント） =====
+    // ===== 会員でログイン（デモアカウント：見本一郎） =====
     function loginAsDemoMember() {
-      // デモ会員を自動投入
+      // デモ会員（見本一郎〜四郎）を自動投入
       setupDemoMemberIfNeeded();
-      // sessionStorage に会員情報をセット
+      // sessionStorage に会員情報をセット（見本一郎 = 10001）
       sessionStorage.setItem('currentMember', JSON.stringify({
-        id: 'DEMO001',
-        name: 'デモ会員',
-        email: 'demo-member@example.com',
-        nickname: 'demo'
+        id: '10001',
+        name: '見本一郎',
+        email: 'student_10001@example.jp',
+        nickname: 'ichiro'
       }));
       window.location.href = 'index.html';
     }

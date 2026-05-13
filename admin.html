@@ -9918,20 +9918,18 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     let editingStaffId = null;
 
     // staff.csv のフォールバック（file:// で fetch 失敗時）
+    // ※ デモ環境用：実在の個人情報は含めない
     const fallbackStaffCSVAdmin = `id,name,role,iconUrl,meetUrl,groupContent,email,password
-MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1
-MW055,Rena Yabe,Consultant,,,,rena.yabe@example.com,pass1234
-MW067,Yuto Aso,Consultant,,,,yuto.aso@example.com,pass1234
-MW118,Kyuga Kishi,Consultant,,,,kyuga.kishi@example.com,pass1234
-MW153,Mitsuko Fujita,Consultant,,,,mitsuko.fujita@example.com,pass1234
-MW180,Eno Yoshizumi,Consultant,,,,eno.yoshizumi@example.com,pass1234
-MW196,Kosuke Ishimaru,Consultant,,,,kosuke.ishimaru@example.com,pass1234
-MW208,Yuka Soejima,Consultant,,,,yuka.soejima@example.com,pass1234
-MW009,Nana Tsukada,CS,,,,nana.tsukada@example.com,pass1234
-MW046,Yuichi Tokunaga,CS,,,,yuichi.tokunaga@example.com,pass1234
-MW077,Riho Yoshidome,CS,,,,riho.yoshidome@example.com,pass1234
-MW101,Haruka Uchiyama,CS,,,,haruka.uchiyama@example.com,pass1234
-MW152,Moeka Nakashima,CS,,,,moeka.nakashima@example.com,pass1234`;
+MW001,コーチA,Coach,,,,coach_001@example.jp,coach001
+MW002,コーチB,Coach,,,,coach_002@example.jp,coach002
+MW003,コーチC,Coach,,,,coach_003@example.jp,coach003
+MW004,コーチD,Coach,,,,coach_004@example.jp,coach004
+MW005,コンサルA,Consultant,,,,consultant_001@example.jp,consultant001
+MW006,コンサルB,Consultant,,,,consultant_002@example.jp,consultant002
+MW007,コンサルC,Consultant,,,,consultant_003@example.jp,consultant003
+MW008,CS担当A,CS,,,,cs_001@example.jp,cs001
+MW009,CS担当B,CS,,,,cs_002@example.jp,cs002
+MW010,CS担当C,CS,,,,cs_003@example.jp,cs003`;
 
     // 初期化：localStorage にデータがあればそれを使用、なければ CSV から取得
     async function initStaffData() {
