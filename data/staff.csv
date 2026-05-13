@@ -1,0 +1,14 @@
+id,name,role,iconUrl,meetUrl,groupContent,email,password
+MW044,デモコーチ,Coach,,,,demo-coach@example.com,demo123
+MW055,コンサルA,Consultant,,,,demo-consultant1@example.com,demo123
+MW067,コンサルB,Consultant,,,,demo-consultant2@example.com,demo123
+MW118,コンサルC,Consultant,,,,demo-consultant3@example.com,demo123
+MW153,コンサルD,Consultant,,,,demo-consultant4@example.com,demo123
+MW180,コンサルE,Consultant,,,,demo-consultant5@example.com,demo123
+MW196,コンサルF,Consultant,,,,demo-consultant6@example.com,demo123
+MW208,コンサルG,Consultant,,,,demo-consultant7@example.com,demo123
+MW009,CS担当A,CS,,,,demo-cs1@example.com,demo123
+MW046,CS担当B,CS,,,,demo-cs2@example.com,demo123
+MW077,CS担当C,CS,,,,demo-cs3@example.com,demo123
+MW101,CS担当D,CS,,,,demo-cs4@example.com,demo123
+MW152,CS担当E,CS,,,,demo-cs5@example.com,demo123

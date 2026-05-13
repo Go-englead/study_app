@@ -1017,7 +1017,7 @@
 <div class="navbar">
   <div>
     <div class="navbar-title" id="nav-title">マイダッシュボード</div>
-    <div class="navbar-sub">2026年4月14日（火）</div>
+    <div class="navbar-sub" id="nav-today-date">―</div>
   </div>
   <div style="display:flex; align-items:center; gap:12px;">
     <!-- 学習記録を追加ボタン -->
@@ -1163,20 +1163,20 @@
     <div class="card" style="margin-bottom:0;">
       <div class="card-label">🎓 卒業まで</div>
       <div>
-        <span class="countdown-num">85</span>
+        <span class="countdown-num" id="grad-countdown-num">―</span>
         <span class="countdown-unit">日</span>
       </div>
-      <div class="countdown-dest">2026年7月8日 卒業予定</div>
+      <div class="countdown-dest" id="grad-countdown-dest">―</div>
     </div>
 
     <!-- 出国カウントダウン -->
     <div class="card" style="margin-bottom:0;">
       <div class="card-label">✈️ 出国まで</div>
       <div>
-        <span class="countdown-num">127</span>
+        <span class="countdown-num" id="depart-countdown-num">―</span>
         <span class="countdown-unit">日</span>
       </div>
-      <div class="countdown-dest">オーストラリア・シドニー　2026年8月19日出発</div>
+      <div class="countdown-dest" id="depart-countdown-dest">―</div>
     </div>
 
   </div>
@@ -1902,6 +1902,78 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     { tbId: 'T05', overallProgress: 18, weeklyRate: 8, weeklyGoalHours: 2, dailyGoalMinutes: 20, todayMinutes: 0, weekMinutes: 10, monthMinutes: 100, monthlyRate: 35, achievedToday: false }
   ];
 
+  // ===== ナビバー日付：今日の日付を表示 =====
+  function renderTodayDate() {
+    const el = document.getElementById('nav-today-date');
+    if (!el) return;
+    const t = new Date();
+    const days = ['日', '月', '火', '水', '木', '金', '土'];
+    el.textContent = `${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日（${days[t.getDay()]}）`;
+  }
+
+  // ===== 卒業まで・出国まで カウントダウン（会員データから動的算出） =====
+  function renderCountdowns() {
+    const fullMember = getCurrentMemberFull();
+
+    // 今日の日付（YYYY-MM-DD 文字列）
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    // 卒業まで
+    const gradNumEl = document.getElementById('grad-countdown-num');
+    const gradDestEl = document.getElementById('grad-countdown-dest');
+    if (gradNumEl && gradDestEl) {
+      const gradDate = fullMember && fullMember.graduateDate;
+      if (gradDate) {
+        const g = new Date(gradDate); g.setHours(0, 0, 0, 0);
+        const diff = Math.floor((g - today) / 86400000);
+        if (diff > 0) {
+          gradNumEl.textContent = diff;
+          gradDestEl.textContent = `${g.getFullYear()}年${g.getMonth() + 1}月${g.getDate()}日 卒業予定`;
+        } else if (diff === 0) {
+          gradNumEl.textContent = '0';
+          gradDestEl.textContent = '本日卒業日です！';
+        } else {
+          gradNumEl.textContent = '―';
+          gradDestEl.textContent = `${g.getFullYear()}年${g.getMonth() + 1}月${g.getDate()}日（卒業済）`;
+        }
+      } else {
+        gradNumEl.textContent = '―';
+        gradDestEl.textContent = '卒業予定日が未設定です';
+      }
+    }
+
+    // 出国まで（travelDate を優先、なければ既存の departureDate にフォールバック）
+    const departNumEl = document.getElementById('depart-countdown-num');
+    const departDestEl = document.getElementById('depart-countdown-dest');
+    if (departNumEl && departDestEl) {
+      const departDate = (fullMember && (fullMember.travelDate || fullMember.departureDate)) || '';
+      if (departDate) {
+        const d = new Date(departDate); d.setHours(0, 0, 0, 0);
+        const diff = Math.floor((d - today) / 86400000);
+        // 渡航先：travelCountry + travelCity から組み立て
+        let destText = '';
+        if (fullMember.travelCountry && fullMember.travelCountry !== '未決定') {
+          destText = fullMember.travelCountry;
+          if (fullMember.travelCity) destText += '・' + fullMember.travelCity;
+        }
+        const dateText = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日出発`;
+        if (diff > 0) {
+          departNumEl.textContent = diff;
+          departDestEl.textContent = destText ? `${destText}　${dateText}` : dateText;
+        } else if (diff === 0) {
+          departNumEl.textContent = '0';
+          departDestEl.textContent = '本日出発日です！';
+        } else {
+          departNumEl.textContent = '―';
+          departDestEl.textContent = destText ? `${destText}（出国済）` : '出国済';
+        }
+      } else {
+        departNumEl.textContent = '―';
+        departDestEl.textContent = '出国予定日が未設定です';
+      }
+    }
+  }
+
   // ===== ヘルパー：ログイン中会員のデータをlocalStorageから取得 =====
   function getCurrentMemberFull() {
     let member = null;
@@ -2302,6 +2374,8 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
 
   // ===== 初期化（CSVロード後にレンダリング） =====
   // ※ 旧 renderRecordTextbookList は「記録」セクション削除に伴い不要となったため呼び出さない
+  renderTodayDate();
+  renderCountdowns();
   loadTextbooks().then(() => {
     renderHomeTextbookProgress();
     renderHomeGraduatedTextbooks();

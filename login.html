@@ -220,6 +220,16 @@
       <button type="submit" class="login-btn">ログイン</button>
     </form>
 
+    <!-- ===== デモアカウント自動ログイン（GitHub公開デモ用） ===== -->
+    <div id="demo-login-section" style="margin-top:20px; padding-top:20px; border-top:1px dashed #D5D8DC;">
+      <div style="font-size:11px; color:#888; text-align:center; margin-bottom:10px;">🚀 デモアカウントですぐ試す</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button type="button" onclick="loginAsDemoCoach()" style="background:#1A5276; color:#fff; border:none; border-radius:6px; padding:10px; font-size:13px; font-weight:700; cursor:pointer;">👨‍🏫 コーチでログイン</button>
+        <button type="button" onclick="loginAsDemoMember()" style="background:#27AE60; color:#fff; border:none; border-radius:6px; padding:10px; font-size:13px; font-weight:700; cursor:pointer;">👤 会員でログイン</button>
+      </div>
+      <div style="font-size:10px; color:#999; text-align:center; margin-top:8px; line-height:1.5;">※ クリックで自動ログインします<br>※ 本番運用ではなくデモ環境です</div>
+    </div>
+
     <!-- ===== 初回パスワード変更フォーム（初回ログイン会員のみ表示） ===== -->
     <form id="change-pw-form" onsubmit="handleChangePassword(event)" style="display:none;">
       <div style="background:#FFF8E1; border-left:4px solid #F39C12; padding:12px 14px; border-radius:6px; font-size:13px; color:#7E5109; margin-bottom:16px; line-height:1.6;">
@@ -300,6 +310,117 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
 
     // 初回パスワード変更画面に渡す会員ID（一時保持）
     let pendingMemberId = null;
+
+    // ========================================
+    // ===== デモアカウント自動ログイン（GitHub公開用） =====
+    // ========================================
+
+    // ===== デモ会員データを localStorage に自動投入（初回アクセス時のみ） =====
+    function setupDemoMemberIfNeeded() {
+      let members = [];
+      try {
+        members = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+      } catch (e) {}
+      // 既にデモ会員が登録されていればスキップ
+      if (members.some(m => m.id === 'DEMO001')) return;
+      // デモ会員を1名追加
+      const today = new Date();
+      const startDate = new Date(today); startDate.setDate(today.getDate() - 60);
+      const graduateDate = new Date(today); graduateDate.setDate(today.getDate() + 90);
+      const travelDate = new Date(today); travelDate.setDate(today.getDate() + 120);
+      const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const demoMember = {
+        id: 'DEMO001',
+        name: 'デモ会員',
+        initial: 'デ',
+        nickname: 'demo',
+        lastNameKanji: 'デモ', firstNameKanji: '会員',
+        lastNameKana: 'デモ', firstNameKana: 'カイイン',
+        lastNameAlpha: 'Demo', firstNameAlpha: 'Member',
+        gender: '男性',
+        birthDate: '2000-01-01',
+        occupation: '会社員',
+        email: 'demo-member@example.com',
+        phone: '090-0000-0000',
+        plan: '6ヶ月プラン',
+        status: '受講中',
+        enrollmentDate: fmt(startDate),
+        orientStaff: 'デモコーチ',
+        startDate: fmt(startDate),
+        graduateDate: fmt(graduateDate),
+        currentClass: 'Lower-Intermediate',
+        initialClass: 'Beginner',
+        nativecamp: '導入済み',
+        consultant: 'コンサルA',
+        cs: 'CS担当A',
+        dailyTargetMinutes: 90,
+        residence: '日本',
+        travelCountry: 'オーストラリア',
+        travelCity: 'シドニー',
+        travelDate: fmt(travelDate),
+        travelReason: '語学学校',
+        englishScores: { toeicLR: 600, ielts: '5.5' },
+        coachLearningGoal: 'IELTS 6.5 を半年で取得。ライティング強化を最優先。',
+        note: '',
+        password: 'demo123',
+        requirePasswordChange: false,
+        // 互換用フィールド
+        weeklyGoalHours: 10, course: 'Lower-Intermediate',
+        rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
+        goalEnglish: '', departureDate: fmt(travelDate),
+        monthlyHours: 0, monthlyHoursCompare: 0,
+        streak: 0, streakCompare: 0,
+        weeklyRates: [0, 0, 0, 0],
+        textbookProgress: [],
+        recentLogs: [],
+        progos: [],
+        coachingRecords: [
+          {
+            id: 'CR_DEMO_1',
+            date: fmt(startDate),
+            coachName: 'デモコーチ',
+            type: '教材選定',
+            selectedTextbooks: [
+              { textbookId: 'T01', note: 'シャドーイング中心', dailyGoalMinutes: 30 },
+              { textbookId: 'T02', note: '通勤時間に取り組む', dailyGoalMinutes: 20 },
+              { textbookId: 'T03', note: 'Chapter 1から順に', dailyGoalMinutes: 40 }
+            ],
+            sharedNote: 'ネイティブキャンプ導入時期：受講開始2週目から',
+            createdAt: Date.now()
+          }
+        ]
+      };
+      members.push(demoMember);
+      localStorage.setItem('addedMembers_v2', JSON.stringify(members));
+    }
+
+    // ===== コーチでログイン（デモアカウント） =====
+    function loginAsDemoCoach() {
+      // staff.csv の MW044 デモコーチでログイン
+      sessionStorage.setItem('currentStaff', JSON.stringify({
+        id: 'MW044',
+        name: 'デモコーチ',
+        role: 'Coach',
+        email: 'demo-coach@example.com'
+      }));
+      // デモ会員を自動投入
+      setupDemoMemberIfNeeded();
+      window.location.href = 'admin.html';
+    }
+
+    // ===== 会員でログイン（デモアカウント） =====
+    function loginAsDemoMember() {
+      // デモ会員を自動投入
+      setupDemoMemberIfNeeded();
+      // sessionStorage に会員情報をセット
+      sessionStorage.setItem('currentMember', JSON.stringify({
+        id: 'DEMO001',
+        name: 'デモ会員',
+        email: 'demo-member@example.com',
+        nickname: 'demo'
+      }));
+      window.location.href = 'index.html';
+    }
 
     // ===== ログイン処理（会員 → スタッフの順で照合） =====
     function handleLogin(event) {
