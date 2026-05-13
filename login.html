@@ -321,76 +321,173 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       try {
         members = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
       } catch (e) {}
-      // 既にデモ会員が登録されていればスキップ
-      if (members.some(m => m.id === 'DEMO001')) return;
-      // デモ会員を1名追加
-      const today = new Date();
-      const startDate = new Date(today); startDate.setDate(today.getDate() - 60);
-      const graduateDate = new Date(today); graduateDate.setDate(today.getDate() + 90);
-      const travelDate = new Date(today); travelDate.setDate(today.getDate() + 120);
+
+      // 共通ヘルパー：YYYY-MM-DD 形式に整形
       const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const demoMember = {
-        id: 'DEMO001',
-        name: 'デモ会員',
-        initial: 'デ',
-        nickname: 'demo',
-        lastNameKanji: 'デモ', firstNameKanji: '会員',
-        lastNameKana: 'デモ', firstNameKana: 'カイイン',
-        lastNameAlpha: 'Demo', firstNameAlpha: 'Member',
-        gender: '男性',
-        birthDate: '2000-01-01',
-        occupation: '会社員',
-        email: 'demo-member@example.com',
-        phone: '090-0000-0000',
-        plan: '6ヶ月プラン',
-        status: '受講中',
-        enrollmentDate: fmt(startDate),
-        orientStaff: 'デモコーチ',
-        startDate: fmt(startDate),
-        graduateDate: fmt(graduateDate),
-        currentClass: 'Lower-Intermediate',
-        initialClass: 'Beginner',
-        nativecamp: '導入済み',
-        consultant: 'コンサルA',
-        cs: 'CS担当A',
-        dailyTargetMinutes: 90,
-        residence: '日本',
-        travelCountry: 'オーストラリア',
-        travelCity: 'シドニー',
-        travelDate: fmt(travelDate),
-        travelReason: '語学学校',
-        englishScores: { toeicLR: 600, ielts: '5.5' },
-        coachLearningGoal: 'IELTS 6.5 を半年で取得。ライティング強化を最優先。',
-        note: '',
-        password: 'demo123',
-        requirePasswordChange: false,
-        // 互換用フィールド
-        weeklyGoalHours: 10, course: 'Lower-Intermediate',
-        rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
-        goalEnglish: '', departureDate: fmt(travelDate),
-        monthlyHours: 0, monthlyHoursCompare: 0,
-        streak: 0, streakCompare: 0,
-        weeklyRates: [0, 0, 0, 0],
-        textbookProgress: [],
-        recentLogs: [],
-        progos: [],
-        coachingRecords: [
-          {
-            id: 'CR_DEMO_1',
-            date: fmt(startDate),
-            coachName: 'デモコーチ',
-            type: '教材選定',
-            selectedTextbooks: [
-              { textbookId: 'T01', note: 'シャドーイング中心', dailyGoalMinutes: 30 },
-              { textbookId: 'T02', note: '通勤時間に取り組む', dailyGoalMinutes: 20 },
-              { textbookId: 'T03', note: 'Chapter 1から順に', dailyGoalMinutes: 40 }
-            ],
-            sharedNote: 'ネイティブキャンプ導入時期：受講開始2週目から',
-            createdAt: Date.now()
-          }
-        ]
-      };
-      members.push(demoMember);
+      const today = new Date();
+      const addDays = (base, days) => { const d = new Date(base); d.setDate(d.getDate() + days); return d; };
+
+      // ===== デモ会員1名（既存・「会員でログイン」ボタン用） =====
+      if (!members.some(m => m.id === 'DEMO001')) {
+        const startDate = addDays(today, -60);
+        const graduateDate = addDays(today, 90);
+        const travelDate = addDays(today, 120);
+        members.push({
+          id: 'DEMO001',
+          name: 'デモ会員', initial: 'デ', nickname: 'demo',
+          lastNameKanji: 'デモ', firstNameKanji: '会員',
+          lastNameKana: 'デモ', firstNameKana: 'カイイン',
+          lastNameAlpha: 'Demo', firstNameAlpha: 'Member',
+          gender: '男性', birthDate: '2000-01-01', occupation: '会社員',
+          email: 'demo-member@example.com', phone: '090-0000-0000',
+          plan: '6ヶ月プラン', status: '受講中',
+          enrollmentDate: fmt(startDate), orientStaff: 'コーチA',
+          startDate: fmt(startDate), graduateDate: fmt(graduateDate),
+          currentClass: 'Lower-Intermediate', initialClass: 'Beginner',
+          nativecamp: '導入済み', consultant: 'コンサルA', cs: 'CS担当A',
+          dailyTargetMinutes: 90,
+          residence: '日本',
+          travelCountry: 'オーストラリア', travelCity: 'シドニー',
+          travelDate: fmt(travelDate), travelReason: '語学学校',
+          englishScores: { toeicLR: 600, ielts: '5.5' },
+          coachLearningGoal: 'IELTS 6.5 を半年で取得。ライティング強化を最優先。',
+          note: '',
+          password: 'demo123', requirePasswordChange: false,
+          weeklyGoalHours: 10, course: 'Lower-Intermediate',
+          rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
+          goalEnglish: '', departureDate: fmt(travelDate),
+          monthlyHours: 0, monthlyHoursCompare: 0,
+          streak: 0, streakCompare: 0,
+          weeklyRates: [0, 0, 0, 0],
+          textbookProgress: [], recentLogs: [], progos: [],
+          coachingRecords: [
+            {
+              id: 'CR_DEMO_1', date: fmt(startDate), coachName: 'コーチA',
+              type: '教材選定',
+              selectedTextbooks: [
+                { textbookId: 'T01', note: 'シャドーイング中心', dailyGoalMinutes: 30 },
+                { textbookId: 'T02', note: '通勤時間に取り組む', dailyGoalMinutes: 20 },
+                { textbookId: 'T03', note: 'Chapter 1から順に', dailyGoalMinutes: 40 }
+              ],
+              sharedNote: 'ネイティブキャンプ導入時期：受講開始2週目から',
+              createdAt: Date.now()
+            }
+          ]
+        });
+      }
+
+      // ===== 4名の追加デモ会員（見本一郎〜四郎） =====
+      const demoStudents = [
+        {
+          id: '10001', name: '見本一郎', initial: '一', nickname: 'ichiro',
+          firstNameKanji: '一郎', firstNameKana: 'イチロウ', firstNameAlpha: 'Ichiro',
+          email: 'student_10001@example.jp', password: 'student10001',
+          gender: '男性', birthDate: '1998-04-15', occupation: '会社員',
+          plan: '6ヶ月プラン',
+          travelCountry: 'オーストラリア', travelCity: 'シドニー', travelReason: '語学学校',
+          coachLearningGoal: 'IELTS 6.5 を取得し、シドニーでの語学留学を成功させる。',
+          startOffset: -45, gradOffset: 135, travelOffset: 165,
+          englishScores: { toeicLR: 650, ielts: '5.5' },
+          textbookSet: [
+            { textbookId: 'T01', note: 'シャドーイング中心', dailyGoalMinutes: 30 },
+            { textbookId: 'T02', note: '通勤時間に取り組む', dailyGoalMinutes: 20 },
+            { textbookId: 'T03', note: 'Chapter 1から順番に', dailyGoalMinutes: 40 }
+          ]
+        },
+        {
+          id: '10002', name: '見本二郎', initial: '二', nickname: 'jiro',
+          firstNameKanji: '二郎', firstNameKana: 'ジロウ', firstNameAlpha: 'Jiro',
+          email: 'student_10002@example.jp', password: 'student10002',
+          gender: '男性', birthDate: '1995-08-22', occupation: '経営者・役員',
+          plan: '給付金9ヶ月プラン',
+          travelCountry: 'カナダ', travelCity: 'トロント', travelReason: 'ワーキングホリデー',
+          coachLearningGoal: 'カナダでのワーキングホリデーに向けて、ビジネス英語を強化。',
+          startOffset: -90, gradOffset: 180, travelOffset: 210,
+          englishScores: { toeicLR: 720, toeicSW: 280, eiken: '準1級' },
+          textbookSet: [
+            { textbookId: 'T01', note: '語彙力強化', dailyGoalMinutes: 25 },
+            { textbookId: 'T02', note: 'リスニング毎日30分', dailyGoalMinutes: 30 }
+          ]
+        },
+        {
+          id: '10003', name: '見本三郎', initial: '三', nickname: 'saburo',
+          firstNameKanji: '三郎', firstNameKana: 'サブロウ', firstNameAlpha: 'Saburo',
+          email: 'student_10003@example.jp', password: 'student10003',
+          gender: '男性', birthDate: '2003-01-10', occupation: '大学・大学院生',
+          plan: '給付金12ヶ月プラン',
+          travelCountry: 'イギリス', travelCity: 'ロンドン', travelReason: '進学（大学・大学院）',
+          coachLearningGoal: 'イギリス大学院進学に向けてIELTS 7.0以上を取得。',
+          startOffset: -120, gradOffset: 240, travelOffset: 280,
+          englishScores: { toefl: 85, ielts: '6.0' },
+          textbookSet: [
+            { textbookId: 'T01', note: 'アカデミック語彙', dailyGoalMinutes: 40 },
+            { textbookId: 'T03', note: '文法書1周完走', dailyGoalMinutes: 30 }
+          ]
+        },
+        {
+          id: '10004', name: '見本四郎', initial: '四', nickname: 'shiro',
+          firstNameKanji: '四郎', firstNameKana: 'シロウ', firstNameAlpha: 'Shiro',
+          email: 'student_10004@example.jp', password: 'student10004',
+          gender: '女性', birthDate: '2001-06-30', occupation: '会社員',
+          plan: '給付金6ヶ月プラン',
+          travelCountry: 'フィリピン', travelCity: 'セブ', travelReason: '語学学校',
+          coachLearningGoal: 'フィリピン留学までに日常会話を流暢に。',
+          startOffset: -20, gradOffset: 160, travelOffset: 200,
+          englishScores: { toeicLR: 500 },
+          textbookSet: [
+            { textbookId: 'T02', note: '基礎から積み上げ', dailyGoalMinutes: 30 },
+            { textbookId: 'T03', note: '中学英語から復習', dailyGoalMinutes: 30 }
+          ]
+        }
+      ];
+
+      demoStudents.forEach((s, idx) => {
+        if (members.some(m => m.id === s.id)) return;  // 既に存在ならスキップ
+        const startDate = addDays(today, s.startOffset);
+        const graduateDate = addDays(today, s.gradOffset);
+        const travelDate = addDays(today, s.travelOffset);
+        const dailyTotal = s.textbookSet.reduce((sum, t) => sum + (t.dailyGoalMinutes || 0), 0);
+        members.push({
+          id: s.id, name: s.name, initial: s.initial, nickname: s.nickname,
+          lastNameKanji: '見本', firstNameKanji: s.firstNameKanji,
+          lastNameKana: 'ミホン', firstNameKana: s.firstNameKana,
+          lastNameAlpha: 'Mihon', firstNameAlpha: s.firstNameAlpha,
+          gender: s.gender, birthDate: s.birthDate, occupation: s.occupation,
+          email: s.email, phone: `090-0000-${1000 + idx}`,
+          plan: s.plan, status: '受講中',
+          enrollmentDate: fmt(startDate), orientStaff: 'コーチA',
+          startDate: fmt(startDate), graduateDate: fmt(graduateDate),
+          currentClass: 'Lower-Intermediate', initialClass: 'Beginner',
+          nativecamp: '導入済み',
+          consultant: ['コンサルA', 'コンサルB', 'コンサルC'][idx % 3],
+          cs: ['CS担当A', 'CS担当B', 'CS担当C'][idx % 3],
+          dailyTargetMinutes: dailyTotal,
+          residence: '日本',
+          travelCountry: s.travelCountry, travelCity: s.travelCity,
+          travelDate: fmt(travelDate), travelReason: s.travelReason,
+          englishScores: s.englishScores,
+          coachLearningGoal: s.coachLearningGoal,
+          note: '',
+          password: s.password, requirePasswordChange: false,
+          weeklyGoalHours: 10, course: 'Lower-Intermediate',
+          rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
+          goalEnglish: '', departureDate: fmt(travelDate),
+          monthlyHours: 0, monthlyHoursCompare: 0,
+          streak: 0, streakCompare: 0,
+          weeklyRates: [0, 0, 0, 0],
+          textbookProgress: [], recentLogs: [], progos: [],
+          coachingRecords: [
+            {
+              id: `CR_${s.id}_1`, date: fmt(startDate), coachName: 'コーチA',
+              type: '教材選定',
+              selectedTextbooks: s.textbookSet,
+              sharedNote: '初期教材選定。受講スタート時に登録。',
+              createdAt: Date.now()
+            }
+          ]
+        });
+      });
+
       localStorage.setItem('addedMembers_v2', JSON.stringify(members));
     }
 
