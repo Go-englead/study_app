@@ -394,14 +394,14 @@ MW044,Go,Coach,,,,go.tsukino@englead.jp,coach1`;
       localStorage.setItem('addedMembers_v2', JSON.stringify(members));
     }
 
-    // ===== コーチでログイン（デモアカウント） =====
+    // ===== コーチでログイン（デモアカウント：MW001 コーチAで自動ログイン） =====
     function loginAsDemoCoach() {
-      // staff.csv の MW044 デモコーチでログイン
+      // staff.csv の MW001 コーチA でログイン
       sessionStorage.setItem('currentStaff', JSON.stringify({
-        id: 'MW044',
-        name: 'デモコーチ',
+        id: 'MW001',
+        name: 'コーチA',
         role: 'Coach',
-        email: 'demo-coach@example.com'
+        email: 'coach_001@example.jp'
       }));
       // デモ会員を自動投入
       setupDemoMemberIfNeeded();
