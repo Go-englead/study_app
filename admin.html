@@ -8146,8 +8146,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
         m.coachingRecords.push(newRec);
       }
 
-      // 日付降順（新しい順）で並び替え
-      m.coachingRecords.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+      // 日付降順（新しい順）で並び替え。同日内は createdAt 降順（最新登録を上部）
+      m.coachingRecords.sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
 
       saveAddedMembersToStorage();
 
@@ -8387,13 +8390,412 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       }
     }
 
+    // ========================================
+    // ===== 達成サマリー統合カード（タスクA：案A 期間タブ型） =====
+    // ========================================
+    // 旧3カード（今月の学習状況／週次達成率の推移／教材ごとの今月達成率）を統合した新カード。
+    // 期間タブ：[今日][今週][今月][累計] でKPI・推移・教材別達成を一括表示。
+
+    // 会員ごとのアクティブ期間タブ状態（'today' / 'week' / 'month' / 'all'）
+    const as_activePeriod = {};
+
+    // ---- ヘルパー：日付を YYYY-MM-DD 文字列に整形 ----
+    function asYmd(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // ---- ヘルパー：教材選定の selectedTextbooks を取得 ----
+    function asGetSelectedTextbooks(member) {
+      if (!member || !Array.isArray(member.coachingRecords)) return [];
+      const rec = member.coachingRecords.find(r => r.type === '教材選定');
+      if (!rec || !Array.isArray(rec.selectedTextbooks)) return [];
+      return rec.selectedTextbooks;
+    }
+
+    // ---- ヘルパー：卒業教材IDの配列を取得 ----
+    function asGetGraduatedIds(member) {
+      if (!member || !Array.isArray(member.coachingRecords)) return [];
+      const records = member.coachingRecords
+        .filter(r => (r.type === '初回コーチング' || r.type === '通常コーチング'))
+        .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+      const result = {};
+      records.forEach(rec => {
+        const tests = Array.isArray(rec.textbookTests) ? rec.textbookTests : [];
+        tests.forEach(t => {
+          if (!result.hasOwnProperty(t.textbookId)) {
+            result[t.textbookId] = t.nextStatus || '未選択';
+          }
+        });
+      });
+      return Object.keys(result).filter(id => result[id] === '卒業');
+    }
+
+    // ---- ヘルパー：アクティブ教材（卒業除外）を取得 ----
+    function asGetActiveTextbooks(member) {
+      const selected = asGetSelectedTextbooks(member);
+      const gradIds = asGetGraduatedIds(member);
+      return selected.filter(t => !gradIds.includes(t.textbookId));
+    }
+
+    // ---- ヘルパー：会員の1日目標時間（分）を取得 ----
+    // 教材選定の dailyGoalMinutes 合計、なければ m.dailyTargetMinutes をフォールバック
+    function asGetDailyGoalTotal(member) {
+      if (!member) return 0;
+      const active = asGetActiveTextbooks(member);
+      const sum = active.reduce((s, t) => {
+        const min = (t.dailyGoalMinutes != null && t.dailyGoalMinutes !== '') ? Number(t.dailyGoalMinutes) : 0;
+        return s + (isNaN(min) ? 0 : min);
+      }, 0);
+      return sum > 0 ? sum : (member.dailyTargetMinutes || 0);
+    }
+
+    // ---- ヘルパー：期間ごとの開始日・終了日・前期間の範囲を返す ----
+    // 戻り値：{ start, end, prevStart, prevEnd, days } すべて Date 型または null
+    function asGetPeriodRange(member, period) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let start, end, prevStart, prevEnd, days;
+
+      if (period === 'today') {
+        start = new Date(today);
+        end = new Date(today);
+        prevStart = new Date(today); prevStart.setDate(prevStart.getDate() - 1);
+        prevEnd = new Date(prevStart);
+        days = 1;
+      } else if (period === 'week') {
+        // 月曜起点
+        const day = today.getDay();
+        const diff = day === 0 ? 6 : day - 1;
+        start = new Date(today); start.setDate(start.getDate() - diff);
+        end = new Date(today);
+        prevStart = new Date(start); prevStart.setDate(prevStart.getDate() - 7);
+        prevEnd = new Date(start); prevEnd.setDate(prevEnd.getDate() - 1);
+        days = Math.floor((end - start) / 86400000) + 1;
+      } else if (period === 'month') {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date(today);
+        prevStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        prevEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        days = today.getDate();
+      } else {
+        // all：受講開始日〜今日
+        let startStr = member.startDate || member.enrollmentDate || null;
+        if (startStr) {
+          start = new Date(startStr);
+          start.setHours(0, 0, 0, 0);
+        } else {
+          // 受講開始日なし → 学習記録の最古日付 or 30日前
+          start = new Date(today); start.setDate(start.getDate() - 30);
+        }
+        end = new Date(today);
+        prevStart = null; prevEnd = null;
+        days = Math.floor((end - start) / 86400000) + 1;
+        if (days < 1) days = 1;
+      }
+      return { start, end, prevStart, prevEnd, days };
+    }
+
+    // ---- ヘルパー：指定範囲内の学習ログを取得 ----
+    function asLoadLogsInRange(memberId, startDate, endDate) {
+      if (!startDate || !endDate) return [];
+      const startStr = asYmd(startDate);
+      const endStr = asYmd(endDate);
+      return loadLearningLogs().filter(l =>
+        l.memberId === memberId && l.date >= startStr && l.date <= endStr
+      );
+    }
+
+    // ---- 主要KPIの計算（達成率・学習時間・連続日数 + 前期比） ----
+    function asComputeKPIs(member, period) {
+      const target = asGetDailyGoalTotal(member);
+      const range = asGetPeriodRange(member, period);
+      const logs = asLoadLogsInRange(member.id, range.start, range.end);
+      const totalMin = logs.reduce((s, l) => s + (l.minutes || 0), 0);
+      const targetMin = target * range.days;
+      const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+
+      // 連続学習日数（今日から遡る）
+      const allLogs = loadLearningLogs().filter(l => l.memberId === member.id);
+      const dateSet = new Set(allLogs.map(l => l.date));
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      let streak = 0;
+      let cursor = new Date(today);
+      while (dateSet.has(asYmd(cursor))) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      // 前期比（累計はなし）
+      let prevRate = null, prevTotalMin = null, prevStreak = null;
+      if (range.prevStart && range.prevEnd) {
+        const prevLogs = asLoadLogsInRange(member.id, range.prevStart, range.prevEnd);
+        prevTotalMin = prevLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+        const prevDays = Math.floor((range.prevEnd - range.prevStart) / 86400000) + 1;
+        const prevTargetMin = target * prevDays;
+        prevRate = prevTargetMin > 0 ? Math.round((prevTotalMin / prevTargetMin) * 100) : 0;
+        // 前期間の終了日時点での連続日数
+        let cursor2 = new Date(range.prevEnd);
+        prevStreak = 0;
+        while (dateSet.has(asYmd(cursor2))) {
+          prevStreak++;
+          cursor2.setDate(cursor2.getDate() - 1);
+        }
+      }
+      return { totalMin, totalHours: Math.round(totalMin / 60 * 10) / 10, rate, streak, prevRate, prevTotalMin, prevStreak };
+    }
+
+    // ---- 期間内の達成率推移（7区間） ----
+    // 戻り値：[{label, rate, totalMin}, ...] 古い→新しい順
+    function asComputeTrendBuckets(member, period) {
+      const target = asGetDailyGoalTotal(member);
+      const allLogs = loadLearningLogs().filter(l => l.memberId === member.id);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const buckets = [];
+
+      if (period === 'today') {
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today); d.setDate(d.getDate() - i);
+          const ds = asYmd(d);
+          const totalMin = allLogs.filter(l => l.date === ds).reduce((s, l) => s + (l.minutes || 0), 0);
+          const rate = target > 0 ? Math.round((totalMin / target) * 100) : 0;
+          buckets.push({ label: i === 0 ? '今日' : i === 1 ? '昨日' : `${i}日前`, rate, totalMin });
+        }
+      } else if (period === 'week') {
+        const weekStartMon = (d) => {
+          const x = new Date(d); x.setHours(0, 0, 0, 0);
+          const day = x.getDay(); const diff = day === 0 ? 6 : day - 1;
+          x.setDate(x.getDate() - diff);
+          return x;
+        };
+        const thisStart = weekStartMon(today);
+        for (let i = 6; i >= 0; i--) {
+          const ws = new Date(thisStart); ws.setDate(ws.getDate() - 7 * i);
+          const we = new Date(ws); we.setDate(we.getDate() + 6);
+          const wsStr = asYmd(ws), weStr = asYmd(we);
+          const totalMin = allLogs.filter(l => l.date >= wsStr && l.date <= weStr).reduce((s, l) => s + (l.minutes || 0), 0);
+          const elapsed = i === 0 ? Math.min(7, Math.floor((today - ws) / 86400000) + 1) : 7;
+          const targetMin = target * elapsed;
+          const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+          buckets.push({ label: i === 0 ? '今週' : `${i}週前`, rate, totalMin });
+        }
+      } else if (period === 'month') {
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+          const yyyy = d.getFullYear(), mm = d.getMonth();
+          const monthLogs = allLogs.filter(l => {
+            const ld = new Date(l.date);
+            return ld.getFullYear() === yyyy && ld.getMonth() === mm;
+          });
+          const totalMin = monthLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+          const daysInMonth = new Date(yyyy, mm + 1, 0).getDate();
+          const effectiveDays = i === 0 ? today.getDate() : daysInMonth;
+          const targetMin = target * effectiveDays;
+          const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+          buckets.push({ label: i === 0 ? '今月' : `${i}ヶ月前`, rate, totalMin });
+        }
+      } else {
+        // all：直近6ヶ月の月次推移を表示
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+          const yyyy = d.getFullYear(), mm = d.getMonth();
+          const monthLogs = allLogs.filter(l => {
+            const ld = new Date(l.date);
+            return ld.getFullYear() === yyyy && ld.getMonth() === mm;
+          });
+          const totalMin = monthLogs.reduce((s, l) => s + (l.minutes || 0), 0);
+          const daysInMonth = new Date(yyyy, mm + 1, 0).getDate();
+          const effectiveDays = i === 0 ? today.getDate() : daysInMonth;
+          const targetMin = target * effectiveDays;
+          const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+          buckets.push({ label: i === 0 ? '今月' : `${i}ヶ月前`, rate, totalMin });
+        }
+      }
+      return buckets;
+    }
+
+    // ---- 教材別達成（選択中の期間で再計算） ----
+    function asComputeTextbookProgress(member, period) {
+      const range = asGetPeriodRange(member, period);
+      const logs = asLoadLogsInRange(member.id, range.start, range.end);
+      const active = asGetActiveTextbooks(member);
+      const masterList = (typeof textbooks !== 'undefined' && Array.isArray(textbooks)) ? textbooks : [];
+
+      return active.map(t => {
+        const dailyGoal = (t.dailyGoalMinutes != null && t.dailyGoalMinutes !== '') ? Number(t.dailyGoalMinutes) : 0;
+        const targetMin = dailyGoal * range.days;
+        const totalMin = logs.filter(l => l.textbookId === t.textbookId).reduce((s, l) => s + (l.minutes || 0), 0);
+        const rate = targetMin > 0 ? Math.round((totalMin / targetMin) * 100) : 0;
+        const master = masterList.find(x => x.id === t.textbookId);
+        return {
+          textbookId: t.textbookId,
+          name: master ? master.name : t.textbookId,
+          totalMin, targetMin, rate
+        };
+      });
+    }
+
+    // ---- 学習時間を表示用にフォーマット ----
+    function asFormatMinutes(min) {
+      if (min < 60) return `${min}分`;
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      return m === 0 ? `${h}h` : `${h}h ${m}m`;
+    }
+
+    // ---- 達成サマリーカードのHTMLを生成 ----
+    function buildAchievementSummaryCard(m) {
+      const period = as_activePeriod[m.id] || 'month';  // デフォルト：今月
+      const periodLabels = { today: '今日', week: '今週', month: '今月', all: '累計' };
+
+      // タブHTML
+      const tabsHtml = ['today', 'week', 'month', 'all'].map(p => {
+        const active = (p === period);
+        return `
+          <button onclick="asSwitchPeriod('${m.id}', '${p}')"
+            style="border:none; padding:6px 14px; font-size:13px; cursor:pointer; border-radius:6px; font-weight:${active ? '700' : '500'}; background:${active ? '#fff' : 'transparent'}; color:${active ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)'}; box-shadow:${active ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'};">
+            ${periodLabels[p]}
+          </button>
+        `;
+      }).join('');
+
+      // 中身HTML（部分再描画対象）
+      const contentHtml = buildAchievementSummaryContent(m, period);
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📊 達成サマリー</div>
+              <div class="card-sub">期間を切り替えて確認できます</div>
+            </div>
+            <div style="display:inline-flex; background:#ECEFF1; border-radius:8px; padding:3px;">
+              ${tabsHtml}
+            </div>
+          </div>
+          <div class="card-body" id="as-content-${m.id}">
+            ${contentHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // ---- カード中身のHTML生成（タブ切替時に書き換える対象） ----
+    function buildAchievementSummaryContent(m, period) {
+      const kpi = asComputeKPIs(m, period);
+      const buckets = asComputeTrendBuckets(m, period);
+      const textbooks = asComputeTextbookProgress(m, period);
+      const isAll = period === 'all';
+
+      // 前期比表示
+      const compareLabel = { today: '前日比', week: '先週比', month: '先月比' }[period] || '';
+      const rateCompare = isAll ? '—' : (kpi.prevRate != null ? `${compareLabel} ${kpi.rate - kpi.prevRate >= 0 ? '+' : ''}${kpi.rate - kpi.prevRate}%` : '—');
+      const hoursCompare = isAll ? '—' : (kpi.prevTotalMin != null ? `${compareLabel} ${kpi.totalMin - kpi.prevTotalMin >= 0 ? '+' : ''}${asFormatMinutes(Math.abs(kpi.totalMin - kpi.prevTotalMin))}${kpi.totalMin - kpi.prevTotalMin >= 0 ? '' : '↓'}` : '—');
+      const streakCompare = isAll ? '—' : (kpi.prevStreak != null ? `${compareLabel} ${kpi.streak - kpi.prevStreak >= 0 ? '+' : ''}${kpi.streak - kpi.prevStreak}日` : '—');
+
+      // 推移バーHTML
+      const maxBarHeight = 60;
+      const trendHtml = buckets.map(b => {
+        const h = b.totalMin === 0 ? 4 : Math.max(8, Math.min(maxBarHeight, (b.rate / 100) * maxBarHeight));
+        const isLast = (b === buckets[buckets.length - 1]);
+        const bg = b.totalMin === 0 ? '#E5E8E8' : (isLast ? 'var(--color-accent)' : '#85C1E2');
+        return `
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;" title="${b.label}：${b.rate}% (${asFormatMinutes(b.totalMin)})">
+            <div style="width:80%; height:${h}px; background:${bg}; border-radius:3px;"></div>
+            <span style="font-size:10px; color:var(--color-text-secondary);">${b.label}</span>
+          </div>
+        `;
+      }).join('');
+
+      // 教材別バーHTML
+      const textbookHtml = textbooks.length === 0
+        ? `<div style="padding:14px; text-align:center; color:#999; font-size:12px; background:#F8F9FA; border-radius:6px;">教材選定がまだ完了していません</div>`
+        : textbooks.map(t => {
+          const fill = Math.min(100, t.rate);
+          const barColor = t.rate >= 100 ? '#27AE60' : t.rate >= 80 ? '#2E86C1' : t.rate >= 50 ? '#F39C12' : t.rate >= 10 ? '#E67E22' : '#E74C3C';
+          return `
+            <div style="margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                <span style="font-weight:600; color:#333;">${t.textbookId}：${t.name}</span>
+                <span style="color:var(--color-text-secondary);">${t.rate}%（${asFormatMinutes(t.totalMin)} / ${asFormatMinutes(t.targetMin)}）</span>
+              </div>
+              <div style="background:#ECEFF1; height:8px; border-radius:4px; overflow:hidden;">
+                <div style="background:${barColor}; width:${fill}%; height:100%; transition:width 0.3s;"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      return `
+        <!-- 主要KPI 3カラム -->
+        <div class="stats-row" style="margin-bottom:16px;">
+          <div class="stat-box">
+            <div class="stat-box-label">達成率</div>
+            <div class="stat-box-value">${kpi.rate}<span class="stat-box-unit">%</span></div>
+            <div class="stat-box-compare ${(kpi.prevRate != null && (kpi.rate - kpi.prevRate) < 0) ? 'down' : ''}">${rateCompare}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">学習時間</div>
+            <div class="stat-box-value">${kpi.totalHours}<span class="stat-box-unit">時間</span></div>
+            <div class="stat-box-compare ${(kpi.prevTotalMin != null && (kpi.totalMin - kpi.prevTotalMin) < 0) ? 'down' : ''}">${hoursCompare}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-label">連続学習日数</div>
+            <div class="stat-box-value">${kpi.streak}<span class="stat-box-unit">日</span></div>
+            <div class="stat-box-compare ${(kpi.prevStreak != null && (kpi.streak - kpi.prevStreak) < 0) ? 'down' : ''}">${streakCompare}</div>
+          </div>
+        </div>
+
+        <!-- 推移グラフ -->
+        <div style="margin-bottom:18px;">
+          <div style="font-size:12px; font-weight:700; color:#333; margin-bottom:8px;">📈 期間内の達成率推移</div>
+          <div style="display:flex; align-items:flex-end; gap:6px; height:80px; padding:0 4px;">
+            ${trendHtml}
+          </div>
+        </div>
+
+        <!-- 教材別達成 -->
+        <div>
+          <div style="font-size:12px; font-weight:700; color:#333; margin-bottom:10px;">📚 教材別達成（${({today:'今日',week:'今週',month:'今月',all:'累計'})[period]}）</div>
+          ${textbookHtml}
+        </div>
+      `;
+    }
+
+    // ---- 期間タブ切替（中身だけ書き換え） ----
+    function asSwitchPeriod(memberId, period) {
+      as_activePeriod[memberId] = period;
+      // カード全体を再描画（タブの見た目も変わるため）
+      const all = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+      const m = all.find(x => x.id === memberId);
+      if (!m) return;
+      // カード全体を置き換え
+      const card = document.querySelector(`#as-content-${memberId}`);
+      if (card) {
+        // 親カードのヘッダのタブも更新するため、カード全体を再生成
+        const cardEl = card.closest('.card');
+        if (cardEl) {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = buildAchievementSummaryCard(m);
+          const newCard = tempDiv.firstElementChild;
+          cardEl.parentNode.replaceChild(newCard, cardEl);
+        }
+      }
+    }
+
     // ===== カルテ：コーチング記録履歴カードを生成（共有モードでは出さない） =====
     function buildCoachingRecordsCard(m) {
       // 共有モードの場合は何も出さない（会員に絶対見せない）
       // isShareMode は変数（boolean）として 9072行付近で定義されている
       if (typeof isShareMode !== 'undefined' && isShareMode) return '';
 
-      const records = Array.isArray(m.coachingRecords) ? m.coachingRecords : [];
+      // 表示前に並び替え（日付降順、同日内は createdAt 降順で最新登録を上部に）
+      // 既存データを書き換えないようコピーしてからソート
+      const records = (Array.isArray(m.coachingRecords) ? m.coachingRecords : [])
+        .slice()
+        .sort((a, b) => {
+          if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        });
 
       if (records.length === 0) {
         return `
@@ -8633,67 +9035,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           </div>
         </div>
 
+        <!-- 達成サマリー統合カード（旧3カードを統合） -->
+        ${buildAchievementSummaryCard(m)}
+
         <!-- B-1：コーチング記録履歴カード（共有モードでは非表示） -->
         ${buildCoachingRecordsCard(m)}
-
-        <!-- 今月の学習状況 -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">今月の学習状況</div>
-              <div class="card-sub">${(() => { const d = new Date(); return `${d.getFullYear()}年${d.getMonth() + 1}月`; })()}</div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="stats-row">
-              <div class="stat-box">
-                <div class="stat-box-label">学習時間</div>
-                <div class="stat-box-value">${m.monthlyHours}<span class="stat-box-unit">時間</span></div>
-                <div class="stat-box-compare ${m.monthlyHoursCompare < 0 ? 'down' : ''}">
-                  先月比 ${m.monthlyHoursCompare >= 0 ? '+' : ''}${m.monthlyHoursCompare}時間
-                </div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-box-label">達成率</div>
-                <div class="stat-box-value">${m.rate}<span class="stat-box-unit">%</span></div>
-                <div class="stat-box-compare ${m.weeklyRates[3] - m.weeklyRates[0] < 0 ? 'down' : ''}">
-                  先月比 ${m.weeklyRates[3] - m.weeklyRates[0] >= 0 ? '+' : ''}${m.weeklyRates[3] - m.weeklyRates[0]}%
-                </div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-box-label">連続学習日数</div>
-                <div class="stat-box-value">${m.streak}<span class="stat-box-unit">日</span></div>
-                <div class="stat-box-compare ${m.streakCompare < 0 ? 'down' : ''}">
-                  先月比 ${m.streakCompare >= 0 ? '+' : ''}${m.streakCompare}日
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 週次達成率グラフ -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">週次達成率の推移</div>
-              <div class="card-sub">直近4週</div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="bar-chart">${weeklyChart}</div>
-          </div>
-        </div>
-
-        <!-- 教材ごとの達成率 -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">教材ごとの今月達成率</div>
-              <div class="card-sub">10%以下🔴 / 50%以下🟡 / 80%以上🔵 / 100%以上🟡金</div>
-            </div>
-          </div>
-          <div class="card-body">${textbookBars}</div>
-        </div>
 
         <!-- 直近の学習記録 -->
         <div class="card">
