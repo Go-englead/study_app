@@ -2520,16 +2520,51 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
     localStorage.setItem(ML_LOGS_KEY, JSON.stringify(logs));
   }
 
-  // 教材プルダウン生成（textbooks 配列が必要）
+  // 教材プルダウン生成（最新コーチングで導入したアクティブ教材のみ表示）
+  // 卒業教材・未選定教材は除外する
   function mlPopulateTextbookOptions() {
     const sel = document.getElementById('ml-textbookId');
     if (!sel) return;
     sel.innerHTML = '<option value="">選択してください</option>';
-    const list = (typeof textbooks !== 'undefined' && Array.isArray(textbooks)) ? textbooks : [];
-    list.forEach(tb => {
+
+    const masterList = (typeof textbooks !== 'undefined' && Array.isArray(textbooks)) ? textbooks : [];
+    const fullMember = getCurrentMemberFull();
+
+    // 会員情報が取得できない場合：フォールバックとして全教材表示
+    if (!fullMember) {
+      masterList.forEach(tb => {
+        const opt = document.createElement('option');
+        opt.value = tb.id;
+        opt.textContent = `${tb.id}：${tb.name}`;
+        sel.appendChild(opt);
+      });
+      return;
+    }
+
+    // 教材選定で割り当てられた教材から、卒業教材を除外
+    const selected = getMemberSelectedTextbooksHome(fullMember);
+    const graduatedIds = getGraduatedTextbookIdsHome(fullMember);
+    const active = selected.filter(t => !graduatedIds.includes(t.textbookId));
+
+    // 教材選定がまったくない場合：選択不可の案内文のみ表示
+    if (active.length === 0) {
+      sel.innerHTML = '';
       const opt = document.createElement('option');
-      opt.value = tb.id;
-      opt.textContent = `${tb.id}：${tb.name}`;
+      opt.value = '';
+      opt.textContent = '（教材選定が未完了です。コーチにご連絡ください）';
+      opt.disabled = true;
+      opt.selected = true;
+      sel.appendChild(opt);
+      return;
+    }
+
+    // アクティブ教材のみをプルダウンに追加
+    active.forEach(t => {
+      const master = masterList.find(m => m.id === t.textbookId);
+      const name = master ? master.name : t.textbookId;
+      const opt = document.createElement('option');
+      opt.value = t.textbookId;
+      opt.textContent = `${t.textbookId}：${name}`;
       sel.appendChild(opt);
     });
   }
