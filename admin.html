@@ -8882,46 +8882,6 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
       // 表示直前に学習記録から集計値を最新化
       computeMemberStats(memberId);
       const remainDays = daysUntil(m.departureDate);
-      const maxWeekly = Math.max(...m.weeklyRates, 100);
-
-      // 週次棒グラフ（100%以上はオレンジ、それ以外は緑）
-      const weeklyChart = m.weeklyRates.map((rate, i) => {
-        const barColor = rate >= 100 ? '#F39C12' : '#27AE60';
-        return `
-        <div class="bar-chart-item">
-          <div class="bar-wrap">
-            <div class="bar" style="height: ${(rate / maxWeekly) * 100}%; background: ${barColor};">
-              <div class="bar-value">${rate}%</div>
-            </div>
-          </div>
-          <div class="bar-label">${i === 3 ? '今週' : (4 - i) + '週前'}</div>
-        </div>
-        `;
-      }).join('');
-
-      // 教材ごとの達成率バー（目標時間/実績時間も表示）
-      const textbookBars = m.textbookProgress.map(p => {
-        const tb = getTextbook(p.tbId);
-        const target = (p.targetHours != null) ? p.targetHours : '-';
-        const actual = (p.actualHours != null) ? p.actualHours : '-';
-        return `
-          <div class="textbook-progress-item">
-            <span class="textbook-emoji">${renderTextbookIcon(tb.iconUrl, 'medium')}</span>
-            <div class="textbook-info">
-              <div class="textbook-name-row">
-                <span class="textbook-name">${tb.name}</span>
-                <span class="textbook-pct">${p.rate}%</span>
-              </div>
-              <div class="textbook-track">
-                <div class="textbook-fill ${getFillClass(p.rate)}" style="width: ${Math.min(p.rate, 100)}%;"></div>
-              </div>
-              <div style="font-size:11px; color:#666; margin-top:4px;">
-                目標 ${target}h / 今月 ${actual}h
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
 
       // 直近の学習記録（日付・教材・学習時間・達成率）
       const logsRows = m.recentLogs.map(log => {
