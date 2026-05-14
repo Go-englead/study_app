@@ -8641,7 +8641,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
           <div class="card-header">
             <div>
               <div class="card-title">今月の学習状況</div>
-              <div class="card-sub">2026年4月</div>
+              <div class="card-sub">${(() => { const d = new Date(); return `${d.getFullYear()}年${d.getMonth() + 1}月`; })()}</div>
             </div>
           </div>
           <div class="card-body">

@@ -3027,9 +3027,11 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
   //   - 達成率3段階で色分け：達成（緑）/ 努力中（黄）/ 記録なし（グレー）
   //   - 今日のセルは太枠で識別
   //   - 翌月ボタンは未来月に進めない（無効化）
-  // ※ 変数宣言を renderStudyCalendar 呼び出しより先に置く（TDZ回避）
+  // ※ 変数宣言を各カード呼び出しより先に置く（TDZ回避）
   const calToday = (() => { const t = new Date(); t.setHours(0,0,0,0); return t; })();
   let calCurrentMonth = { year: calToday.getFullYear(), month: calToday.getMonth() };
+  // 達成率の推移カードの初期期間（TDZ回避のためここで先行宣言）
+  let gtCurrentPeriod = 'today';
 
   // 初期描画（認証チェック後にも呼ばれるが、念のため二重実行）
   // ※ checkMemberAuth が先に走ってログイン情報を確定させているため、それ以降に呼ぶ
@@ -3138,7 +3140,7 @@ T05,オンライン英会話,オンライン英会話,サンプルT05,,`;
   // - 本日タブ：6日前〜今日（7日分、棒1本=1日）
   // - 今週タブ：6週前〜今週（7週分、棒1本=7日）
   // - 今月タブ：6ヶ月前〜今月（7月分、棒1本=その月の日数分）
-  let gtCurrentPeriod = 'today';  // デフォルト：日別
+  // ※ gtCurrentPeriod は TDZ 回避のため、初期描画呼び出しより前で宣言済み
 
   function gtSwitchPeriod(period) {
     gtCurrentPeriod = period;
