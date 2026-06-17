@@ -1,0 +1,39 @@
+{
+  "name": "study_app",
+  "version": "1.0.0",
+  "description": "英語コーチングサービスの**学習管理プラットフォーム**（プロトタイプ）です。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "concurrently \"tsx watch api/index.ts\" \"vite\"",
+    "dev:api": "tsx watch api/index.ts",
+    "dev:web": "vite",
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Go-englead/study_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Go-englead/study_app/issues"
+  },
+  "homepage": "https://github.com/Go-englead/study_app#readme",
+  "dependencies": {
+    "@hono/node-server": "^2.0.5",
+    "hono": "^4.12.25"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "concurrently": "^10.0.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
+}
