@@ -38,6 +38,10 @@ Thumbs.db
 node_modules/
 dist/
 
+# ===== E2E（gauge）の生成物：スクショ・HTMLレポート（リポジトリ肥大化の原因） =====
+e2e/reports/
+e2e/.gauge/
+
 # ===== Claude Code の個人設定ファイル =====
 .claude/
 
