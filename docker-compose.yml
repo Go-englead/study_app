@@ -15,13 +15,22 @@ services:
       timeout: 5s
       retries: 5
 
+  # API（開発用）。tsx watch＋ソース bind mount でホットリロード（再ビルド不要）。
+  # 本番相当の静的ビルドは api/Dockerfile（デプロイ時に使用）。
   api:
-    build: ./api
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install && pnpm dev"
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://studyapp:studyapp@db:5432/studyapp
+      # pnpm ストアを node_modules ボリューム内（bind mount 外＝ホスト/git を汚さない）に
+      npm_config_store_dir: /app/node_modules/.pnpm-store
+    volumes:
+      - ./api:/app                          # ソース bind mount（保存で tsx watch が再起動）
+      - api-node-modules:/app/node_modules  # node_modules はコンテナ(linux)側を保持
     ports:
       - "3000:3000"
 
@@ -53,3 +62,4 @@ services:
 volumes:
   db-data:
   frontend-node-modules:
+  api-node-modules:

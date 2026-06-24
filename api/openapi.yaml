@@ -618,9 +618,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Textbook'
+                type: object
+                properties:
+                  textbooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Textbook'
     post:
       tags: [textbooks]
       summary: 教材追加（職員用）
@@ -641,6 +644,22 @@ paths:
                 $ref: '#/components/schemas/Textbook'
 
   /v1/admin/textbooks/{textbookId}:
+    get:
+      tags: [textbooks]
+      summary: 教材詳細取得（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/textbookId'
+      responses:
+        '200':
+          description: 教材詳細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Textbook'
+        '404':
+          description: 見つからない
     put:
       tags: [textbooks]
       summary: 教材更新（職員用）
@@ -1335,48 +1354,62 @@ components:
     # ── 教材マスター ──
     Textbook:
       type: object
+      description: 教材マスタ。id はシステムUUID、textbookCode が業務コード（T01等）。
       properties:
         id:
           type: string
+          format: uuid
+          description: システムID（UUID）
+        textbookCode:
+          type: string
+          description: 教材コード（業務キー・UNIQUE）
           example: T01
         name:
           type: string
           example: キクタン【Entry】
         category:
           type: string
+          description: タイプ（自由入力）
           example: 単語/フレーズ
-        color:
-          type: string
-          example: '#2E86C1'
         unit:
           type: string
           enum: [Day, Chapter, Lesson, 回]
+        color:
+          type: string
+          example: '#2E86C1'
         iconUrl:
           type: string
           format: uri
         manualUrl:
           type: string
           format: uri
+        note:
+          type: string
 
     TextbookInput:
       type: object
-      required: [name, category, unit]
+      required: [textbookCode, name, category, unit]
       properties:
+        textbookCode:
+          type: string
+          description: 教材コード（業務キー・ユーザー入力・UNIQUE）
         name:
           type: string
         category:
           type: string
-        color:
-          type: string
         unit:
           type: string
           enum: [Day, Chapter, Lesson, 回]
+        color:
+          type: string
         iconUrl:
           type: string
           format: uri
         manualUrl:
           type: string
           format: uri
+        note:
+          type: string
 
     # ── スタッフ ──
     Staff:

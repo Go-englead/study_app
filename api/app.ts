@@ -4,6 +4,9 @@ import { MemberRepositoryImpl } from './gateway/MemberRepositoryImpl';
 import { MemberUseCase } from './usecase/member/MemberUseCase';
 import { registerMemberRoutes } from './controller/MemberController';
 import { registerMeRoutes } from './controller/MeController';
+import { TextbookRepositoryImpl } from './gateway/TextbookRepositoryImpl';
+import { TextbookUseCase } from './usecase/textbook/TextbookUseCase';
+import { registerTextbookRoutes } from './controller/TextbookController';
 import { memberAuth, adminAuth, MemberAuthVariables, AdminAuthVariables } from './middleware/auth';
 import { DomainError } from './domain/shared/domain-error';
 
@@ -29,6 +32,7 @@ export function createApp(databaseUrl: string) {
 
   const memberRepository = new MemberRepositoryImpl(db);
   const memberUseCase = new MemberUseCase(memberRepository);
+  const textbookUseCase = new TextbookUseCase(new TextbookRepositoryImpl(db));
 
   const app = new Hono();
 
@@ -43,6 +47,7 @@ export function createApp(databaseUrl: string) {
   const admin = new Hono<{ Variables: AdminAuthVariables }>();
   admin.use('*', adminAuth);
   registerMemberRoutes(admin, memberUseCase);
+  registerTextbookRoutes(admin, textbookUseCase);
   applyErrorHandler(admin);
   app.route('/v1/admin', admin);
 

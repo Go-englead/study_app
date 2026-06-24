@@ -888,7 +888,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Textbook"][];
+                        "application/json": {
+                            textbooks?: components["schemas"]["Textbook"][];
+                        };
                     };
                 };
             };
@@ -932,7 +934,36 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** 教材詳細取得（職員用） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    textbookId: components["parameters"]["textbookId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 教材詳細 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Textbook"];
+                    };
+                };
+                /** @description 見つからない */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         /** 教材更新（職員用） */
         put: {
             parameters: {
@@ -1459,32 +1490,48 @@ export interface components {
             listening?: number;
             speaking?: number;
         };
+        /** @description 教材マスタ。id はシステムUUID、textbookCode が業務コード（T01等）。 */
         Textbook: {
-            /** @example T01 */
+            /**
+             * Format: uuid
+             * @description システムID（UUID）
+             */
             id?: string;
+            /**
+             * @description 教材コード（業務キー・UNIQUE）
+             * @example T01
+             */
+            textbookCode?: string;
             /** @example キクタン【Entry】 */
             name?: string;
-            /** @example 単語/フレーズ */
+            /**
+             * @description タイプ（自由入力）
+             * @example 単語/フレーズ
+             */
             category?: string;
-            /** @example #2E86C1 */
-            color?: string;
             /** @enum {string} */
             unit?: "Day" | "Chapter" | "Lesson" | "回";
+            /** @example #2E86C1 */
+            color?: string;
             /** Format: uri */
             iconUrl?: string;
             /** Format: uri */
             manualUrl?: string;
+            note?: string;
         };
         TextbookInput: {
+            /** @description 教材コード（業務キー・ユーザー入力・UNIQUE） */
+            textbookCode: string;
             name: string;
             category: string;
-            color?: string;
             /** @enum {string} */
             unit: "Day" | "Chapter" | "Lesson" | "回";
+            color?: string;
             /** Format: uri */
             iconUrl?: string;
             /** Format: uri */
             manualUrl?: string;
+            note?: string;
         };
         Staff: {
             /** @example MW001 */

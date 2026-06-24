@@ -103,6 +103,45 @@ async function seedSearchMembers(): Promise<void> {
   }
 }
 
+// ── 教材（textbooks）API ヘルパ ──
+async function apiListTextbooks(): Promise<Array<{ id: string }>> {
+  const res = await fetch(`${API_URL}/v1/admin/textbooks`, { headers: apiHeaders });
+  const body = (await res.json()) as { textbooks?: Array<{ id: string }> };
+  return body.textbooks ?? [];
+}
+async function apiDeleteTextbook(id: string): Promise<void> {
+  await fetch(`${API_URL}/v1/admin/textbooks/${id}`, { method: 'DELETE', headers: apiHeaders });
+}
+async function apiCreateTextbook(body: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${API_URL}/v1/admin/textbooks`, {
+    method: 'POST',
+    headers: apiHeaders,
+    body: JSON.stringify(body),
+  });
+  if (res.status !== 201) throw new Error(`教材 seed 失敗: ${res.status} ${await res.text()}`);
+}
+
+const SEED_TEXTBOOKS = [
+  { textbookCode: 'T01', name: 'キクタン Entry', category: '単語/フレーズ', unit: 'Day', color: '#2E86C1' },
+  { textbookCode: 'T02', name: '起きてから寝るまで', category: '単語/フレーズ', unit: 'Chapter', color: '#2E86C1' },
+  { textbookCode: 'T03', name: '中学英語をもう一度', category: '文法', unit: 'Lesson', color: '#1F618D' },
+  { textbookCode: 'T04', name: 'マンスリーコーチング', category: 'コーチング', unit: '回', color: '#1A5276' },
+  { textbookCode: 'T05', name: 'オンライン英会話', category: 'オンライン英会話', unit: '回', color: '#F39C12' },
+];
+
+/** 全教材を消して seed 5件にする（会員は BeforeScenario で消えているため FK 参照なし）。 */
+async function seedTextbooks(): Promise<void> {
+  for (const t of await apiListTextbooks()) await apiDeleteTextbook(t.id);
+  for (const t of SEED_TEXTBOOKS) await apiCreateTextbook(t);
+}
+
+function tbField(name: string) {
+  return p().getByTestId(`textbook-field-${name}`);
+}
+function textbookRow(code: string) {
+  return p().getByTestId(`textbook-row-${code}`);
+}
+
 /** 一覧の各行の「氏名」（氏名 / ニックネーム セルの氏名部分・空白除去）一覧を取得。 */
 async function currentRowNames(): Promise<string[]> {
   const rows = p().locator('[data-testid^="member-row-"]');
@@ -260,6 +299,91 @@ export default class StepImpl {
   public async clickDelete(): Promise<void> {
     await p().getByTestId('member-delete').click();
     await expect(p().getByTestId('member-modal')).toBeHidden();
+  }
+
+  // ── 教材 ──
+  @Step('教材データを準備する')
+  public async prepareTextbooks(): Promise<void> {
+    await seedTextbooks();
+  }
+
+  @Step('教材管理メニューをクリックする')
+  public async clickTextbooksMenu(): Promise<void> {
+    await p().getByRole('link', { name: '教材管理' }).click();
+    await expect(p().getByTestId('textbooks-table')).toBeVisible();
+  }
+
+  @Step('教材一覧の件数が <count> 件である')
+  public async assertTextbookCount(count: string): Promise<void> {
+    await expect(p().locator('[data-testid^="textbook-row-"]')).toHaveCount(Number(count));
+  }
+
+  @Step('教材一覧に <codes> が表示される')
+  public async assertTextbookRowsVisible(codes: string): Promise<void> {
+    for (const code of codes.split(',').map((s) => s.trim())) {
+      await expect(textbookRow(code)).toBeVisible();
+    }
+  }
+
+  @Step('教材一覧に <code> が表示されない')
+  public async assertTextbookRowHidden(code: string): Promise<void> {
+    await expect(textbookRow(code)).toHaveCount(0);
+  }
+
+  @Step('教材追加ボタンをクリックする')
+  public async openTextbookCreate(): Promise<void> {
+    await p().getByTestId('textbook-create-open').click();
+    await expect(p().getByTestId('textbook-modal')).toBeVisible();
+  }
+
+  @Step('教材フォームに最小限の情報を入力する')
+  public async fillNewTextbook(): Promise<void> {
+    await tbField('textbookCode').fill('T99');
+    await tbField('name').fill('新規テスト教材');
+    await tbField('category').fill('テストカテゴリ');
+    await tbField('unit').selectOption('回');
+  }
+
+  @Step('教材フォームを保存する')
+  public async saveTextbookForm(): Promise<void> {
+    await p().getByTestId('textbook-form-submit').click();
+    await expect(p().getByTestId('textbook-modal')).toBeHidden();
+  }
+
+  @Step('教材 <code> の行をクリックする')
+  public async clickTextbookRow(code: string): Promise<void> {
+    await textbookRow(code).click();
+    await expect(p().getByTestId('textbook-modal')).toBeVisible();
+  }
+
+  @Step('教材 <code> の行に <text> が表示される')
+  public async assertTextbookRowText(code: string, text: string): Promise<void> {
+    await expect(textbookRow(code)).toContainText(text);
+  }
+
+  @Step('教材編集モーダルの <field> が <value> と表示される')
+  public async assertTextbookField(field: string, value: string): Promise<void> {
+    await expect(tbField(field)).toHaveValue(value);
+  }
+
+  @Step('教材編集モーダルの <field> を <value> に変更する')
+  public async changeTextbookField(field: string, value: string): Promise<void> {
+    const el = tbField(field);
+    const tag = await el.evaluate((e) => e.tagName);
+    if (tag === 'SELECT') await el.selectOption(value);
+    else await el.fill(value);
+  }
+
+  @Step('教材編集モーダルを保存する')
+  public async saveTextbookEdit(): Promise<void> {
+    await p().getByTestId('textbook-form-submit').click();
+    await expect(p().getByTestId('textbook-modal')).toBeHidden();
+  }
+
+  @Step('教材を削除する')
+  public async deleteTextbook(): Promise<void> {
+    await p().getByTestId('textbook-delete').click();
+    await expect(p().getByTestId('textbook-modal')).toBeHidden();
   }
 
   // ── 検索 ──

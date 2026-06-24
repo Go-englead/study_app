@@ -17,10 +17,19 @@
 
 ## 🏛 アーキテクチャ規約（バックエンド `api/`）
 
-レイヤリング：**driver → gateway → usecase → controller**＋**関数型ドメイン**（`domain/`）。
+本プロジェクトは **関数型 DDD（ドメイン駆動設計）** で実装する。レイヤリング：**driver → gateway → usecase → controller**＋**ドメイン**（`domain/`）。
 
+> **ドメイン設計の正典は [`api/domain/README.md`](api/domain/README.md)**（集約マップ・集約ルート・値オブジェクト・不変条件）。**ドメインを新規/変更する前に必ず参照**し、整合させること。
+
+### ドメイン層の規約（DDD）
+- **集約ごとに `domain/<aggregate>/` を切る**：`xxx.ts`（集約＋`createXxx`/`updateXxx`）と `xxx-repository.ts`（**Repository interface はドメイン層に置く**。実装は `gateway/`）。
+- **識別子は branded type**（`Brand<string, 'XxxId'>`）。`createXxxId()` で生成。
+- **id=UUID（サロゲート）＋ 業務コード（自然キー・ユーザー入力・UNIQUE）の二本立て**。例：`Member.id`(UUID)/`Member.code`、`Textbook.id`(UUID)/`Textbook.code`(T01)。画面・CSV の "ID" は業務コードを指すことが多い（DBの真のPKは別UUID）。
+- **値オブジェクトは smart constructor**（`createXxx`）で生成時に検証。readonly interface。不正は `throw DomainError`（→ controller で 400）。タイプ違いは判別共用体。
+- 計算値は **compute-on-read**（保存しない。例：会員ステータス）。
+
+### その他
 - **契約は `api/openapi.yaml`**。変更したら `pnpm openapi:gen` で型再生成（フロントも `frontend` 側で再生成）。
-- **ドメイン**：readonly interface＋`createX`/`updateX` 関数、バリデーションは `throw DomainError`（→ controller で 400）。タイプ違いは判別共用体。
 - **usecase**：Repository からドメイン取得 → 操作 → **UseCase専用DTO** を返す。
 - **driver**：Drizzle で Row 取得／upsert。**gateway** が Row⇔ドメイン変換。
 

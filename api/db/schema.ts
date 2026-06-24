@@ -309,6 +309,8 @@ export const continuationPlans = pgTable(
 );
 
 // ───────────────────────── Row 型 ─────────────────────────
+export type TextbookRow = typeof textbooks.$inferSelect;
+export type NewTextbookRow = typeof textbooks.$inferInsert;
 export type MemberRow = typeof members.$inferSelect;
 export type NewMemberRow = typeof members.$inferInsert;
 export type NewMemberContactRow = typeof memberContacts.$inferInsert;
