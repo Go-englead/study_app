@@ -134,7 +134,6 @@ CREATE TABLE IF NOT EXISTS textbook_assignments (
   textbook_id        uuid NOT NULL REFERENCES textbooks(id) ON DELETE RESTRICT,
   daily_goal_minutes integer,
   note               text NOT NULL DEFAULT '',
-  status             text NOT NULL DEFAULT '継続' CHECK (status IN ('継続','卒業')),
   PRIMARY KEY (member_id, textbook_id)
 );
 

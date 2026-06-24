@@ -7,6 +7,9 @@ import { registerMeRoutes } from './controller/MeController';
 import { TextbookRepositoryImpl } from './gateway/TextbookRepositoryImpl';
 import { TextbookUseCase } from './usecase/textbook/TextbookUseCase';
 import { registerTextbookRoutes } from './controller/TextbookController';
+import { TextbookAssignmentRepositoryImpl } from './gateway/TextbookAssignmentRepositoryImpl';
+import { TextbookAssignmentUseCase } from './usecase/textbook-assignment/TextbookAssignmentUseCase';
+import { registerTextbookAssignmentRoutes } from './controller/TextbookAssignmentController';
 import { memberAuth, adminAuth, MemberAuthVariables, AdminAuthVariables } from './middleware/auth';
 import { DomainError } from './domain/shared/domain-error';
 
@@ -32,7 +35,13 @@ export function createApp(databaseUrl: string) {
 
   const memberRepository = new MemberRepositoryImpl(db);
   const memberUseCase = new MemberUseCase(memberRepository);
-  const textbookUseCase = new TextbookUseCase(new TextbookRepositoryImpl(db));
+  const textbookRepository = new TextbookRepositoryImpl(db);
+  const textbookUseCase = new TextbookUseCase(textbookRepository);
+  const assignmentUseCase = new TextbookAssignmentUseCase(
+    new TextbookAssignmentRepositoryImpl(db),
+    textbookRepository,
+    memberRepository,
+  );
 
   const app = new Hono();
 
@@ -48,6 +57,7 @@ export function createApp(databaseUrl: string) {
   admin.use('*', adminAuth);
   registerMemberRoutes(admin, memberUseCase);
   registerTextbookRoutes(admin, textbookUseCase);
+  registerTextbookAssignmentRoutes(admin, assignmentUseCase);
   applyErrorHandler(admin);
   app.route('/v1/admin', admin);
 

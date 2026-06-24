@@ -1023,6 +1023,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/members/{memberId}/textbook-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 会員の割り当て教材一覧 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 割り当て教材一覧 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            assignments?: components["schemas"]["AssignedTextbook"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** 会員に教材を割り当て */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssignTextbookInput"];
+                };
+            };
+            responses: {
+                /** @description 割り当て成功 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AssignedTextbook"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/members/{memberId}/textbook-assignments/{textbookId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 会員の教材割り当てを解除 */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                    textbookId: components["parameters"]["textbookId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 解除成功 */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/staff": {
         parameters: {
             query?: never;
@@ -1449,6 +1552,23 @@ export interface components {
             textbookId: string;
             note?: string;
             dailyGoalMinutes?: number;
+        };
+        AssignedTextbook: {
+            /** Format: uuid */
+            textbookId?: string;
+            textbookCode?: string;
+            name?: string;
+            category?: string;
+            unit?: string;
+            color?: string;
+            dailyGoalMinutes?: number | null;
+            note?: string;
+        };
+        AssignTextbookInput: {
+            /** @description 割り当てる教材のUUID */
+            textbookId: string;
+            dailyGoalMinutes?: number;
+            note?: string;
         };
         ContinuationPlan: {
             id?: string;

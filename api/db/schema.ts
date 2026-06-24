@@ -179,12 +179,8 @@ export const textbookAssignments = pgTable(
       .references(() => textbooks.id, { onDelete: 'restrict' }),
     dailyGoalMinutes: integer('daily_goal_minutes'),
     note: text('note').notNull().default(''),
-    status: text('status').notNull().default('継続'),
   },
-  (t) => [
-    primaryKey({ columns: [t.memberId, t.textbookId] }),
-    check('assignment_status_check', sql`${t.status} IN ('継続','卒業')`),
-  ],
+  (t) => [primaryKey({ columns: [t.memberId, t.textbookId] })],
 );
 
 export const learningLogs = pgTable(

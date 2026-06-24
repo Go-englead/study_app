@@ -386,6 +386,64 @@ export default class StepImpl {
     await expect(p().getByTestId('textbook-modal')).toBeHidden();
   }
 
+  // ── 教材割り当て（会員⨯教材） ──
+  @Step('割り当て用の教材データを準備する')
+  public async prepareAssignmentTextbooks(): Promise<void> {
+    // 会員（見本一郎）は BeforeScenario で投入済み。教材5件を用意する。
+    await seedTextbooks();
+  }
+
+  @Step('会員への割り当てタブを開く')
+  public async openAssignTab(): Promise<void> {
+    await p().getByTestId('textbook-tab-assign').click();
+    await expect(p().getByTestId('assign-member-list')).toBeVisible();
+  }
+
+  @Step('割り当て対象に会員 <name> を選択する')
+  public async selectAssignMember(name: string): Promise<void> {
+    const re = new RegExp(name.replace(/\s/g, '').split('').join('\\s*'));
+    await p().locator('[data-testid^="assign-member-"]').filter({ hasText: re }).first().click();
+    await expect(p().getByTestId('assign-main')).toBeVisible();
+  }
+
+  @Step('教材を割り当てボタンをクリックする')
+  public async openAssignModal(): Promise<void> {
+    await p().getByTestId('assign-open').click();
+    await expect(p().getByTestId('assign-modal')).toBeVisible();
+  }
+
+  @Step('割り当てフォームで教材 <code> を目標 <minutes> 分・メモ <note> で割り当てる')
+  public async submitAssign(code: string, minutes: string, note: string): Promise<void> {
+    const sel = p().getByTestId('assign-textbook-select');
+    const value = await sel.locator('option').filter({ hasText: code }).first().getAttribute('value');
+    await sel.selectOption(value!);
+    await p().getByTestId('assign-goal').fill(minutes);
+    await p().getByTestId('assign-note').fill(note);
+    await p().getByTestId('assign-submit').click();
+    await expect(p().getByTestId('assign-modal')).toBeHidden();
+  }
+
+  @Step('割り当て一覧に教材 <code> が表示される')
+  public async assertAssignmentVisible(code: string): Promise<void> {
+    await expect(p().getByTestId(`assignment-row-${code}`)).toBeVisible();
+  }
+
+  @Step('割り当て一覧の教材 <code> に <text> が表示される')
+  public async assertAssignmentRowText(code: string, text: string): Promise<void> {
+    await expect(p().getByTestId(`assignment-row-${code}`)).toContainText(text);
+  }
+
+  @Step('割り当て一覧に教材 <code> が表示されない')
+  public async assertAssignmentHidden(code: string): Promise<void> {
+    await expect(p().getByTestId(`assignment-row-${code}`)).toHaveCount(0);
+  }
+
+  @Step('教材 <code> の割り当てを解除する')
+  public async unassign(code: string): Promise<void> {
+    await p().getByTestId(`assignment-unassign-${code}`).click();
+    await expect(p().getByTestId(`assignment-row-${code}`)).toHaveCount(0);
+  }
+
   @Step('教材を教材名 <name> で検索する')
   public async searchTextbookByName(name: string): Promise<void> {
     await p().getByTestId('textbook-search-name').fill(name);

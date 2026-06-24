@@ -702,6 +702,61 @@ paths:
         '204':
           description: 削除成功
 
+  # ── 教材割り当て（会員⨯教材・別集約 TextbookAssignment） ──
+  /v1/admin/members/{memberId}/textbook-assignments:
+    get:
+      tags: [textbooks]
+      summary: 会員の割り当て教材一覧
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: 割り当て教材一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AssignedTextbook'
+    post:
+      tags: [textbooks]
+      summary: 会員に教材を割り当て
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignTextbookInput'
+      responses:
+        '201':
+          description: 割り当て成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedTextbook'
+
+  /v1/admin/members/{memberId}/textbook-assignments/{textbookId}:
+    delete:
+      tags: [textbooks]
+      summary: 会員の教材割り当てを解除
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+        - $ref: '#/components/parameters/textbookId'
+      responses:
+        '204':
+          description: 解除成功
+
   # ── スタッフ ──────────────────────────────────────
   /v1/admin/staff:
     get:
@@ -1277,6 +1332,41 @@ components:
           type: string
         dailyGoalMinutes:
           type: integer
+
+    # 会員に割り当てられた教材（表示用・教材マスタ情報を結合）
+    AssignedTextbook:
+      type: object
+      properties:
+        textbookId:
+          type: string
+          format: uuid
+        textbookCode:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        color:
+          type: string
+        dailyGoalMinutes:
+          type: integer
+          nullable: true
+        note:
+          type: string
+
+    AssignTextbookInput:
+      type: object
+      required: [textbookId]
+      properties:
+        textbookId:
+          type: string
+          description: 割り当てる教材のUUID
+        dailyGoalMinutes:
+          type: integer
+        note:
+          type: string
 
     # ── 継続プラン ──
     ContinuationPlan:

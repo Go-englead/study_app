@@ -24,10 +24,7 @@ export function TextbooksScreen() {
   }
 
   return (
-    <div className="screen active">
-      <div className="page-title">教材管理</div>
-      <div className="page-sub">教材マスターと割り当ての管理</div>
-
+    <>
       {/* 検索フォーム（常時上部・同一一覧をフィルタ） */}
       <form className="search-panel" onSubmit={onSearch}>
         <div className="search-grid-3">
@@ -100,6 +97,6 @@ export function TextbooksScreen() {
       {modal.mode === 'edit' && (
         <TextbookFormModal mode={modal.textbookId} onClose={() => setModal({ mode: 'closed' })} />
       )}
-    </div>
+    </>
   )
 }

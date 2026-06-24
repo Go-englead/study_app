@@ -73,17 +73,6 @@ function EditTextbookBody({ textbookId, onClose }: { textbookId: string; onClose
       {update.isError && (
         <p className="form-error">{(update.error as { message?: string })?.message ?? '更新に失敗しました'}</p>
       )}
-      <div style={{ textAlign: 'right', marginBottom: 8 }}>
-        <button
-          type="button"
-          className="secondary-btn"
-          data-testid="textbook-delete"
-          style={{ color: 'var(--color-error)', borderColor: 'var(--color-error)' }}
-          onClick={onDelete}
-        >
-          🗑 この教材を削除
-        </button>
-      </div>
       <TextbookForm
         lockCode
         submitLabel="変更を保存"
@@ -91,6 +80,17 @@ function EditTextbookBody({ textbookId, onClose }: { textbookId: string; onClose
         defaultValues={textbookToFormValues(textbook)}
         onCancel={onClose}
         onSubmit={(input) => update.mutate(input, { onSuccess: onClose })}
+        footerLeft={
+          <button
+            type="button"
+            className="secondary-btn"
+            data-testid="textbook-delete"
+            style={{ color: 'var(--color-error)', borderColor: 'var(--color-error)' }}
+            onClick={onDelete}
+          >
+            🗑 削除
+          </button>
+        }
       />
     </>
   )

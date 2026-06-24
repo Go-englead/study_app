@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { textbookFormSchema, toTextbookInput, UNITS, type TextbookFormValues } from '../schemas'
@@ -11,6 +12,8 @@ interface Props {
   lockCode?: boolean
   onSubmit: (input: TextbookInput) => void
   onCancel?: () => void
+  /** フッター左に置く追加ボタン（編集時の削除など） */
+  footerLeft?: ReactNode
 }
 
 export function TextbookForm({
@@ -20,6 +23,7 @@ export function TextbookForm({
   lockCode,
   onSubmit,
   onCancel,
+  footerLeft,
 }: Props) {
   const {
     register,
@@ -70,7 +74,9 @@ export function TextbookForm({
         </div>
       </section>
 
-      <div className="form-actions" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+      <div className="form-actions" style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>{footerLeft}</div>
+        <div style={{ display: 'flex', gap: 8 }}>
         {onCancel && (
           <button type="button" className="secondary-btn" onClick={onCancel} data-testid="textbook-form-cancel">
             キャンセル
@@ -79,6 +85,7 @@ export function TextbookForm({
         <button type="submit" className="primary-btn" disabled={submitting} data-testid="textbook-form-submit">
           {submitting ? '送信中…' : submitLabel}
         </button>
+        </div>
       </div>
     </form>
   )
