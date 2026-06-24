@@ -11,6 +11,61 @@
 - **公開URL**：https://go-englead.github.io/study_app/
 - **ログイン画面URL**：https://go-englead.github.io/study_app/login.html
 - **運用方式**：GitHub 管理、GitHub Pages で公開
+- **現在の移行**：localStorage ベースの旧 client（`admin.html` 等）から、バックエンドAPI＋React フロントへ段階移行中。
+
+---
+
+## 🏛 アーキテクチャ規約（バックエンド `api/`）
+
+レイヤリング：**driver → gateway → usecase → controller**＋**関数型ドメイン**（`domain/`）。
+
+- **契約は `api/openapi.yaml`**。変更したら `pnpm openapi:gen` で型再生成（フロントも `frontend` 側で再生成）。
+- **ドメイン**：readonly interface＋`createX`/`updateX` 関数、バリデーションは `throw DomainError`（→ controller で 400）。タイプ違いは判別共用体。
+- **usecase**：Repository からドメイン取得 → 操作 → **UseCase専用DTO** を返す。
+- **driver**：Drizzle で Row 取得／upsert。**gateway** が Row⇔ドメイン変換。
+
+### DB 設計ルール（`api/db/`）
+- **PK は全て UUID**。加えて業務コード（`member_code` 等）を自然キーとして UNIQUE 保持。
+- **サロゲートキーを無闇に使わない**。ジャンクションは複合PK（例 `member_staff_assignments (member_id, role)`、`textbook_assignments (member_id, textbook_id)`）。
+- **画面のセクション単位でサテライト分割**。members は本体（基本情報）＋ `member_contacts`／`member_enrollments`／`member_residence_travels`／`member_english_scores`／`member_coach_inputs`／`member_staff_assignments`（担当ジャンクション）／`member_credentials`（認証）に分割。**全サテライトは PK=member_id・1:1・FK CASCADE**。
+- **認証情報は別テーブル**（`member_credentials`／`staff_credentials`、PK=FK）。
+- enum は CHECK 制約。FK は CASCADE（子）/ RESTRICT（マスタ参照）。
+
+### ドメインの重要な決定
+- **ステータスは compute-on-read**（保存しない）。日付（受講開始・卒業・休会）から算出。例外＝「途中退会」のみ `manual_status_override` に保存。**休会の時限ステータス更新・卒業日延長は後回し（未実装）**。
+- **担当者は staff への FK ジャンクション**（role＝`Consultant`/`CS`/`Orient`）。フォームの「その他」＝`"OTHER"` は**行を作らない**（NULL行も作らない）。
+- **仮パスワードはサーバー生成**し、登録レスポンスで一度だけ平文返却（`tempPassword`）。リクエストには含めない。
+
+### 認証
+- JWT ミドルウェアで `/v1/member/*`（会員）と `/v1/admin/*`（職員）を分離。claim は `memberId` / `adminId`。
+- **当面は開発用固定トークン**（secret `test-key`・期限ほぼ無限）。ログインAPIは未実装。
+
+---
+
+## 🖥 フロントエンド規約（`frontend/`）
+
+- **bulletproof-react 構成**：`app/`（provider・router・routes）／`lib/`（api-client・react-query）／`config/`（env）／`features/<name>/`（api・components・schemas・types）／`types/`（生成型）。
+- **スタック**：Vite + React + TS / TanStack Query / **TanStack Router（file-based・`app/routes`）** / react-hook-form + zod / **openapi-fetch**（型は `openapi.yaml` から `openapi-typescript` 生成）。
+- **UIは必ず既存 client に合わせる**（→ Skill `reproduce-client-screen`）。単一ページ＋左サイドバー6タブ（タブ=ルート）、**新規=中央モーダル／編集=スライドパネル**。
+- **E2E 用に `data-testid` を付与**（フォームは `member-field-<name>` 等）。
+- 認証は `config/env.ts` の開発用トークン。
+
+---
+
+## 🧪 テスト規約
+
+- **API 結合テスト**：Testcontainers + Vitest。実行は `pnpm test`（`TESTCONTAINERS_RYUK_DISABLED=true` 済み）。**テストデータは Drizzle で投入**（生SQL書かない）、**分割テーブルそれぞれを検証**。
+- **E2E**：`e2e/specs/` の **Gauge spec＝仕様書**（1ファイル＝1ユーザーストーリー、「誰は〜できる」）。ステップ実装は React 向け（`tests/StepImplementation.ts`、要素は **data-testid**、`@BeforeScenario` で API 経由 clean&seed、ログインは dev トークンのため no-op）。`BASE_URL` は :8080（or dev :5173）。
+
+---
+
+## ⚙️ 環境の地雷（必読）
+
+- **パッケージマネージャは pnpm 統一**（npm 禁止）。ビルドスクリプト許可は `pnpm-workspace.yaml` の `onlyBuiltDependencies`、または `pnpm approve-builds`。
+- **docker ポート**：frontend `8080` / 旧client `8081` / api `3000` / db `5432`。
+- **API は起動時にマイグレーションしない**。docker DB が空なら `docker compose exec -T db psql -U studyapp -d studyapp < api/db/migrations/0001_init.sql` を手動実行（※起動時自動化は未対応）。
+- **Docker レジストリ egress が時々切れる**（`registry-1.docker.io` タイムアウト）。コンテナ再ビルド不可のときは **`cd frontend && pnpm dev`（:5173・`/api`→:3000 プロキシ）** で最新ソースを確認／E2E も :5173 で実行可。
+- **gauge はシステムバイナリ**（`npx gauge` 不可、`gauge run` を使う）。`e2e/node_modules` 破損（`tsconfig-paths/register`・`gauge-ts/dist` 欠落）時は `rm -rf node_modules package-lock.json && npm install` でクリーン再インストール。
 
 ---
 

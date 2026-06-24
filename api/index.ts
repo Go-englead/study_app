@@ -1,10 +1,11 @@
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
+import { serve } from '@hono/node-server';
+import { createApp } from './app';
 
-const app = new Hono()
+const databaseUrl =
+  process.env.DATABASE_URL ?? 'postgres://studyapp:studyapp@localhost:5432/studyapp';
 
-app.get('/', (c) => c.json({ message: 'Hello World' }))
+const { app } = createApp(databaseUrl);
 
 serve({ fetch: app.fetch, port: 3000 }, (info) => {
-  console.log(`Server running at http://localhost:${info.port}`)
-})
+  console.log(`Server running at http://localhost:${info.port}`);
+});

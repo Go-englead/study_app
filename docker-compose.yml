@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: studyapp
+      POSTGRES_PASSWORD: studyapp
+      POSTGRES_DB: studyapp
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studyapp -d studyapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://studyapp:studyapp@db:5432/studyapp
+    ports:
+      - "3000:3000"
+
+  # React 管理画面（メインUI・開発用）。vite dev＋ソース bind mount でコンテナ内 HMR。
+  # /api は api コンテナへプロキシ。本番相当の静的ビルドは frontend/Dockerfile（デプロイ時に使用）。
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install && pnpm exec vite --host --port 80"
+    environment:
+      VITE_PROXY_TARGET: http://api:3000     # コンテナ内から api サービスへ
+      VITE_HMR_CLIENT_PORT: "8080"           # ブラウザは :8080 経由なので HMR ws も :8080
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app                       # ソース bind mount（保存で即反映）
+      - frontend-node-modules:/app/node_modules  # node_modules はコンテナ(linux)側を保持
+    ports:
+      - "8080:80"
+
+  # 旧 HTML（調査・参照用に温存）。frontend と 8080 が被るため 8081 へ移設。
+  client:
+    build: ./client
+    ports:
+      - "8081:80"
+
+volumes:
+  db-data:
+  frontend-node-modules:

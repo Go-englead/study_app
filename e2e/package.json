@@ -1,0 +1,22 @@
+{
+  "name": "study-app-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "gauge run specs/",
+    "test:headed": "HEADLESS=false gauge run specs/",
+    "test:login": "gauge run specs/01_member_login.spec specs/02_staff_login.spec",
+    "test:login:headed": "HEADLESS=false gauge run specs/01_member_login.spec specs/02_staff_login.spec"
+  },
+  "dependencies": {
+    "gauge-ts": "0.3.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "@types/node": "latest",
+    "playwright": "latest"
+  }
+}
