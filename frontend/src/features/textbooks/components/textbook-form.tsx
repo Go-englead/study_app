@@ -54,7 +54,7 @@ export function TextbookForm({
         <div className="form-grid">
           <label>教材コード*<input {...field('textbookCode')} readOnly={lockCode} />{err('textbookCode')}</label>
           <label>教材名*<input {...field('name')} />{err('name')}</label>
-          <label>タイプ<input {...field('category')} placeholder="例：単語/フレーズ" />{err('category')}</label>
+          <label>カテゴリ<input {...field('category')} placeholder="例：単語/フレーズ" />{err('category')}</label>
           <label>
             単位*
             <select {...field('unit')}>

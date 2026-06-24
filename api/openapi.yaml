@@ -609,9 +609,20 @@ paths:
   /v1/admin/textbooks:
     get:
       tags: [textbooks]
-      summary: 教材一覧取得
+      summary: 教材一覧取得（name・category で部分一致検索）
       security:
         - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema: { type: string }
+          description: 教材名の部分一致
+        - name: category
+          in: query
+          required: false
+          schema: { type: string }
+          description: カテゴリの部分一致
       responses:
         '200':
           description: 教材一覧

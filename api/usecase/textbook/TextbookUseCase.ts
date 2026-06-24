@@ -21,9 +21,12 @@ export class TextbookUseCase {
     return textbook ? toTextbookDto(textbook) : undefined;
   }
 
-  /** 一覧取得 */
-  async list(): Promise<TextbookDto[]> {
-    const textbooks = await this.textbooks.findAll();
+  /** 一覧取得／検索（教材名・カテゴリの部分一致。条件なし＝全件）。 */
+  async list(query: { name?: string; category?: string } = {}): Promise<TextbookDto[]> {
+    const textbooks = await this.textbooks.search({
+      nameLike: query.name || undefined,
+      categoryLike: query.category || undefined,
+    });
     return textbooks.map(toTextbookDto);
   }
 

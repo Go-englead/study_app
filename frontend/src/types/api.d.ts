@@ -872,10 +872,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 教材一覧取得 */
+        /** 教材一覧取得（name・category で部分一致検索） */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description 教材名の部分一致 */
+                    name?: string;
+                    /** @description カテゴリの部分一致 */
+                    category?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;

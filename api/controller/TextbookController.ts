@@ -56,9 +56,12 @@ function toTextbookResponse(dto: TextbookDto): TextbookResponse {
  * UseCase を呼んで DTO を取得 → 生成 Response 型へ変換して返す。
  */
 export function registerTextbookRoutes(app: Hono<any>, usecase: TextbookUseCase): void {
-  // GET /textbooks（一覧）
+  // GET /textbooks（一覧／検索：name・category の部分一致）
   app.get('/textbooks', async (c) => {
-    const dtos = await usecase.list();
+    const dtos = await usecase.list({
+      name: c.req.query('name'),
+      category: c.req.query('category'),
+    });
     const body: { textbooks: TextbookResponse[] } = {
       textbooks: dtos.map(toTextbookResponse),
     };

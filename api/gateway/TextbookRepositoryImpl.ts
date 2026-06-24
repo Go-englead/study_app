@@ -2,7 +2,10 @@ import { Database } from '../db/client';
 import { NewTextbookRow, TextbookRow } from '../db/schema';
 import * as textbookDriver from '../driver/textbookDriver';
 import { Textbook, TextbookId, TextbookUnit } from '../domain/textbook/textbook';
-import { TextbookRepository } from '../domain/textbook/textbook-repository';
+import {
+  TextbookRepository,
+  TextbookSearchCriteria,
+} from '../domain/textbook/textbook-repository';
 
 // ───────────────────── Row → ドメイン（保存済みデータは検証済みとして信頼） ─────────────────────
 function toDomain(r: TextbookRow): Textbook {
@@ -46,6 +49,11 @@ export class TextbookRepositoryImpl implements TextbookRepository {
 
   async findAll(): Promise<Textbook[]> {
     const rows = await textbookDriver.findAll(this.db);
+    return rows.map(toDomain);
+  }
+
+  async search(criteria: TextbookSearchCriteria): Promise<Textbook[]> {
+    const rows = await textbookDriver.search(this.db, criteria);
     return rows.map(toDomain);
   }
 

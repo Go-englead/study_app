@@ -386,6 +386,18 @@ export default class StepImpl {
     await expect(p().getByTestId('textbook-modal')).toBeHidden();
   }
 
+  @Step('教材を教材名 <name> で検索する')
+  public async searchTextbookByName(name: string): Promise<void> {
+    await p().getByTestId('textbook-search-name').fill(name);
+    await p().getByTestId('textbook-search-submit').click();
+  }
+
+  @Step('教材をカテゴリ <category> で検索する')
+  public async searchTextbookByCategory(category: string): Promise<void> {
+    await p().getByTestId('textbook-search-category').fill(category);
+    await p().getByTestId('textbook-search-submit').click();
+  }
+
   // ── 検索 ──
   @Step('検索用に会員データを準備する')
   public async prepareSearchData(): Promise<void> {
