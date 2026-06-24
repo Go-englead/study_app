@@ -34,6 +34,8 @@ services:
     environment:
       VITE_PROXY_TARGET: http://api:3000     # コンテナ内から api サービスへ
       VITE_HMR_CLIENT_PORT: "8080"           # ブラウザは :8080 経由なので HMR ws も :8080
+      # pnpm ストアを node_modules ボリューム内（bind mount 外＝ホスト/git を汚さない）に置く
+      npm_config_store_dir: /app/node_modules/.pnpm-store
     depends_on:
       - api
     volumes:
