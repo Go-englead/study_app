@@ -1,0 +1,1521 @@
+openapi: 3.0.3
+info:
+  title: Study App API
+  version: 1.0.0
+  description: 英語コーチング学習管理システム API
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: ローカル開発環境
+  - url: https://your-domain.vercel.app/api/v1
+    description: 本番環境
+
+tags:
+  - name: auth
+    description: 認証
+  - name: me
+    description: ログイン中の会員（自分自身の操作）
+  - name: members
+    description: 会員管理（職員用）
+  - name: learning-logs
+    description: 学習記録
+  - name: coaching-records
+    description: コーチング記録（職員用）
+  - name: progos
+    description: PROGOS スコア管理
+  - name: textbooks
+    description: 教材マスター
+  - name: staff
+    description: スタッフ管理（職員用）
+  - name: dashboard
+    description: ダッシュボード統計（職員用）
+
+# ────────────────────────────────────────────────
+# Paths
+# ────────────────────────────────────────────────
+paths:
+
+  # ── 認証 ──────────────────────────────────────
+  /v1/auth/login:
+    post:
+      tags: [auth]
+      summary: ログイン
+      description: 会員・職員共通ログイン。roleによって返却情報が異なる。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: coach_001@example.jp
+                password:
+                  type: string
+                  example: coach001
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT トークン
+                  user:
+                    $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: ログアウト
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: ログアウト成功
+
+  /v1/auth/me:
+    get:
+      tags: [auth]
+      summary: ログイン中ユーザーの情報取得
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 認証ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── 自分の学習データ（会員が自分自身を操作） ───────
+  /v1/member/learning-logs:
+    get:
+      tags: [me]
+      summary: 自分の学習記録一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+            example: '2026-06-01'
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+            example: '2026-06-30'
+      responses:
+        '200':
+          description: 学習記録一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningLog'
+    post:
+      tags: [me]
+      summary: 自分の学習記録を追加
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningLogInput'
+      responses:
+        '201':
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningLog'
+
+  /v1/member/learning-logs/{logId}:
+    put:
+      tags: [me]
+      summary: 自分の学習記録を更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/logId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningLogInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningLog'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [me]
+      summary: 自分の学習記録を削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/logId'
+      responses:
+        '204':
+          description: 削除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/member/dashboard:
+    get:
+      tags: [me]
+      summary: 自分のダッシュボードデータ取得
+      description: ストリーク・デイリーゴール・カウントダウン・教材進捗をまとめて返す
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ダッシュボードデータ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDashboard'
+
+  /v1/member/analysis:
+    get:
+      tags: [me]
+      summary: 自分の達成率・学習時間の集計データ取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unit
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 集計データ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberAnalysis'
+
+  # ── 会員管理（職員用） ───────────────────────────
+  /v1/admin/members:
+    get:
+      tags: [members]
+      summary: 会員一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [受講中, 休会中, 卒業済み]
+        - name: minRate
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 100
+        - name: maxRate
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 100
+        - name: residence
+          in: query
+          schema:
+            type: string
+        - name: travelCountry
+          in: query
+          schema:
+            type: string
+        - name: progosLevel
+          in: query
+          schema:
+            type: string
+        - name: textbookId
+          in: query
+          schema:
+            type: string
+        - name: lastLoginDays
+          in: query
+          description: 最終ログインからの日数（以内）
+          schema:
+            type: integer
+        - name: graduateDateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: graduateDateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 会員一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MemberSummary'
+                  total:
+                    type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [members]
+      summary: 会員を1件登録
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '201':
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+
+  /v1/admin/members/import:
+    post:
+      tags: [members]
+      summary: 会員 CSV 一括インポート
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: インポート結果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported:
+                    type: integer
+                  skipped:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row:
+                          type: integer
+                        message:
+                          type: string
+
+  /v1/admin/members/export:
+    get:
+      tags: [members]
+      summary: 会員一覧を CSV エクスポート
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: CSV ファイル
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /v1/admin/members/{memberId}:
+    get:
+      tags: [members]
+      summary: 会員カルテ詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: 会員詳細
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [members]
+      summary: 会員情報更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+    delete:
+      tags: [members]
+      summary: 会員を削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '204':
+          description: 削除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── 学習記録（職員が特定会員のログを参照） ───────────
+  /v1/admin/members/{memberId}/learning-logs:
+    get:
+      tags: [learning-logs]
+      summary: 特定会員の学習記録一覧取得（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 学習記録一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LearningLog'
+
+  # ── コーチング記録 ────────────────────────────────
+  /v1/admin/members/{memberId}/coaching-records:
+    get:
+      tags: [coaching-records]
+      summary: コーチング記録一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: コーチング記録一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoachingRecord'
+    post:
+      tags: [coaching-records]
+      summary: コーチング記録追加
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachingRecordInput'
+      responses:
+        '201':
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachingRecord'
+
+  # ── 継続プラン ────────────────────────────────────
+  /v1/admin/members/{memberId}/continuation-plans:
+    get:
+      tags: [members]
+      summary: 継続プラン一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: 継続プラン一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContinuationPlan'
+    post:
+      tags: [members]
+      summary: 継続プラン追加
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContinuationPlanInput'
+      responses:
+        '201':
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContinuationPlan'
+
+  # ── PROGOS ───────────────────────────────────────
+  /v1/admin/members/{memberId}/progos:
+    get:
+      tags: [progos]
+      summary: 特定会員の PROGOS スコア履歴取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: PROGOS スコア一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProgosScore'
+    post:
+      tags: [progos]
+      summary: PROGOS スコア追加（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgosScoreInput'
+      responses:
+        '201':
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgosScore'
+
+  /v1/admin/progos/import:
+    post:
+      tags: [progos]
+      summary: PROGOS スコア CSV 一括インポート（職員用）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: インポート結果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+  # ── 教材マスター ──────────────────────────────────
+  /v1/admin/textbooks:
+    get:
+      tags: [textbooks]
+      summary: 教材一覧取得
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 教材一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Textbook'
+    post:
+      tags: [textbooks]
+      summary: 教材追加（職員用）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextbookInput'
+      responses:
+        '201':
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Textbook'
+
+  /v1/admin/textbooks/{textbookId}:
+    put:
+      tags: [textbooks]
+      summary: 教材更新（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/textbookId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextbookInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Textbook'
+    delete:
+      tags: [textbooks]
+      summary: 教材削除（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/textbookId'
+      responses:
+        '204':
+          description: 削除成功
+
+  # ── スタッフ ──────────────────────────────────────
+  /v1/admin/staff:
+    get:
+      tags: [staff]
+      summary: スタッフ一覧取得
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: スタッフ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Staff'
+
+  # ── ダッシュボード（職員用） ──────────────────────
+  /v1/admin/dashboard/stats:
+    get:
+      tags: [dashboard]
+      summary: KPI 統計取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1w, 1m, 3m, all]
+            default: 1m
+      responses:
+        '200':
+          description: KPI 統計
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+
+  /v1/admin/dashboard/follow-up:
+    get:
+      tags: [dashboard]
+      summary: 要フォロー会員一覧取得
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 要フォロー会員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowUpList'
+
+# ────────────────────────────────────────────────
+# Components
+# ────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    memberId:
+      name: memberId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: '10001'
+    logId:
+      name: logId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: 'LOG_10001_20260617_001'
+    textbookId:
+      name: textbookId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: 'T01'
+
+  responses:
+    Unauthorized:
+      description: 認証エラー（トークン未提供または無効）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: 権限エラー（ロールが不足）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: リソースが見つからない
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: UNAUTHORIZED
+        message:
+          type: string
+          example: 認証が必要です
+
+    # ── 認証 ──
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [member, coach, consultant, cs]
+
+    # ── 会員 ──
+    MemberStatus:
+      type: string
+      enum: [入学手続き中, 受講中, 休会中, 卒業, 継続中, 再入学手続き中, 途中退会]
+
+    MemberSummary:
+      type: object
+      description: 会員一覧の行
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: システムID（UUID）
+        code:
+          type: string
+          description: 会員番号（業務コード）
+          example: '10001'
+        name:
+          type: string
+          description: 表示名（姓 名）
+          example: 見本 一郎
+        nickname:
+          type: string
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+        plan:
+          type: string
+          example: 6ヶ月プラン
+        startDate:
+          type: string
+          format: date
+        graduateDate:
+          type: string
+          format: date
+        currentClass:
+          type: string
+          example: Lower-Intermediate
+        achievementRate:
+          type: number
+          description: 今月の達成率（%）
+          example: 65
+        monthlyHours:
+          type: number
+          description: 今月の学習時間（時間）
+          example: 38
+        streak:
+          type: integer
+          description: 連続学習日数
+          example: 7
+        lastLoginAt:
+          type: string
+          format: date-time
+
+    Member:
+      description: 会員詳細（カルテ）。フィールドは既存クライアントの member オブジェクトに準拠。
+      allOf:
+        - $ref: '#/components/schemas/MemberSummary'
+        - type: object
+          properties:
+            initial:
+              type: string
+              description: 姓のイニシャル
+            # 編集フォーム（em-*）プリセット用の氏名6分割
+            lastNameKanji:
+              type: string
+            firstNameKanji:
+              type: string
+            lastNameKana:
+              type: string
+            firstNameKana:
+              type: string
+            lastNameAlpha:
+              type: string
+            firstNameAlpha:
+              type: string
+            email:
+              type: string
+              format: email
+            gender:
+              type: string
+              example: 男性
+            birthDate:
+              type: string
+              format: date
+            phone:
+              type: string
+            occupation:
+              type: string
+              example: 会社員
+            occupationNote:
+              type: string
+            residence:
+              type: string
+              example: 日本
+            residenceOverseas:
+              type: string
+            enrollmentDate:
+              type: string
+              format: date
+              description: オリエンテーション実施日
+            orientStaffId:
+              type: string
+              description: オリエン担当スタッフの UUID（未割り当ては省略）
+            initialClass:
+              type: string
+            nativecamp:
+              type: string
+            dailyTargetMinutes:
+              type: integer
+              example: 90
+            travelCountry:
+              type: string
+              example: オーストラリア
+            travelCity:
+              type: string
+              example: シドニー
+            travelDate:
+              type: string
+              format: date
+            travelReason:
+              type: string
+              example: 語学学校
+            travelNote:
+              type: string
+            englishScores:
+              type: object
+              properties:
+                toeicLR:
+                  type: integer
+                toeicSW:
+                  type: integer
+                toefl:
+                  type: integer
+                ielts:
+                  type: string
+                eiken:
+                  type: string
+                other:
+                  type: string
+            coachLearningGoal:
+              type: string
+            note:
+              type: string
+            consultantStaffId:
+              type: string
+              description: 担当コンサルタントのスタッフ UUID（未割り当ては省略）
+            csStaffId:
+              type: string
+              description: 担当CSのスタッフ UUID（未割り当ては省略）
+            # 4. 継続プラン履歴（※現状ダミー。継続プラン機能の実装時に実データへ）
+            continuationPlans:
+              type: array
+              description: 継続プラン履歴（カルテ「4. 継続プラン履歴」）
+              items:
+                $ref: '#/components/schemas/ContinuationPlanHistoryItem'
+            # 5. 休会管理（※現状ダミー。休会機能の実装時に実データへ）
+            suspension:
+              $ref: '#/components/schemas/Suspension'
+
+    ContinuationPlanHistoryItem:
+      type: object
+      description: 継続プラン履歴の1行（カルテ表示用。planType/months/期間/備考）
+      properties:
+        id:
+          type: string
+          format: uuid
+        planType:
+          type: string
+          example: 給付金6ヶ月プラン
+        months:
+          type: integer
+          example: 6
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        note:
+          type: string
+
+    Suspension:
+      type: object
+      nullable: true
+      description: 休会情報（休会していなければ null）
+      properties:
+        suspendedFrom:
+          type: string
+          format: date
+        suspendedUntil:
+          type: string
+          format: date
+        graduateDate:
+          type: string
+          format: date
+          description: 休会日数ぶん延長後の卒業予定日
+        preSuspendGraduateDate:
+          type: string
+          format: date
+          description: 休会前の卒業予定日
+
+    MemberInput:
+      type: object
+      description: 会員登録・更新の入力。既存クライアントのフォーム（nm-* / em-*）の flat なフィールドに準拠。登録時はフォームが自動生成した仮パスワードを含む（member_credentials へ保存）。
+      required: [code, lastNameKanji, firstNameKanji, email]
+      properties:
+        code:
+          type: string
+          description: '【会員ID】（必須）5桁数値の業務コード'
+        lastNameKanji:
+          type: string
+          description: '【姓（漢字）】（必須）'
+        firstNameKanji:
+          type: string
+          description: '【名（漢字）】（必須）'
+        lastNameKana:
+          type: string
+          description: '【姓（カタカナ）】（必須）'
+        firstNameKana:
+          type: string
+          description: '【名（カタカナ）】（必須）'
+        lastNameAlpha:
+          type: string
+          description: '【姓（アルファベット）】（必須）'
+        firstNameAlpha:
+          type: string
+          description: '【名（アルファベット）】（必須）'
+        nickname:
+          type: string
+          description: '【ニックネーム】（任意）'
+        email:
+          type: string
+          format: email
+          description: '【メールアドレス】（必須）ログインIDになる'
+        gender:
+          type: string
+          description: '【性別】（必須）男性 / 女性 / その他'
+        birthDate:
+          type: string
+          format: date
+          description: '【生年月日】（必須）'
+        phone:
+          type: string
+          description: '【電話番号】（必須）'
+        occupation:
+          type: string
+          description: '【職業】（任意）会社員 / 経営者・役員 / 自営業・フリーランス / 公務員 / 大学・大学院生 / 中学・高校生 / パート・アルバイト / 無職 / その他'
+        occupationNote:
+          type: string
+          description: '【職業 備考】（任意）「その他」選択時の詳細など'
+        residence:
+          type: string
+          description: '【入学時の在住国】（任意）日本 / 海外'
+        residenceOverseas:
+          type: string
+          description: '【海外の国名】在住国で「海外」選択時は必須'
+        plan:
+          type: string
+          description: '【入会プラン】（必須）6ヶ月プラン / 給付金6ヶ月プラン / 給付金9ヶ月プラン / 給付金12ヶ月プラン'
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+          description: '【ステータス】（必須）入学手続き中 / 再入学手続き中 / 受講中 / 継続中 / 休会中 / 卒業 / 途中退会。日付から算出できないもの（途中退会 等）のみ反映'
+        enrollmentDate:
+          type: string
+          format: date
+          description: '【オリエン実施日】（任意）'
+        orientStaffId:
+          type: string
+          description: '【オリエン担当者】（任意）role=Coach のスタッフ UUID。「その他」選択時は "OTHER"（担当行は作らない）'
+        startDate:
+          type: string
+          format: date
+          description: '【受講開始日】（任意）初回コーチング日'
+        graduateDate:
+          type: string
+          format: date
+          description: '【卒業予定日】（任意）プランから自動算出 / 手動上書き可'
+        initialClass:
+          type: string
+          description: '【入学時クラス】（必須）Beginner / Lower-Intermediate / Intermediate & Above / Higher Education Prep'
+        currentClass:
+          type: string
+          description: '【現在のクラス】（必須）Beginner / Lower-Intermediate / Intermediate & Above / Higher Education Prep'
+        nativecamp:
+          type: string
+          description: '【ネイティブキャンプ】（必須）未選択 / 未導入 / 導入済み'
+        dailyTargetMinutes:
+          type: integer
+          description: '【1日の目標学習時間(分)】（必須）1〜1440。達成率の分母'
+        consultantStaffId:
+          type: string
+          description: '【担当コンサルタント】（必須）role=Consultant のスタッフ UUID。「その他」選択時は "OTHER"（担当行は作らない）'
+        csStaffId:
+          type: string
+          description: '【担当CS】（必須）role=CS のスタッフ UUID。「その他」選択時は "OTHER"（担当行は作らない）'
+        travelCountry:
+          type: string
+          description: '【渡航先（国）】（任意）オーストラリア / カナダ / イギリス / ニュージーランド / フィリピン / その他 / 未決定'
+        travelCity:
+          type: string
+          description: '【渡航先（都市）】（任意）渡航先（国）に連動'
+        travelDate:
+          type: string
+          format: date
+          description: '【渡航時期】（任意）未来日のみ'
+        travelReason:
+          type: string
+          description: '【渡航理由】（任意）語学学校 / ワーキングホリデー / 進学（大学・大学院）/ 高校留学 / 海外就職 / その他'
+        travelNote:
+          type: string
+          description: '【在住・渡航 備考】（任意）'
+        scoreToeicLR:
+          type: integer
+          description: '【TOEIC L&R】（任意）10〜990'
+        scoreToeicSW:
+          type: integer
+          description: '【TOEIC S&W】（任意）0〜400'
+        scoreToefl:
+          type: integer
+          description: '【TOEFL iBT】（任意）0〜120'
+        scoreIelts:
+          type: string
+          description: '【IELTS】（任意）'
+        scoreEiken:
+          type: string
+          description: '【英検】（任意）5級〜1級'
+        scoreOther:
+          type: string
+          description: '【その他 検定名・スコア】（任意・自由入力）例：ケンブリッジ英検 FCE B2'
+        coachLearningGoal:
+          type: string
+          description: '【学習目標・目的】（任意）'
+        note:
+          type: string
+          description: '【備考】（任意）特記事項、家族情報など'
+
+    # ── 学習記録 ──
+    LearningLog:
+      type: object
+      properties:
+        id:
+          type: string
+          example: LOG_10001_20260617_001
+        memberId:
+          type: string
+        date:
+          type: string
+          format: date
+        textbookId:
+          type: string
+        durationMinutes:
+          type: integer
+          description: 学習時間（分）
+          example: 75
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LearningLogInput:
+      type: object
+      required: [date, textbookId, durationMinutes]
+      properties:
+        date:
+          type: string
+          format: date
+        textbookId:
+          type: string
+        durationMinutes:
+          type: integer
+          minimum: 1
+          example: 75
+        comment:
+          type: string
+
+    # ── コーチング記録 ──
+    CoachingRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        date:
+          type: string
+          format: date
+        coachId:
+          type: string
+        coachName:
+          type: string
+        type:
+          type: string
+          enum: [教材選定, オリエンテーション, 初回コーチング, 通常コーチング]
+        selectedTextbooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextbookAssignment'
+        sharedNote:
+          type: string
+        internalNote:
+          type: string
+        continuationDecision:
+          type: string
+          enum: [継続, 卒業]
+        createdAt:
+          type: string
+          format: date-time
+
+    CoachingRecordInput:
+      type: object
+      required: [date, type]
+      properties:
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [教材選定, オリエンテーション, 初回コーチング, 通常コーチング]
+        selectedTextbooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextbookAssignment'
+        sharedNote:
+          type: string
+        internalNote:
+          type: string
+        continuationDecision:
+          type: string
+          enum: [継続, 卒業]
+
+    TextbookAssignment:
+      type: object
+      required: [textbookId]
+      properties:
+        textbookId:
+          type: string
+        note:
+          type: string
+        dailyGoalMinutes:
+          type: integer
+
+    # ── 継続プラン ──
+    ContinuationPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        type:
+          type: string
+          enum: [継続, 休会, 再入会]
+        plan:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ContinuationPlanInput:
+      type: object
+      required: [type, startDate]
+      properties:
+        type:
+          type: string
+          enum: [継続, 休会, 再入会]
+        plan:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        note:
+          type: string
+
+    # ── PROGOS ──
+    ProgosScore:
+      type: object
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        date:
+          type: string
+          format: date
+        level:
+          type: string
+          example: A2
+        reading:
+          type: integer
+        writing:
+          type: integer
+        listening:
+          type: integer
+        speaking:
+          type: integer
+
+    ProgosScoreInput:
+      type: object
+      required: [date, level]
+      properties:
+        date:
+          type: string
+          format: date
+        level:
+          type: string
+        reading:
+          type: integer
+        writing:
+          type: integer
+        listening:
+          type: integer
+        speaking:
+          type: integer
+
+    # ── 教材マスター ──
+    Textbook:
+      type: object
+      properties:
+        id:
+          type: string
+          example: T01
+        name:
+          type: string
+          example: キクタン【Entry】
+        category:
+          type: string
+          example: 単語/フレーズ
+        color:
+          type: string
+          example: '#2E86C1'
+        unit:
+          type: string
+          enum: [Day, Chapter, Lesson, 回]
+        iconUrl:
+          type: string
+          format: uri
+        manualUrl:
+          type: string
+          format: uri
+
+    TextbookInput:
+      type: object
+      required: [name, category, unit]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        color:
+          type: string
+        unit:
+          type: string
+          enum: [Day, Chapter, Lesson, 回]
+        iconUrl:
+          type: string
+          format: uri
+        manualUrl:
+          type: string
+          format: uri
+
+    # ── スタッフ ──
+    Staff:
+      type: object
+      properties:
+        id:
+          type: string
+          example: MW001
+        name:
+          type: string
+        role:
+          type: string
+          enum: [Coach, Consultant, CS]
+        email:
+          type: string
+          format: email
+
+    # ── 会員ダッシュボード ──
+    MemberDashboard:
+      type: object
+      properties:
+        streak:
+          type: integer
+          description: 連続学習日数
+        dailyGoal:
+          type: object
+          properties:
+            targetMinutes:
+              type: integer
+            achievedMinutes:
+              type: integer
+            rate:
+              type: number
+        countdowns:
+          type: object
+          properties:
+            daysToGraduate:
+              type: integer
+            daysToTravel:
+              type: integer
+        textbookProgress:
+          type: array
+          items:
+            type: object
+            properties:
+              textbookId:
+                type: string
+              name:
+                type: string
+              completedUnits:
+                type: integer
+              totalUnits:
+                type: integer
+        graduatedTextbooks:
+          type: array
+          items:
+            type: object
+            properties:
+              textbookId:
+                type: string
+              name:
+                type: string
+              completedAt:
+                type: string
+                format: date
+        coachingReminderNeeded:
+          type: boolean
+          description: 前回コーチングから30日以上経過しているか
+
+    # ── 会員分析 ──
+    MemberAnalysis:
+      type: object
+      properties:
+        unit:
+          type: string
+          enum: [day, week, month]
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+                description: 日付・週・月のラベル
+              achievementRate:
+                type: number
+              learningMinutes:
+                type: integer
+
+    # ── 職員ダッシュボード ──
+    DashboardStats:
+      type: object
+      properties:
+        period:
+          type: string
+          enum: [1w, 1m, 3m, all]
+        averageAchievementRate:
+          type: number
+        totalLearningHours:
+          type: number
+        activeMemberCount:
+          type: integer
+        monthlyTrend:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                example: '2026-06'
+              averageAchievementRate:
+                type: number
+              totalLearningHours:
+                type: number
+
+    FollowUpList:
+      type: object
+      properties:
+        notLoggedIn3Months:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberSummary'
+        lowAchievement:
+          type: array
+          description: 達成率 0〜30% の会員
+          items:
+            $ref: '#/components/schemas/MemberSummary'
+        noLearningLog:
+          type: array
+          description: 学習記録がない会員
+          items:
+            $ref: '#/components/schemas/MemberSummary'
+        pendingCoaching:
+          type: array
+          description: コーチング受診待ちの会員
+          items:
+            $ref: '#/components/schemas/MemberSummary'
+        graduationCandidate:
+          type: array
+          description: 卒業判定候補の会員
+          items:
+            $ref: '#/components/schemas/MemberSummary'

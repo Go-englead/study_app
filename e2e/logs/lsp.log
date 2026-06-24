@@ -1,0 +1,982 @@
+18-06-2026 14:15:02.775 [Gauge] [INFO] Initializing concepts cache with 0 concepts
+18-06-2026 14:15:02.780 [Gauge] [INFO] Initializing specs cache with 17 specs
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_logout.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_staff_login.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_member_edit.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_continuation_plan.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_suspension.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_member_search.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_coaching_record.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_auto_status.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_log_edit_delete.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_member_register.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_calendar.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_achievement_graph.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_progos_score.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_member_dashboard.spec
+18-06-2026 14:15:02.780 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_textbook_progress.spec
+18-06-2026 14:15:02.780 [Gauge] [INFO] Initializing steps cache with 17 steps
+18-06-2026 14:15:02.780 [Gauge] [INFO] Starting language runner
+18-06-2026 14:15:02.781 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+18-06-2026 14:15:02.781 [Gauge] [DEBUG] Found 17 files
+18-06-2026 14:15:02.836 [ts] [ERROR] (node:340) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+18-06-2026 14:15:02.836 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+18-06-2026 14:15:03.983 [ts] [ERROR] (node:369) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+18-06-2026 14:15:03.983 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+18-06-2026 14:15:03.997 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 49721
+18-06-2026 14:15:03.999 [Gauge] [DEBUG] Successfully made the connection with runner with port: 49721
+18-06-2026 14:15:03.999 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+18-06-2026 14:15:04.010 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+18-06-2026 14:15:04.013 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:04.041 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:04.044 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:04.060 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:08.546 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:08.569 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:08.573 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:08.590 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:10.254 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:10.278 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:10.282 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:10.298 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:11.549 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:11.571 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:11.573 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:11.596 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:15:11.786 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:15:11.823 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:18:05.138 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 14:18:05.139 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 14:18:05.532 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:18:05.569 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:18:14.204 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:18:14.229 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:18:14.232 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:18:14.247 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:18:28.548 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:18:28.566 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:18:28.569 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:18:28.583 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:19:37.890 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:19:37.913 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:19:37.916 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:19:37.931 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:54.420 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:54.436 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:54.438 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:54.455 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:55.093 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:55.116 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:55.119 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:55.137 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:56.168 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:56.186 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:56.188 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:56.203 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:57.509 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:57.529 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:20:57.532 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:20:57.548 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:21:06.724 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:21:06.747 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:21:06.752 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:21:06.768 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:21:07.445 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:21:07.468 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:21:07.476 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:21:07.514 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:21:09.008 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:21:09.030 [Gauge] [DEBUG] Validation completed.
+18-06-2026 14:21:09.033 [Gauge] [DEBUG] Validation started.
+18-06-2026 14:21:09.052 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:38:36.354 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:38:36.386 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:39:07.698 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:39:07.719 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:42:36.584 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:42:36.601 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:42:36.605 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:42:36.621 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:42:37.463 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:42:37.485 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:42:37.488 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:42:37.505 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:42:56.203 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:42:56.223 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:45:54.130 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:45:54.183 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:51:05.490 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:51:05.511 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:51:44.403 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:51:44.421 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:51:44.424 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:51:44.443 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:51:44.692 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:51:44.708 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:52:09.316 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:52:09.339 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:52:09.342 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:52:09.356 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:54:27.203 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:54:27.227 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:55:51.234 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:55:51.249 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:55:56.225 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:55:56.246 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:56:01.113 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:56:01.130 [Gauge] [DEBUG] Validation completed.
+18-06-2026 19:56:06.694 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 19:56:06.694 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 19:56:07.040 [Gauge] [DEBUG] Validation started.
+18-06-2026 19:56:07.074 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:10.886 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:19.057 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:19.070 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:00:19.072 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:19.086 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:00:19.409 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:19.442 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:00:19.445 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:19.460 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:00:50.213 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:50.231 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:00:50.234 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:50.248 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:00:53.120 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:00:53.136 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:02:11.806 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_staff_login.spec
+18-06-2026 20:02:11.807 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_staff_login.spec
+18-06-2026 20:02:12.204 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:02:12.232 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:04:05.585 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:04:05.604 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:04:05.607 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:04:05.622 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:04:11.122 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:04:11.150 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:04:11.152 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:04:11.167 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:04:17.229 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:04:17.248 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:04:17.251 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:04:17.264 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:05:06.112 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:05:06.128 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:05:06.633 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:05:06.661 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:05:12.445 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:05:12.462 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:05:23.462 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:05:23.477 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:05:23.482 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:05:23.495 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:30.019 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:30.038 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:30.043 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:30.058 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:34.727 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:34.745 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:34.751 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:34.764 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:41.634 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:41.652 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:41.657 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:41.671 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:51.085 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:51.104 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:09:51.109 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:09:51.123 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:10:01.383 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:10:01.401 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:10:01.406 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:10:01.419 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:10:17.666 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:10:17.688 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:10:17.695 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:10:17.710 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:10:44.918 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:10:44.933 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:10:44.937 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:10:44.949 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:12:45.254 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:12:45.271 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:14:42.613 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:14:42.635 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:15:13.112 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:15:13.134 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:15:44.025 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:15:44.046 [Gauge] [DEBUG] Validation completed.
+18-06-2026 20:18:26.657 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 20:18:26.657 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 20:18:27.101 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:18:32.168 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_staff_login.spec
+18-06-2026 20:18:32.168 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_staff_login.spec
+18-06-2026 20:18:32.522 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:18:32.555 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:18:50.417 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:23:41.752 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:23:48.336 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 20:23:48.336 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 20:23:48.690 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:23:48.721 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:33:21.192 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 20:33:21.192 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+18-06-2026 20:33:21.554 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:33:21.581 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:42:00.439 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:42:09.004 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:30.359 [Gauge] [DEBUG] Concept file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+18-06-2026 20:44:30.815 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:36.819 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:41.549 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 20:44:41.549 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+18-06-2026 20:44:41.901 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:41.922 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:47.565 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_member_search.spec
+18-06-2026 20:44:47.565 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_member_search.spec
+18-06-2026 20:44:47.912 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:52.203 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_logout.spec
+18-06-2026 20:44:52.203 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_logout.spec
+18-06-2026 20:44:52.553 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:58.840 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_member_register.spec
+18-06-2026 20:44:58.840 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_member_register.spec
+18-06-2026 20:44:59.192 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:44:59.223 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:45:04.615 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_member_edit.spec
+18-06-2026 20:45:04.615 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_member_edit.spec
+18-06-2026 20:45:04.964 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:45:09.977 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_coaching_record.spec
+18-06-2026 20:45:09.977 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_coaching_record.spec
+18-06-2026 20:45:10.327 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:45:15.003 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_progos_score.spec
+18-06-2026 20:45:15.003 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_progos_score.spec
+18-06-2026 20:45:15.352 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:45:22.806 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_continuation_plan.spec
+18-06-2026 20:45:22.806 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_continuation_plan.spec
+18-06-2026 20:45:23.152 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:45:28.285 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_suspension.spec
+18-06-2026 20:45:28.285 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_suspension.spec
+18-06-2026 20:45:28.630 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:45:41.572 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:46:00.456 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:46:08.890 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:46:41.220 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:58:41.774 [Gauge] [DEBUG] Validation started.
+18-06-2026 20:58:48.671 [Gauge] [DEBUG] Validation started.
+19-06-2026 14:38:54.761 [Gauge] [DEBUG] Validation started.
+19-06-2026 14:49:23.211 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_member_login.spec
+19-06-2026 14:49:23.212 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_staff_login.spec
+19-06-2026 14:49:23.212 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_learning_log.spec
+19-06-2026 14:49:23.212 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_member_search.spec
+19-06-2026 14:49:23.213 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_logout.spec
+19-06-2026 14:49:23.213 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_member_register.spec
+19-06-2026 14:49:23.213 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_member_edit.spec
+19-06-2026 14:49:23.213 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_coaching_record.spec
+19-06-2026 14:49:23.213 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_progos_score.spec
+19-06-2026 14:49:23.594 [Gauge] [DEBUG] Validation started.
+19-06-2026 14:49:27.174 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_continuation_plan.spec
+19-06-2026 14:49:27.175 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_suspension.spec
+19-06-2026 14:49:27.175 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_auto_status.spec
+19-06-2026 14:49:27.175 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_member_dashboard.spec
+19-06-2026 14:49:27.175 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_textbook_progress.spec
+19-06-2026 14:49:27.175 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_achievement_graph.spec
+19-06-2026 14:49:27.175 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_calendar.spec
+19-06-2026 14:49:27.176 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_log_edit_delete.spec
+19-06-2026 14:49:27.529 [Gauge] [ERROR] No specifications found in specs.
+19-06-2026 14:49:27.589 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+19-06-2026 14:49:27.589 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:27.589 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:27.589 [Gauge] [INFO] Initializing specs cache with 0 specs
+19-06-2026 14:49:27.589 [Gauge] [INFO] Initializing steps cache with 1 steps
+19-06-2026 14:49:27.590 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+19-06-2026 14:49:27.590 [Gauge] [DEBUG] Found 1 files
+19-06-2026 14:49:27.590 [Gauge] [INFO] Starting language runner
+19-06-2026 14:49:27.641 [ts] [ERROR] (node:5157) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+19-06-2026 14:49:27.641 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:28.789 [ts] [ERROR] (node:5180) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+19-06-2026 14:49:28.789 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:28.805 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 61878
+19-06-2026 14:49:28.805 [Gauge] [DEBUG] Successfully made the connection with runner with port: 61878
+19-06-2026 14:49:28.805 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+19-06-2026 14:49:28.819 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+19-06-2026 14:49:28.854 [Gauge] [ERROR] No specifications found in specs.
+19-06-2026 14:49:28.871 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+19-06-2026 14:49:28.871 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:28.871 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:28.871 [Gauge] [INFO] Initializing specs cache with 0 specs
+19-06-2026 14:49:28.871 [Gauge] [INFO] Initializing steps cache with 1 steps
+19-06-2026 14:49:28.871 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+19-06-2026 14:49:28.871 [Gauge] [INFO] Starting language runner
+19-06-2026 14:49:28.871 [Gauge] [DEBUG] Found 1 files
+19-06-2026 14:49:28.903 [ts] [ERROR] (node:5202) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+19-06-2026 14:49:28.903 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:29.718 [ts] [ERROR] (node:5234) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+19-06-2026 14:49:29.718 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:29.723 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 61884
+19-06-2026 14:49:29.723 [Gauge] [DEBUG] Successfully made the connection with runner with port: 61884
+19-06-2026 14:49:29.723 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+19-06-2026 14:49:29.725 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+19-06-2026 14:49:29.729 [Gauge] [ERROR] No specifications found in specs.
+19-06-2026 14:49:29.740 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+19-06-2026 14:49:29.740 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:29.740 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:29.740 [Gauge] [INFO] Initializing specs cache with 0 specs
+19-06-2026 14:49:29.740 [Gauge] [INFO] Initializing steps cache with 1 steps
+19-06-2026 14:49:29.740 [Gauge] [INFO] Starting language runner
+19-06-2026 14:49:29.740 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+19-06-2026 14:49:29.740 [Gauge] [DEBUG] Found 1 files
+19-06-2026 14:49:29.770 [ts] [ERROR] (node:5241) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+19-06-2026 14:49:29.770 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:30.608 [ts] [ERROR] (node:5264) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+19-06-2026 14:49:30.608 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:30.621 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 61890
+19-06-2026 14:49:30.622 [Gauge] [DEBUG] Successfully made the connection with runner with port: 61890
+19-06-2026 14:49:30.622 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+19-06-2026 14:49:30.625 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+19-06-2026 14:49:30.633 [Gauge] [ERROR] No specifications found in specs.
+19-06-2026 14:49:30.648 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+19-06-2026 14:49:30.648 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:30.648 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+19-06-2026 14:49:30.648 [Gauge] [INFO] Initializing specs cache with 0 specs
+19-06-2026 14:49:30.648 [Gauge] [INFO] Initializing steps cache with 1 steps
+19-06-2026 14:49:30.648 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+19-06-2026 14:49:30.648 [Gauge] [INFO] Starting language runner
+19-06-2026 14:49:30.648 [Gauge] [DEBUG] Found 1 files
+19-06-2026 14:49:30.680 [ts] [ERROR] (node:5282) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+19-06-2026 14:49:30.680 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:31.510 [ts] [ERROR] (node:5305) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+19-06-2026 14:49:31.510 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+19-06-2026 14:49:31.515 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 61896
+19-06-2026 14:49:31.515 [Gauge] [DEBUG] Successfully made the connection with runner with port: 61896
+19-06-2026 14:49:31.515 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+19-06-2026 14:49:31.517 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+19-06-2026 14:49:31.521 [Gauge] [ERROR] No specifications found in specs.
+22-06-2026 15:17:21.931 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:17:21.931 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:21.931 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:21.943 [Gauge] [INFO] Initializing specs cache with 47 specs
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/30_職員は会員を削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は新規会員を登録することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/28_職員は会員の登録情報を編集することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:17:21.943 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:17:21.943 [Gauge] [INFO] Initializing steps cache with 48 steps
+22-06-2026 15:17:21.944 [Gauge] [INFO] Starting language runner
+22-06-2026 15:17:21.945 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:17:21.945 [Gauge] [DEBUG] Found 48 files
+22-06-2026 15:17:21.983 [ts] [ERROR] (node:67770) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:17:21.984 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:17:22.735 [ts] [ERROR] npm warn exec The following package was not found and will be installed: ts-node@10.9.2
+22-06-2026 15:17:25.867 [ts] [ERROR] Error: Cannot find module 'tsconfig-paths/register'
+22-06-2026 15:17:25.867 [ts] [ERROR] Require stack:
+22-06-2026 15:17:25.867 [ts] [ERROR] - internal/preload
+22-06-2026 15:17:25.867 [ts] [ERROR] at Module.<anonymous> (node:internal/modules/cjs/loader:1500:15)
+22-06-2026 15:17:25.867 [ts] [ERROR] at Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/@cspotcode/source-map-support/source-map-support.js:811:30)
+22-06-2026 15:17:25.867 [ts] [ERROR] at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+22-06-2026 15:17:25.867 [ts] [ERROR] at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+22-06-2026 15:17:25.867 [ts] [ERROR] at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1116:12)
+22-06-2026 15:17:25.867 [ts] [ERROR] at Module._load (node:internal/modules/cjs/loader:1285:25)
+22-06-2026 15:17:25.867 [ts] [ERROR] at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+22-06-2026 15:17:25.867 [ts] [ERROR] at Module.require (node:internal/modules/cjs/loader:1600:12)
+22-06-2026 15:17:25.867 [ts] [ERROR] at Module._preloadModules (node:internal/modules/cjs/loader:2146:12)
+22-06-2026 15:17:25.867 [ts] [ERROR] at register (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:610:46) {
+22-06-2026 15:17:25.867 [ts] [ERROR] code: 'MODULE_NOT_FOUND',
+22-06-2026 15:17:25.867 [ts] [ERROR] requireStack: [ 'internal/preload' ]
+22-06-2026 15:17:25.867 [ts] [ERROR] }
+22-06-2026 15:17:25.890 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:17:25.895 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:17:25.897 [Gauge] [CRITICAL] notif #0: initialized: runtime error: invalid memory address or nil pointer dereference
+goroutine 131 [running]:
+runtime/debug.Stack()
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/debug/stack.go:26 +0x64
+github.com/getgauge/gauge/api/lang.recoverPanic(0x7cf63f39c120)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:320 +0x30
+panic({0x10540d680?, 0x1055bc0b0?})
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/panic.go:860 +0x12c
+github.com/getgauge/gauge/runner.(*GrpcRunner).ExecuteMessageWithTimeout(...)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/runner/grpcRunner.go:196
+github.com/getgauge/gauge/api/lang.globPatternRequest()
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/runner.go:87 +0x6c
+github.com/getgauge/gauge/api/lang.registerRunnerCapabilities({0x105531a50, 0x7cf63f52eb40}, {0x105533c88, 0x10560bc80})
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/capabilities.go:110 +0xa8
+github.com/getgauge/gauge/api/lang.(*LangHandler).Handle(0x10560bc80?, {0x105533c88, 0x10560bc80}, {0x105531a50, 0x7cf63f52eb40}, 0x7cf63f39c120)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:77 +0x4bc
+github.com/getgauge/gauge/api/lang.(*LangHandler).handle(0x7cf63f01cba0?, {0x105533c88?, 0x10560bc80?}, 0x104be2d7c?, 0x0?)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:61 +0x60
+github.com/sourcegraph/jsonrpc2.(*HandlerWithErrorConfigurer).Handle(0x7cf63f4ba480, {0x105533c88, 0x10560bc80}, 0x7cf63f52eb40, 0x7cf63f39c120)
+	/Users/brew/Library/Caches/Homebrew/go_mod_cache/pkg/mod/github.com/sourcegraph/jsonrpc2@v0.2.1/handler_with_error.go:21 +0x4c
+created by github.com/getgauge/gauge/api/lang.lspHandler.Handle in goroutine 129
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:56 +0xa8
+22-06-2026 15:17:25.909 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:17:25.909 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:25.909 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:25.913 [Gauge] [INFO] Initializing specs cache with 47 specs
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/30_職員は会員を削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/28_職員は会員の登録情報を編集することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は新規会員を登録することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:17:25.913 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:17:25.913 [Gauge] [INFO] Initializing steps cache with 48 steps
+22-06-2026 15:17:25.913 [Gauge] [INFO] Starting language runner
+22-06-2026 15:17:25.915 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:17:25.915 [Gauge] [DEBUG] Found 48 files
+22-06-2026 15:17:25.943 [ts] [ERROR] (node:67839) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:17:25.943 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:17:26.541 [ts] [ERROR] Error: Cannot find module 'tsconfig-paths/register'
+22-06-2026 15:17:26.541 [ts] [ERROR] Require stack:
+22-06-2026 15:17:26.541 [ts] [ERROR] - internal/preload
+22-06-2026 15:17:26.541 [ts] [ERROR] at Module.<anonymous> (node:internal/modules/cjs/loader:1500:15)
+22-06-2026 15:17:26.541 [ts] [ERROR] at Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/@cspotcode/source-map-support/source-map-support.js:811:30)
+22-06-2026 15:17:26.541 [ts] [ERROR] at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+22-06-2026 15:17:26.541 [ts] [ERROR] at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+22-06-2026 15:17:26.541 [ts] [ERROR] at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1116:12)
+22-06-2026 15:17:26.541 [ts] [ERROR] at Module._load (node:internal/modules/cjs/loader:1285:25)
+22-06-2026 15:17:26.541 [ts] [ERROR] at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+22-06-2026 15:17:26.541 [ts] [ERROR] at Module.require (node:internal/modules/cjs/loader:1600:12)
+22-06-2026 15:17:26.541 [ts] [ERROR] at Module._preloadModules (node:internal/modules/cjs/loader:2146:12)
+22-06-2026 15:17:26.541 [ts] [ERROR] at register (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:610:46) {
+22-06-2026 15:17:26.541 [ts] [ERROR] code: 'MODULE_NOT_FOUND',
+22-06-2026 15:17:26.541 [ts] [ERROR] requireStack: [ 'internal/preload' ]
+22-06-2026 15:17:26.541 [ts] [ERROR] }
+22-06-2026 15:17:26.553 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:17:26.556 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:17:26.556 [Gauge] [CRITICAL] notif #0: initialized: runtime error: invalid memory address or nil pointer dereference
+goroutine 115 [running]:
+runtime/debug.Stack()
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/debug/stack.go:26 +0x64
+github.com/getgauge/gauge/api/lang.recoverPanic(0x6cd580a3e120)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:320 +0x30
+panic({0x1036d5680?, 0x1038840b0?})
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/panic.go:860 +0x12c
+github.com/getgauge/gauge/runner.(*GrpcRunner).ExecuteMessageWithTimeout(...)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/runner/grpcRunner.go:196
+github.com/getgauge/gauge/api/lang.globPatternRequest()
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/runner.go:87 +0x6c
+github.com/getgauge/gauge/api/lang.registerRunnerCapabilities({0x1037f9a50, 0x6cd580bff200}, {0x1037fbc88, 0x1038d3c80})
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/capabilities.go:110 +0xa8
+github.com/getgauge/gauge/api/lang.(*LangHandler).Handle(0x1038d3c80?, {0x1037fbc88, 0x1038d3c80}, {0x1037f9a50, 0x6cd580bff200}, 0x6cd580a3e120)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:77 +0x4bc
+github.com/getgauge/gauge/api/lang.(*LangHandler).handle(0x6cd580c84140?, {0x1037fbc88?, 0x1038d3c80?}, 0x102bf3820?, 0x6cd581032228?)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:61 +0x60
+github.com/sourcegraph/jsonrpc2.(*HandlerWithErrorConfigurer).Handle(0x6cd580fac5b0, {0x1037fbc88, 0x1038d3c80}, 0x6cd580bff200, 0x6cd580a3e120)
+	/Users/brew/Library/Caches/Homebrew/go_mod_cache/pkg/mod/github.com/sourcegraph/jsonrpc2@v0.2.1/handler_with_error.go:21 +0x4c
+created by github.com/getgauge/gauge/api/lang.lspHandler.Handle in goroutine 113
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:56 +0xa8
+22-06-2026 15:17:26.569 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:17:26.569 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:26.569 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:26.573 [Gauge] [INFO] Initializing specs cache with 47 specs
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/30_職員は会員を削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は新規会員を登録することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/28_職員は会員の登録情報を編集することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:17:26.573 [Gauge] [INFO] Initializing steps cache with 48 steps
+22-06-2026 15:17:26.574 [Gauge] [INFO] Starting language runner
+22-06-2026 15:17:26.575 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:17:26.575 [Gauge] [DEBUG] Found 48 files
+22-06-2026 15:17:26.605 [ts] [ERROR] (node:67874) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:17:26.605 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:17:27.215 [ts] [ERROR] Error: Cannot find module 'tsconfig-paths/register'
+22-06-2026 15:17:27.215 [ts] [ERROR] Require stack:
+22-06-2026 15:17:27.215 [ts] [ERROR] - internal/preload
+22-06-2026 15:17:27.215 [ts] [ERROR] at Module.<anonymous> (node:internal/modules/cjs/loader:1500:15)
+22-06-2026 15:17:27.215 [ts] [ERROR] at Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/@cspotcode/source-map-support/source-map-support.js:811:30)
+22-06-2026 15:17:27.215 [ts] [ERROR] at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+22-06-2026 15:17:27.215 [ts] [ERROR] at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+22-06-2026 15:17:27.215 [ts] [ERROR] at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1116:12)
+22-06-2026 15:17:27.215 [ts] [ERROR] at Module._load (node:internal/modules/cjs/loader:1285:25)
+22-06-2026 15:17:27.215 [ts] [ERROR] at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+22-06-2026 15:17:27.215 [ts] [ERROR] at Module.require (node:internal/modules/cjs/loader:1600:12)
+22-06-2026 15:17:27.215 [ts] [ERROR] at Module._preloadModules (node:internal/modules/cjs/loader:2146:12)
+22-06-2026 15:17:27.215 [ts] [ERROR] at register (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:610:46) {
+22-06-2026 15:17:27.215 [ts] [ERROR] code: 'MODULE_NOT_FOUND',
+22-06-2026 15:17:27.215 [ts] [ERROR] requireStack: [ 'internal/preload' ]
+22-06-2026 15:17:27.215 [ts] [ERROR] }
+22-06-2026 15:17:27.228 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:17:27.229 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:17:27.230 [Gauge] [CRITICAL] notif #0: initialized: runtime error: invalid memory address or nil pointer dereference
+goroutine 68 [running]:
+runtime/debug.Stack()
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/debug/stack.go:26 +0x64
+github.com/getgauge/gauge/api/lang.recoverPanic(0x6a7f671143c0)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:320 +0x30
+panic({0x1019a9680?, 0x101b580b0?})
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/panic.go:860 +0x12c
+github.com/getgauge/gauge/runner.(*GrpcRunner).ExecuteMessageWithTimeout(...)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/runner/grpcRunner.go:196
+github.com/getgauge/gauge/api/lang.globPatternRequest()
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/runner.go:87 +0x6c
+github.com/getgauge/gauge/api/lang.registerRunnerCapabilities({0x101acda50, 0x6a7f66e28000}, {0x101acfc88, 0x101ba7c80})
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/capabilities.go:110 +0xa8
+github.com/getgauge/gauge/api/lang.(*LangHandler).Handle(0x101ba7c80?, {0x101acfc88, 0x101ba7c80}, {0x101acda50, 0x6a7f66e28000}, 0x6a7f671143c0)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:77 +0x4bc
+github.com/getgauge/gauge/api/lang.(*LangHandler).handle(0x6a7f670b0000?, {0x101acfc88?, 0x101ba7c80?}, 0x100c05c54?, 0x0?)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:61 +0x60
+github.com/sourcegraph/jsonrpc2.(*HandlerWithErrorConfigurer).Handle(0x6a7f672a2050, {0x101acfc88, 0x101ba7c80}, 0x6a7f66e28000, 0x6a7f671143c0)
+	/Users/brew/Library/Caches/Homebrew/go_mod_cache/pkg/mod/github.com/sourcegraph/jsonrpc2@v0.2.1/handler_with_error.go:21 +0x4c
+created by github.com/getgauge/gauge/api/lang.lspHandler.Handle in goroutine 66
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:56 +0xa8
+22-06-2026 15:17:27.241 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:17:27.241 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:27.241 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:27.245 [Gauge] [INFO] Initializing specs cache with 47 specs
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/28_職員は会員の登録情報を編集することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/30_職員は会員を削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は新規会員を登録することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:17:27.245 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:17:27.246 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:17:27.246 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:17:27.246 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:17:27.246 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:17:27.246 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:17:27.246 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:17:27.246 [Gauge] [INFO] Initializing steps cache with 48 steps
+22-06-2026 15:17:27.246 [Gauge] [INFO] Starting language runner
+22-06-2026 15:17:27.247 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:17:27.247 [Gauge] [DEBUG] Found 48 files
+22-06-2026 15:17:27.277 [ts] [ERROR] (node:67915) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:17:27.277 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:17:27.951 [ts] [ERROR] Error: Cannot find module 'tsconfig-paths/register'
+22-06-2026 15:17:27.951 [ts] [ERROR] Require stack:
+22-06-2026 15:17:27.951 [ts] [ERROR] - internal/preload
+22-06-2026 15:17:27.951 [ts] [ERROR] at Module.<anonymous> (node:internal/modules/cjs/loader:1500:15)
+22-06-2026 15:17:27.951 [ts] [ERROR] at Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/@cspotcode/source-map-support/source-map-support.js:811:30)
+22-06-2026 15:17:27.951 [ts] [ERROR] at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+22-06-2026 15:17:27.951 [ts] [ERROR] at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+22-06-2026 15:17:27.951 [ts] [ERROR] at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1116:12)
+22-06-2026 15:17:27.951 [ts] [ERROR] at Module._load (node:internal/modules/cjs/loader:1285:25)
+22-06-2026 15:17:27.951 [ts] [ERROR] at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+22-06-2026 15:17:27.951 [ts] [ERROR] at Module.require (node:internal/modules/cjs/loader:1600:12)
+22-06-2026 15:17:27.951 [ts] [ERROR] at Module._preloadModules (node:internal/modules/cjs/loader:2146:12)
+22-06-2026 15:17:27.951 [ts] [ERROR] at register (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:610:46) {
+22-06-2026 15:17:27.951 [ts] [ERROR] code: 'MODULE_NOT_FOUND',
+22-06-2026 15:17:27.951 [ts] [ERROR] requireStack: [ 'internal/preload' ]
+22-06-2026 15:17:27.951 [ts] [ERROR] }
+22-06-2026 15:17:27.963 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:17:27.964 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:17:27.964 [Gauge] [CRITICAL] notif #0: initialized: runtime error: invalid memory address or nil pointer dereference
+goroutine 71 [running]:
+runtime/debug.Stack()
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/debug/stack.go:26 +0x64
+github.com/getgauge/gauge/api/lang.recoverPanic(0x6cc6d0412120)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:320 +0x30
+panic({0x1034bd680?, 0x10366c0b0?})
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/panic.go:860 +0x12c
+github.com/getgauge/gauge/runner.(*GrpcRunner).ExecuteMessageWithTimeout(...)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/runner/grpcRunner.go:196
+github.com/getgauge/gauge/api/lang.globPatternRequest()
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/runner.go:87 +0x6c
+github.com/getgauge/gauge/api/lang.registerRunnerCapabilities({0x1035e1a50, 0x6cc6d0aa0990}, {0x1035e3c88, 0x1036bbc80})
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/capabilities.go:110 +0xa8
+github.com/getgauge/gauge/api/lang.(*LangHandler).Handle(0x1036bbc80?, {0x1035e3c88, 0x1036bbc80}, {0x1035e1a50, 0x6cc6d0aa0990}, 0x6cc6d0412120)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:77 +0x4bc
+github.com/getgauge/gauge/api/lang.(*LangHandler).handle(0x6cc6d04bafd0?, {0x1035e3c88?, 0x1036bbc80?}, 0x0?, 0x0?)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:61 +0x60
+github.com/sourcegraph/jsonrpc2.(*HandlerWithErrorConfigurer).Handle(0x6cc6d093e450, {0x1035e3c88, 0x1036bbc80}, 0x6cc6d0aa0990, 0x6cc6d0412120)
+	/Users/brew/Library/Caches/Homebrew/go_mod_cache/pkg/mod/github.com/sourcegraph/jsonrpc2@v0.2.1/handler_with_error.go:21 +0x4c
+created by github.com/getgauge/gauge/api/lang.lspHandler.Handle in goroutine 69
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:56 +0xa8
+22-06-2026 15:17:27.976 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:17:27.976 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:27.976 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:17:27.980 [Gauge] [INFO] Initializing specs cache with 47 specs
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は新規会員を登録することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/30_職員は会員を削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/28_職員は会員の登録情報を編集することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:17:27.980 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:17:27.980 [Gauge] [INFO] Initializing steps cache with 48 steps
+22-06-2026 15:17:27.981 [Gauge] [INFO] Starting language runner
+22-06-2026 15:17:27.982 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:17:27.982 [Gauge] [DEBUG] Found 48 files
+22-06-2026 15:17:28.011 [ts] [ERROR] (node:67953) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:17:28.011 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:17:30.216 [ts] [ERROR] Error: Cannot find module 'tsconfig-paths/register'
+22-06-2026 15:17:30.216 [ts] [ERROR] Require stack:
+22-06-2026 15:17:30.216 [ts] [ERROR] - internal/preload
+22-06-2026 15:17:30.216 [ts] [ERROR] at Module.<anonymous> (node:internal/modules/cjs/loader:1500:15)
+22-06-2026 15:17:30.216 [ts] [ERROR] at Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/@cspotcode/source-map-support/source-map-support.js:811:30)
+22-06-2026 15:17:30.216 [ts] [ERROR] at wrapResolveFilename (node:internal/modules/cjs/loader:1071:27)
+22-06-2026 15:17:30.216 [ts] [ERROR] at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1095:10)
+22-06-2026 15:17:30.216 [ts] [ERROR] at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1116:12)
+22-06-2026 15:17:30.216 [ts] [ERROR] at Module._load (node:internal/modules/cjs/loader:1285:25)
+22-06-2026 15:17:30.216 [ts] [ERROR] at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+22-06-2026 15:17:30.216 [ts] [ERROR] at Module.require (node:internal/modules/cjs/loader:1600:12)
+22-06-2026 15:17:30.216 [ts] [ERROR] at Module._preloadModules (node:internal/modules/cjs/loader:2146:12)
+22-06-2026 15:17:30.216 [ts] [ERROR] at register (/Users/yasuikendo/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:610:46) {
+22-06-2026 15:17:30.216 [ts] [ERROR] code: 'MODULE_NOT_FOUND',
+22-06-2026 15:17:30.216 [ts] [ERROR] requireStack: [ 'internal/preload' ]
+22-06-2026 15:17:30.216 [ts] [ERROR] }
+22-06-2026 15:17:30.228 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:17:30.231 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:17:30.231 [Gauge] [CRITICAL] notif #0: initialized: runtime error: invalid memory address or nil pointer dereference
+goroutine 129 [running]:
+runtime/debug.Stack()
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/debug/stack.go:26 +0x64
+github.com/getgauge/gauge/api/lang.recoverPanic(0x6cf6cf99c000)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:320 +0x30
+panic({0x103115680?, 0x1032c40b0?})
+	/opt/homebrew/Cellar/go/1.26.4/libexec/src/runtime/panic.go:860 +0x12c
+github.com/getgauge/gauge/runner.(*GrpcRunner).ExecuteMessageWithTimeout(...)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/runner/grpcRunner.go:196
+github.com/getgauge/gauge/api/lang.globPatternRequest()
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/runner.go:87 +0x6c
+github.com/getgauge/gauge/api/lang.registerRunnerCapabilities({0x103239a50, 0x6cf6cfaf8cf0}, {0x10323bc88, 0x103313c80})
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/capabilities.go:110 +0xa8
+github.com/getgauge/gauge/api/lang.(*LangHandler).Handle(0x103313c80?, {0x10323bc88, 0x103313c80}, {0x103239a50, 0x6cf6cfaf8cf0}, 0x6cf6cf99c000)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:77 +0x4bc
+github.com/getgauge/gauge/api/lang.(*LangHandler).handle(0x6cf6cfa14e70?, {0x10323bc88?, 0x103313c80?}, 0x102633820?, 0x6cf6cff0a8b8?)
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:61 +0x60
+github.com/sourcegraph/jsonrpc2.(*HandlerWithErrorConfigurer).Handle(0x6cf6cfd3ecf0, {0x10323bc88, 0x103313c80}, 0x6cf6cfaf8cf0, 0x6cf6cf99c000)
+	/Users/brew/Library/Caches/Homebrew/go_mod_cache/pkg/mod/github.com/sourcegraph/jsonrpc2@v0.2.1/handler_with_error.go:21 +0x4c
+created by github.com/getgauge/gauge/api/lang.lspHandler.Handle in goroutine 85
+	/private/tmp/gauge-20260617-5094-rxwmjx/gauge-1.6.32/api/lang/server.go:56 +0xa8
+22-06-2026 15:52:18.413 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:52:18.413 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:52:18.413 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:52:18.448 [Gauge] [INFO] Initializing specs cache with 45 specs
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は会員情報を登録・編集・削除することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:52:18.465 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:52:18.466 [Gauge] [INFO] Initializing steps cache with 46 steps
+22-06-2026 15:52:18.468 [Gauge] [INFO] Starting language runner
+22-06-2026 15:52:18.469 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:52:18.470 [Gauge] [DEBUG] Found 46 files
+22-06-2026 15:52:18.562 [ts] [ERROR] (node:89131) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:52:18.562 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:52:20.063 [ts] [ERROR] (node:89197) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+22-06-2026 15:52:20.063 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:52:20.069 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 64489
+22-06-2026 15:52:20.070 [Gauge] [DEBUG] Successfully made the connection with runner with port: 64489
+22-06-2026 15:52:20.070 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:52:20.077 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:52:20.102 [Gauge] [DEBUG] Validation started.
+22-06-2026 15:52:20.221 [Gauge] [DEBUG] Validation started.
+22-06-2026 15:52:25.551 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:52:26.437 [Gauge] [INFO] Initializing concepts cache with 2 concepts
+22-06-2026 15:52:26.437 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:52:26.437 [Gauge] [DEBUG] Adding concepts from /Users/yasuikendo/morrow-world/study_app/e2e/specs/login.cpt
+22-06-2026 15:52:26.442 [Gauge] [INFO] Initializing specs cache with 45 specs
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/36_職員は会員の継続プランを登録・編集・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/40_職員は教材マスタを追加・編集・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/27_職員は会員CSVの一括登録とエクスポートができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/24_職員は管理ダッシュボードで全会員の学習状況サマリーを確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/10_生徒はダッシュボードで卒業日・出国日までの残り日数を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/21_職員はIDとパスワードを入力して管理ダッシュボードにログインすることができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/08_生徒はダッシュボードで本日の目標達成率を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/18_生徒は成果順位タブで順位と学習分析を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/05_生徒はカレンダーから特定日の学習記録を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/22_コーチ・講師以外のロールの職員は管理画面にログインできない.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/17_生徒は教材タブで教材ごとの学習状況を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/38_会員のステータスは卒業日・休会設定に応じて自動的に切り替わる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/07_生徒はダッシュボードで連続学習日数を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/04_生徒はカレンダーの日付から学習の記録または確認を選ぶことができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/37_職員は会員の休会を設定・解除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/46_職員はログアウトしてセッションを終了することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/45_職員はカルテを共有モードで開くことができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/15_生徒はコーチングのリマインダーをダッシュボードで受け取ることができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/31_職員は会員に使用する教材を選定することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/01_生徒はIDとパスワードを入力してダッシュボードにログインすることができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/12_生徒は卒業した教材をダッシュボードで確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/20_生徒はアバターメニューからログアウトすることができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/02_生徒は初回ログイン時にパスワードを変更することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/32_職員は会員の学習記録を代理で追加することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/11_生徒はダッシュボード画面にて教材別の進捗をみることができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/44_職員は自分のパスワードを変更することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/29_職員は会員のログイン情報を発行・再発行することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/仕様一覧.md
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/41_職員はPROGOS分析で全会員の英語力スコアを把握することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/06_生徒は入力済みの学習記録を修正・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/19_生徒は設定タブでアカウントや学習目標を確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/16_生徒はタブを切り替えて各画面を表示することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/33_職員はコーチング記録を作成することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/14_生徒はカレンダーで月ごとの学習実績を視覚的に確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/03_生徒は学習した内容を日ごとに記録することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/43_職員はスタッフ情報を編集・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/39_職員は教材マスターと会員への割り当てを管理することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/42_職員はスタッフ情報を管理することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/26_職員は会員情報を登録・編集・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/13_生徒は学習達成率の推移をグラフで確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/35_職員はPROGOSスコアを登録・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/34_職員はコーチング記録を閲覧・編集・削除することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/23_デモログインボタンで会員・コーチとしてログインすることができる.spec
+22-06-2026 15:52:26.442 [Gauge] [DEBUG] Adding specs from /Users/yasuikendo/morrow-world/study_app/e2e/specs/09_生徒はホームで学習時間と連続日数のサマリーを確認することができる.spec
+22-06-2026 15:52:26.442 [Gauge] [INFO] Initializing steps cache with 46 steps
+22-06-2026 15:52:26.442 [Gauge] [INFO] Starting language runner
+22-06-2026 15:52:26.443 [Gauge] [DEBUG] Watching directory: /Users/yasuikendo/morrow-world/study_app/e2e/specs
+22-06-2026 15:52:26.443 [Gauge] [DEBUG] Found 46 files
+22-06-2026 15:52:26.503 [ts] [ERROR] (node:89325) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+22-06-2026 15:52:26.503 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:52:27.453 [ts] [ERROR] (node:89360) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+22-06-2026 15:52:27.453 [ts] [ERROR] (Use `node --trace-deprecation ...` to show where the warning was created)
+22-06-2026 15:52:27.460 [Gauge] [DEBUG] Attempting to connect to grpc server at port: 64535
+22-06-2026 15:52:27.460 [Gauge] [DEBUG] Successfully made the connection with runner with port: 64535
+22-06-2026 15:52:27.460 [Gauge] [INFO] LangServer: reading on stdin, writing on stdout
+22-06-2026 15:52:27.474 [Gauge] [DEBUG] notif #0: workspace/didChangeConfiguration: Updated settings.
+22-06-2026 15:52:27.494 [Gauge] [DEBUG] Validation started.
+22-06-2026 15:52:27.570 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:13:01.280 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:13:01.398 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:18:41.413 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 16:18:41.413 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 16:18:41.902 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:18:41.982 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:18:58.693 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:19:09.804 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:36:07.980 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:36:16.525 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:36:27.120 [Gauge] [DEBUG] Spec file removed: /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 16:36:27.120 [Gauge] [DEBUG] Spec file added / modified: /Users/yasuikendo/morrow-world/study_app/e2e/specs/25_職員はキーワードで会員を検索することができる.spec
+22-06-2026 16:36:27.504 [Gauge] [DEBUG] Validation started.
+22-06-2026 16:36:27.597 [Gauge] [DEBUG] Validation started.
