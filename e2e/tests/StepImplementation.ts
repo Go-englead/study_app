@@ -389,14 +389,35 @@ export default class StepImpl {
   // ── 教材割り当て（会員⨯教材） ──
   @Step('割り当て用の教材データを準備する')
   public async prepareAssignmentTextbooks(): Promise<void> {
-    // 会員（見本一郎）は BeforeScenario で投入済み。教材5件を用意する。
+    // 会員（見本一郎）は BeforeScenario で投入済み。2人目（見本二郎）と教材5件を用意する。
+    await apiCreateMember({
+      code: '10002',
+      lastNameKanji: '見本',
+      firstNameKanji: '二郎',
+      lastNameKana: 'ミホン',
+      firstNameKana: 'ジロウ',
+      lastNameAlpha: 'Mihon',
+      firstNameAlpha: 'Jiro',
+      email: 'b10002@example.jp',
+      plan: '6ヶ月プラン',
+      initialClass: 'Beginner',
+      currentClass: 'Beginner',
+      nativecamp: '未選択',
+      dailyTargetMinutes: 60,
+    });
     await seedTextbooks();
+  }
+
+  @Step('割り当て会員リストに <name> が表示される')
+  public async assertAssignMemberVisible(name: string): Promise<void> {
+    const re = new RegExp(name.replace(/\s/g, '').split('').join('\\s*'));
+    await expect(p().locator('[data-testid^="assign-member-"]').filter({ hasText: re })).toBeVisible();
   }
 
   @Step('会員への割り当てタブを開く')
   public async openAssignTab(): Promise<void> {
     await p().getByTestId('textbook-tab-assign').click();
-    await expect(p().getByTestId('assign-member-list')).toBeVisible();
+    await expect(p().getByTestId('assign-members')).toBeVisible();
   }
 
   @Step('割り当て対象に会員 <name> を選択する')

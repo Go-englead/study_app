@@ -3,17 +3,20 @@ import { useMembers } from '../../members/api/get-members'
 import { useMemberAssignments } from '../api/get-member-assignments'
 import { useUnassignTextbook } from '../api/unassign-textbook'
 import { AssignTextbookModal } from './assign-textbook-modal'
+import { useTextbookPageStore } from '../../../stores/textbook-page-store'
 
-/** 教材管理「会員への割り当て」：左＝会員選択／右＝その会員の割り当て教材（追加/解除）。 */
+/** 教材管理「会員への割り当て」：左＝会員選択／右＝その会員の割り当て教材（追加/解除）。
+ *  選択会員はストアで保持（画面遷移しても維持・リロードで初期化）。 */
 export function AssignmentsScreen() {
   const { data: members = [] } = useMembers()
-  const [selectedMemberId, setSelectedMemberId] = useState('')
+  const selectedMemberId = useTextbookPageStore((s) => s.selectedMemberId)
+  const setSelectedMemberId = useTextbookPageStore((s) => s.setSelectedMemberId)
   const selectedMember = members.find((m) => m.id === selectedMemberId)
 
   return (
     <div className="assign-layout">
       {/* 左：会員選択 */}
-      <div className="card" data-testid="assign-member-list">
+      <div className="card" data-testid="assign-members">
         <div className="karte-list-header">会員を選択</div>
         <div>
           {members.map((m) => (

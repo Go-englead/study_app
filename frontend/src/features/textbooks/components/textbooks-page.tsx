@@ -1,12 +1,12 @@
-import { useState } from 'react'
 import { TextbooksScreen } from './textbooks-screen'
 import { AssignmentsScreen } from '../../textbook-assignments/components/assignments-screen'
+import { useTextbookPageStore } from '../../../stores/textbook-page-store'
 
-type Tab = 'master' | 'assign'
-
-/** 教材管理ページ。タブで「教材マスター」と「会員への割り当て」を切り替える（client準拠）。 */
+/** 教材管理ページ。タブで「教材マスター」と「会員への割り当て」を切り替える（client準拠）。
+ *  タブ状態はストアで保持（画面遷移しても維持・リロードで初期化）。 */
 export function TextbooksPage() {
-  const [tab, setTab] = useState<Tab>('master')
+  const tab = useTextbookPageStore((s) => s.tab)
+  const setTab = useTextbookPageStore((s) => s.setTab)
 
   return (
     <div className="screen active">
