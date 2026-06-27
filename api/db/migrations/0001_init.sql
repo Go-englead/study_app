@@ -134,6 +134,8 @@ CREATE TABLE IF NOT EXISTS textbook_assignments (
   textbook_id        uuid NOT NULL REFERENCES textbooks(id) ON DELETE RESTRICT,
   daily_goal_minutes integer,
   note               text NOT NULL DEFAULT '',
+  -- 卒業日（NULL=現役 / 日付あり=卒業済み）。現役/卒業は compute-on-read。
+  graduated_on       text,
   PRIMARY KEY (member_id, textbook_id)
 );
 
@@ -147,36 +149,76 @@ CREATE TABLE IF NOT EXISTS learning_logs (
   comment          text NOT NULL DEFAULT ''
 );
 
--- コーチング記録
+-- ───────────────────────── コーチング記録（CTI：親＋種別別子テーブル） ─────────────────────────
+-- 親は全種別共通項目のみ。種別固有の値は class ごとの子テーブルに分割（種別追加＝子テーブル追加で済む）。
+
+-- 親：コーチング記録（共通）
 CREATE TABLE IF NOT EXISTS coaching_records (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  member_id       uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-  type            text NOT NULL CHECK (type IN ('教材選定','オリエンテーション','初回コーチング','通常コーチング')),
-  held_on         text NOT NULL,
-  coach_name      text NOT NULL,
-  shared_note     text,
-  monthly_review  text,
-  coach_advice    text,
-  other_notes     text,
-  coaching_number integer CHECK (coaching_number IS NULL OR coaching_number >= 2),
-  -- 通常コーチング以外（教材選定/オリエン/初回）は会員1件のみ
-  CONSTRAINT uq_coaching_number UNIQUE (member_id, coaching_number)
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  member_id  uuid NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  type       text NOT NULL CHECK (type IN ('教材選定','オリエンテーション','初回コーチング','通常コーチング','その他')),
+  held_on    text NOT NULL,
+  coach_name text NOT NULL
 );
+-- 教材選定/オリエン/初回は会員1件のみ（通常・その他は複数可）。回数の一意はドメインで担保。
 CREATE UNIQUE INDEX IF NOT EXISTS uq_coaching_once
   ON coaching_records (member_id, type)
-  WHERE type <> '通常コーチング';
+  WHERE type IN ('教材選定','オリエンテーション','初回コーチング');
 
--- コーチングのテスト記録（ジャンクション・複合主キー）
-CREATE TABLE IF NOT EXISTS coaching_record_textbook_tests (
-  coaching_record_id uuid NOT NULL REFERENCES coaching_records(id) ON DELETE CASCADE,
+-- [教材選定class] 共有事項（1:1）
+CREATE TABLE IF NOT EXISTS cr_textbook_selections (
+  coaching_record_id uuid PRIMARY KEY REFERENCES coaching_records(id) ON DELETE CASCADE,
+  shared_note        text NOT NULL DEFAULT ''
+);
+-- [教材選定class] 選定教材の明細（1:N・当時のスナップショット）
+CREATE TABLE IF NOT EXISTS cr_selection_items (
+  coaching_record_id uuid NOT NULL REFERENCES cr_textbook_selections(coaching_record_id) ON DELETE CASCADE,
   textbook_id        uuid NOT NULL REFERENCES textbooks(id) ON DELETE RESTRICT,
-  test_status        text NOT NULL DEFAULT '未選択' CHECK (test_status IN ('実施済み','未実施','未選択')),
+  daily_goal_minutes integer,
+  note               text NOT NULL DEFAULT '',
+  PRIMARY KEY (coaching_record_id, textbook_id)
+);
+
+-- [オリエンテーションclass]（1:1）
+CREATE TABLE IF NOT EXISTS cr_orientations (
+  coaching_record_id uuid PRIMARY KEY REFERENCES coaching_records(id) ON DELETE CASCADE,
+  monthly_review     text NOT NULL DEFAULT '',
+  coach_advice       text NOT NULL DEFAULT '',
+  other_notes        text NOT NULL DEFAULT ''
+);
+
+-- [コーチングclass＝初回/通常]（1:1）。coaching_number: 初回=1 / 通常>=2。複合PKで何回目かを明示。
+CREATE TABLE IF NOT EXISTS cr_coaching_sessions (
+  coaching_record_id uuid NOT NULL REFERENCES coaching_records(id) ON DELETE CASCADE,
+  coaching_number    integer NOT NULL CHECK (coaching_number >= 1),
+  monthly_review     text NOT NULL DEFAULT '',
+  coach_advice       text NOT NULL DEFAULT '',
+  other_notes        text NOT NULL DEFAULT '',
+  PRIMARY KEY (coaching_record_id, coaching_number)
+);
+
+-- [コーチングclass] テスト内容（1:N）。未選択は保存しない（実施済み/未実施のみ）。
+CREATE TABLE IF NOT EXISTS cr_session_tests (
+  coaching_record_id uuid NOT NULL,
+  coaching_number    integer NOT NULL,
+  textbook_id        uuid NOT NULL REFERENCES textbooks(id) ON DELETE RESTRICT,
+  test_status        text NOT NULL CHECK (test_status IN ('実施済み','未実施')),
   test_range         text,
   format             text,
   score              text,
   note               text,
-  next_status        text NOT NULL DEFAULT '未選択' CHECK (next_status IN ('卒業','継続','未選択')),
-  PRIMARY KEY (coaching_record_id, textbook_id)
+  next_status        text NOT NULL DEFAULT '継続' CHECK (next_status IN ('卒業','継続')),
+  PRIMARY KEY (coaching_record_id, coaching_number, textbook_id),
+  FOREIGN KEY (coaching_record_id, coaching_number)
+    REFERENCES cr_coaching_sessions (coaching_record_id, coaching_number) ON DELETE CASCADE
+);
+
+-- [その他class]（1:1）
+CREATE TABLE IF NOT EXISTS cr_others (
+  coaching_record_id uuid PRIMARY KEY REFERENCES coaching_records(id) ON DELETE CASCADE,
+  monthly_review     text NOT NULL DEFAULT '',
+  coach_advice       text NOT NULL DEFAULT '',
+  other_notes        text NOT NULL DEFAULT ''
 );
 
 -- PROGOS スコア

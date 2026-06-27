@@ -620,8 +620,71 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** 学習記録を追加（職員用） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LearningLogInput"];
+                };
+            };
+            responses: {
+                /** @description 追加成功 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LearningLog"];
+                    };
+                };
+            };
+        };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/members/{memberId}/learning-logs/{logId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 学習記録を削除（職員用） */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                    logId: components["parameters"]["logId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 削除成功 */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -634,7 +697,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** コーチング記録一覧取得 */
+        /** コーチング記録一覧取得（会員カルテ履歴） */
         get: {
             parameters: {
                 query?: never;
@@ -652,7 +715,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["CoachingRecord"][];
+                        "application/json": {
+                            coachingRecords: components["schemas"]["CoachingRecord"][];
+                        };
                     };
                 };
             };
@@ -686,6 +751,97 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/coaching-records/{coachingRecordId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** コーチング記録詳細取得（編集プリセット用） */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    coachingRecordId: components["parameters"]["coachingRecordId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description コーチング記録 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachingRecord"];
+                    };
+                };
+                /** @description 見つからない */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** コーチング記録更新（全置換） */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    coachingRecordId: components["parameters"]["coachingRecordId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CoachingRecordInput"];
+                };
+            };
+            responses: {
+                /** @description 更新成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachingRecord"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** コーチング記録削除 */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    coachingRecordId: components["parameters"]["coachingRecordId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 削除成功 */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1520,33 +1676,52 @@ export interface components {
             durationMinutes: number;
             comment?: string;
         };
-        CoachingRecord: {
-            id?: string;
-            memberId?: string;
-            /** Format: date */
-            date?: string;
-            coachId?: string;
-            coachName?: string;
-            /** @enum {string} */
-            type?: "教材選定" | "オリエンテーション" | "初回コーチング" | "通常コーチング";
-            selectedTextbooks?: components["schemas"]["TextbookAssignment"][];
-            sharedNote?: string;
-            internalNote?: string;
-            /** @enum {string} */
-            continuationDecision?: "継続" | "卒業";
-            /** Format: date-time */
-            createdAt?: string;
+        CoachingSelectedTextbook: {
+            textbookId: string;
+            dailyGoalMinutes?: number | null;
+            note?: string;
         };
-        CoachingRecordInput: {
+        CoachingTextbookTest: {
+            textbookId: string;
+            /** @enum {string} */
+            testStatus: "実施済み" | "未実施";
+            range?: string;
+            format?: string;
+            score?: string;
+            note?: string;
+            /** @enum {string} */
+            nextStatus?: "卒業" | "継続";
+        };
+        CoachingRecord: {
+            id: string;
+            memberId: string;
+            /** @enum {string} */
+            type: "教材選定" | "オリエンテーション" | "初回コーチング" | "通常コーチング" | "その他";
             /** Format: date */
             date: string;
-            /** @enum {string} */
-            type: "教材選定" | "オリエンテーション" | "初回コーチング" | "通常コーチング";
-            selectedTextbooks?: components["schemas"]["TextbookAssignment"][];
+            coachName: string;
+            selectedTextbooks?: components["schemas"]["CoachingSelectedTextbook"][];
             sharedNote?: string;
-            internalNote?: string;
+            coachingNumber?: number;
+            textbookTests?: components["schemas"]["CoachingTextbookTest"][];
+            monthlyReview?: string;
+            coachAdvice?: string;
+            otherNotes?: string;
+        };
+        CoachingRecordInput: {
             /** @enum {string} */
-            continuationDecision?: "継続" | "卒業";
+            type: "教材選定" | "オリエンテーション" | "初回コーチング" | "通常コーチング" | "その他";
+            /** Format: date */
+            date: string;
+            coachName: string;
+            selectedTextbooks?: components["schemas"]["CoachingSelectedTextbook"][];
+            sharedNote?: string;
+            coachingNumber?: number;
+            textbookTests?: components["schemas"]["CoachingTextbookTest"][];
+            newAssignments?: components["schemas"]["CoachingSelectedTextbook"][];
+            monthlyReview?: string;
+            coachAdvice?: string;
+            otherNotes?: string;
         };
         TextbookAssignment: {
             textbookId: string;
@@ -1594,26 +1769,37 @@ export interface components {
             endDate?: string;
             note?: string;
         };
+        ProgosSkillSet: {
+            /** @enum {string} */
+            range: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            /** @enum {string} */
+            accuracy: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            /** @enum {string} */
+            fluency: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            /** @enum {string} */
+            interaction: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            /** @enum {string} */
+            coherence: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            /** @enum {string} */
+            phonology: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+        };
         ProgosScore: {
-            id?: string;
-            memberId?: string;
+            id: string;
+            memberId: string;
             /** Format: date */
-            date?: string;
-            /** @example A2 */
-            level?: string;
-            reading?: number;
-            writing?: number;
-            listening?: number;
-            speaking?: number;
+            examDate: string;
+            /** @enum {string} */
+            overall: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            skills: components["schemas"]["ProgosSkillSet"];
+            comment?: string;
         };
         ProgosScoreInput: {
             /** Format: date */
-            date: string;
-            level: string;
-            reading?: number;
-            writing?: number;
-            listening?: number;
-            speaking?: number;
+            examDate: string;
+            /** @enum {string} */
+            overall: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+            skills: components["schemas"]["ProgosSkillSet"];
+            comment?: string;
         };
         /** @description 教材マスタ。id はシステムUUID、textbookCode が業務コード（T01等）。 */
         Textbook: {
@@ -1762,6 +1948,7 @@ export interface components {
         memberId: string;
         logId: string;
         textbookId: string;
+        coachingRecordId: string;
     };
     requestBodies: never;
     headers: never;

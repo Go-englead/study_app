@@ -8,6 +8,7 @@ import {
   primaryKey,
   uniqueIndex,
   check,
+  foreignKey,
 } from 'drizzle-orm/pg-core';
 
 // ───────────────────────── マスタ系 ─────────────────────────
@@ -179,6 +180,8 @@ export const textbookAssignments = pgTable(
       .references(() => textbooks.id, { onDelete: 'restrict' }),
     dailyGoalMinutes: integer('daily_goal_minutes'),
     note: text('note').notNull().default(''),
+    // 卒業日（NULL=現役 / 日付あり=卒業済み）。現役/卒業は compute-on-read。
+    graduatedOn: text('graduated_on'),
   },
   (t) => [primaryKey({ columns: [t.memberId, t.textbookId] })],
 );
@@ -200,6 +203,9 @@ export const learningLogs = pgTable(
   (t) => [check('learning_log_duration_check', sql`${t.durationMinutes} >= 1`)],
 );
 
+// ───────────────────────── コーチング記録（CTI：親＋種別別子テーブル） ─────────────────────────
+
+// 親：全種別共通項目のみ
 export const coachingRecords = pgTable(
   'coaching_records',
   {
@@ -210,52 +216,107 @@ export const coachingRecords = pgTable(
     type: text('type').notNull(),
     heldOn: text('held_on').notNull(),
     coachName: text('coach_name').notNull(),
-    sharedNote: text('shared_note'),
-    monthlyReview: text('monthly_review'),
-    coachAdvice: text('coach_advice'),
-    otherNotes: text('other_notes'),
-    coachingNumber: integer('coaching_number'),
   },
   (t) => [
     check(
       'coaching_type_check',
-      sql`${t.type} IN ('教材選定','オリエンテーション','初回コーチング','通常コーチング')`,
+      sql`${t.type} IN ('教材選定','オリエンテーション','初回コーチング','通常コーチング','その他')`,
     ),
-    check(
-      'coaching_number_check',
-      sql`${t.coachingNumber} IS NULL OR ${t.coachingNumber} >= 2`,
-    ),
-    // 通常コーチング以外は会員1件のみ
+    // 教材選定/オリエン/初回は会員1件のみ（通常・その他は複数可）。回数一意はドメインで担保。
     uniqueIndex('uq_coaching_once')
       .on(t.memberId, t.type)
-      .where(sql`${t.type} <> '通常コーチング'`),
-    // 通常コーチングの回数重複不可（他typeは coaching_number NULL）
-    uniqueIndex('uq_coaching_number').on(t.memberId, t.coachingNumber),
+      .where(sql`${t.type} IN ('教材選定','オリエンテーション','初回コーチング')`),
   ],
 );
 
-export const coachingRecordTextbookTests = pgTable(
-  'coaching_record_textbook_tests',
+// [教材選定class] 共有事項（1:1）
+export const crTextbookSelections = pgTable('cr_textbook_selections', {
+  coachingRecordId: uuid('coaching_record_id')
+    .primaryKey()
+    .references(() => coachingRecords.id, { onDelete: 'cascade' }),
+  sharedNote: text('shared_note').notNull().default(''),
+});
+
+// [教材選定class] 選定教材の明細（1:N・当時のスナップショット）
+export const crSelectionItems = pgTable(
+  'cr_selection_items',
+  {
+    coachingRecordId: uuid('coaching_record_id')
+      .notNull()
+      .references(() => crTextbookSelections.coachingRecordId, { onDelete: 'cascade' }),
+    textbookId: uuid('textbook_id')
+      .notNull()
+      .references(() => textbooks.id, { onDelete: 'restrict' }),
+    dailyGoalMinutes: integer('daily_goal_minutes'),
+    note: text('note').notNull().default(''),
+  },
+  (t) => [primaryKey({ columns: [t.coachingRecordId, t.textbookId] })],
+);
+
+// [オリエンテーションclass]（1:1）
+export const crOrientations = pgTable('cr_orientations', {
+  coachingRecordId: uuid('coaching_record_id')
+    .primaryKey()
+    .references(() => coachingRecords.id, { onDelete: 'cascade' }),
+  monthlyReview: text('monthly_review').notNull().default(''),
+  coachAdvice: text('coach_advice').notNull().default(''),
+  otherNotes: text('other_notes').notNull().default(''),
+});
+
+// [コーチングclass＝初回/通常]（1:1）。coaching_number: 初回=1 / 通常>=2。複合PK。
+export const crCoachingSessions = pgTable(
+  'cr_coaching_sessions',
   {
     coachingRecordId: uuid('coaching_record_id')
       .notNull()
       .references(() => coachingRecords.id, { onDelete: 'cascade' }),
+    coachingNumber: integer('coaching_number').notNull(),
+    monthlyReview: text('monthly_review').notNull().default(''),
+    coachAdvice: text('coach_advice').notNull().default(''),
+    otherNotes: text('other_notes').notNull().default(''),
+  },
+  (t) => [
+    primaryKey({ columns: [t.coachingRecordId, t.coachingNumber] }),
+    check('coaching_number_check', sql`${t.coachingNumber} >= 1`),
+  ],
+);
+
+// [コーチングclass] テスト内容（1:N）。未選択は保存しない（実施済み/未実施のみ）。
+export const crSessionTests = pgTable(
+  'cr_session_tests',
+  {
+    coachingRecordId: uuid('coaching_record_id').notNull(),
+    coachingNumber: integer('coaching_number').notNull(),
     textbookId: uuid('textbook_id')
       .notNull()
       .references(() => textbooks.id, { onDelete: 'restrict' }),
-    testStatus: text('test_status').notNull().default('未選択'),
+    testStatus: text('test_status').notNull(),
     testRange: text('test_range'),
     format: text('format'),
     score: text('score'),
     note: text('note'),
-    nextStatus: text('next_status').notNull().default('未選択'),
+    nextStatus: text('next_status').notNull().default('継続'),
   },
   (t) => [
-    primaryKey({ columns: [t.coachingRecordId, t.textbookId] }),
-    check('test_status_check', sql`${t.testStatus} IN ('実施済み','未実施','未選択')`),
-    check('next_status_check', sql`${t.nextStatus} IN ('卒業','継続','未選択')`),
+    primaryKey({ columns: [t.coachingRecordId, t.coachingNumber, t.textbookId] }),
+    foreignKey({
+      columns: [t.coachingRecordId, t.coachingNumber],
+      foreignColumns: [crCoachingSessions.coachingRecordId, crCoachingSessions.coachingNumber],
+    }).onDelete('cascade'),
+    check('test_status_check', sql`${t.testStatus} IN ('実施済み','未実施')`),
+    check('next_status_check', sql`${t.nextStatus} IN ('卒業','継続')`),
   ],
 );
+
+// [その他class]（1:1）
+export const crOthers = pgTable('cr_others', {
+  coachingRecordId: uuid('coaching_record_id')
+    .primaryKey()
+    .references(() => coachingRecords.id, { onDelete: 'cascade' }),
+  monthlyReview: text('monthly_review').notNull().default(''),
+  coachAdvice: text('coach_advice').notNull().default(''),
+  otherNotes: text('other_notes').notNull().default(''),
+});
 
 export const progosScores = pgTable(
   'progos_scores',
@@ -317,3 +378,19 @@ export type NewMemberEnglishScoreRow = typeof memberEnglishScores.$inferInsert;
 export type NewMemberCoachInputRow = typeof memberCoachInputs.$inferInsert;
 export type MemberCredentialRow = typeof memberCredentials.$inferSelect;
 export type NewMemberCredentialRow = typeof memberCredentials.$inferInsert;
+
+// コーチング記録（CTI）
+export type CoachingRecordRow = typeof coachingRecords.$inferSelect;
+export type NewCoachingRecordRow = typeof coachingRecords.$inferInsert;
+export type CrTextbookSelectionRow = typeof crTextbookSelections.$inferSelect;
+export type NewCrTextbookSelectionRow = typeof crTextbookSelections.$inferInsert;
+export type CrSelectionItemRow = typeof crSelectionItems.$inferSelect;
+export type NewCrSelectionItemRow = typeof crSelectionItems.$inferInsert;
+export type CrOrientationRow = typeof crOrientations.$inferSelect;
+export type NewCrOrientationRow = typeof crOrientations.$inferInsert;
+export type CrCoachingSessionRow = typeof crCoachingSessions.$inferSelect;
+export type NewCrCoachingSessionRow = typeof crCoachingSessions.$inferInsert;
+export type CrSessionTestRow = typeof crSessionTests.$inferSelect;
+export type NewCrSessionTestRow = typeof crSessionTests.$inferInsert;
+export type CrOtherRow = typeof crOthers.$inferSelect;
+export type NewCrOtherRow = typeof crOthers.$inferInsert;

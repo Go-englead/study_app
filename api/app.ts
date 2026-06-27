@@ -10,6 +10,15 @@ import { registerTextbookRoutes } from './controller/TextbookController';
 import { TextbookAssignmentRepositoryImpl } from './gateway/TextbookAssignmentRepositoryImpl';
 import { TextbookAssignmentUseCase } from './usecase/textbook-assignment/TextbookAssignmentUseCase';
 import { registerTextbookAssignmentRoutes } from './controller/TextbookAssignmentController';
+import { CoachingRecordRepositoryImpl } from './gateway/CoachingRecordRepositoryImpl';
+import { CoachingRecordUseCase } from './usecase/coaching-record/CoachingRecordUseCase';
+import { registerCoachingRecordRoutes } from './controller/CoachingRecordController';
+import { LearningLogRepositoryImpl } from './gateway/LearningLogRepositoryImpl';
+import { LearningLogUseCase } from './usecase/learning-log/LearningLogUseCase';
+import { registerLearningLogRoutes } from './controller/LearningLogController';
+import { ProgosScoreRepositoryImpl } from './gateway/ProgosScoreRepositoryImpl';
+import { ProgosScoreUseCase } from './usecase/progos-score/ProgosScoreUseCase';
+import { registerProgosScoreRoutes } from './controller/ProgosScoreController';
 import { memberAuth, adminAuth, MemberAuthVariables, AdminAuthVariables } from './middleware/auth';
 import { DomainError } from './domain/shared/domain-error';
 
@@ -37,11 +46,24 @@ export function createApp(databaseUrl: string) {
   const memberUseCase = new MemberUseCase(memberRepository);
   const textbookRepository = new TextbookRepositoryImpl(db);
   const textbookUseCase = new TextbookUseCase(textbookRepository);
+  const assignmentRepository = new TextbookAssignmentRepositoryImpl(db);
   const assignmentUseCase = new TextbookAssignmentUseCase(
-    new TextbookAssignmentRepositoryImpl(db),
+    assignmentRepository,
     textbookRepository,
     memberRepository,
   );
+  const coachingUseCase = new CoachingRecordUseCase(
+    new CoachingRecordRepositoryImpl(db),
+    assignmentRepository,
+    textbookRepository,
+    memberRepository,
+  );
+  const learningLogUseCase = new LearningLogUseCase(
+    new LearningLogRepositoryImpl(db),
+    memberRepository,
+    textbookRepository,
+  );
+  const progosUseCase = new ProgosScoreUseCase(new ProgosScoreRepositoryImpl(db), memberRepository);
 
   const app = new Hono();
 
@@ -58,6 +80,9 @@ export function createApp(databaseUrl: string) {
   registerMemberRoutes(admin, memberUseCase);
   registerTextbookRoutes(admin, textbookUseCase);
   registerTextbookAssignmentRoutes(admin, assignmentUseCase);
+  registerCoachingRecordRoutes(admin, coachingUseCase);
+  registerLearningLogRoutes(admin, learningLogUseCase);
+  registerProgosScoreRoutes(admin, progosUseCase);
   applyErrorHandler(admin);
   app.route('/v1/admin', admin);
 

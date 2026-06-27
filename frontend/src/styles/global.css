@@ -35,11 +35,13 @@
 
     /* ===== 基本スタイル ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
     body {
       font-family: var(--font-primary);
       background: var(--color-bg-soft);
       color: var(--color-text-primary);
-      min-height: 100vh;
+      height: 100%;
+      overflow: hidden; /* スクロールは .content が担当（画面にフィット） */
       font-size: 14px;
       line-height: 1.6;
     }
@@ -52,7 +54,7 @@
     }
 
     /* ===== レイアウト（PC向け） ===== */
-    .layout { display: flex; min-height: 100vh; }
+    .layout { display: flex; height: 100%; }
 
     /* ===== サイドバー（ダークネイビー） ===== */
     .sidebar {
@@ -119,6 +121,8 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0; /* 子(.content)のスクロールを許可 */
+      min-width: 0;
     }
 
     /* ===== 上部バー ===== */
@@ -155,7 +159,7 @@
     .logout-btn:hover { background: #F4F6F8; border-color: #E74C3C; color: #E74C3C; }
 
     /* ===== コンテンツ ===== */
-    .content { padding: 24px 32px; flex: 1; }
+    .content { padding: 24px 32px 64px; flex: 1; overflow-y: auto; min-height: 0; }
 
     /* ===== 画面切替 ===== */
     .screen { display: none; }
@@ -943,6 +947,8 @@
     }
     .center-modal-sm { max-width: 440px; }
     .center-modal-lg { max-width: 900px; }
+    /* form でラップしても header/body/footer の flex 連鎖を保つ（フッターが切れない） */
+    .center-modal > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; }
     .center-modal-header {
       padding: 18px 24px;
       border-bottom: 1px solid #D5D8DC;
@@ -1407,6 +1413,24 @@
 .form-error { color: var(--color-error, #c0392b); font-size: 12px; }
 .form-success { color: var(--color-accent, #27AE60); font-size: 13px; }
 @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* ===== カルテ系モーダル（コーチング/学習記録/PROGOS）のフォーム部品を会員フォームと統一 ===== */
+.karte-form label.form-group { display: flex; flex-direction: column; font-size: 12px; gap: 4px; color: var(--color-text-secondary); }
+.karte-form input:not([type="checkbox"]):not([type="radio"]),
+.karte-form select,
+.karte-form textarea {
+  padding: 8px; border: 1px solid var(--color-border); border-radius: 6px;
+  font-size: 13px; font-family: inherit; width: 100%; box-sizing: border-box; background: #fff;
+}
+.karte-form input:focus, .karte-form select:focus, .karte-form textarea:focus { border-color: var(--color-primary); outline: none; }
+.karte-form textarea { resize: vertical; }
+/* 対象会員バッジ */
+.cr-target { background: #EAF2F8; border-left: 3px solid var(--color-primary); padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 14px; }
+/* 「＋ 教材を追加」など全幅の点線アクション */
+.karte-add-row { width: 100%; margin-top: 6px; border: 1px dashed var(--color-border); background: #FAFBFC; color: var(--color-text-secondary); border-radius: 6px; padding: 9px; font-size: 13px; cursor: pointer; }
+.karte-add-row:hover { background: #F0F3F6; border-color: var(--color-primary); color: var(--color-primary); }
+/* フォーム内のヒント文 */
+.karte-hint { font-size: 11px; color: #8a94a0; margin-top: 6px; display: flex; gap: 4px; }
 
 /* ===== React: サイドバーの Link を nav-item として整える ===== */
 .nav-menu li { list-style: none; }

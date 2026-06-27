@@ -455,12 +455,45 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/LearningLog'
+    post:
+      tags: [learning-logs]
+      summary: 学習記録を追加（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningLogInput'
+      responses:
+        '201':
+          description: 追加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningLog'
+
+  /v1/admin/members/{memberId}/learning-logs/{logId}:
+    delete:
+      tags: [learning-logs]
+      summary: 学習記録を削除（職員用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+        - $ref: '#/components/parameters/logId'
+      responses:
+        '204':
+          description: 削除成功
 
   # ── コーチング記録 ────────────────────────────────
   /v1/admin/members/{memberId}/coaching-records:
     get:
       tags: [coaching-records]
-      summary: コーチング記録一覧取得
+      summary: コーチング記録一覧取得（会員カルテ履歴）
       security:
         - bearerAuth: []
       parameters:
@@ -471,9 +504,13 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CoachingRecord'
+                type: object
+                required: [coachingRecords]
+                properties:
+                  coachingRecords:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CoachingRecord'
     post:
       tags: [coaching-records]
       summary: コーチング記録追加
@@ -494,6 +531,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CoachingRecord'
+
+  /v1/admin/coaching-records/{coachingRecordId}:
+    get:
+      tags: [coaching-records]
+      summary: コーチング記録詳細取得（編集プリセット用）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/coachingRecordId'
+      responses:
+        '200':
+          description: コーチング記録
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachingRecord'
+        '404':
+          description: 見つからない
+    put:
+      tags: [coaching-records]
+      summary: コーチング記録更新（全置換）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/coachingRecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachingRecordInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachingRecord'
+    delete:
+      tags: [coaching-records]
+      summary: コーチング記録削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/coachingRecordId'
+      responses:
+        '204':
+          description: 削除成功
 
   # ── 継続プラン ────────────────────────────────────
   /v1/admin/members/{memberId}/continuation-plans:
@@ -843,6 +928,12 @@ components:
       schema:
         type: string
         example: 'T01'
+    coachingRecordId:
+      name: coachingRecordId
+      in: path
+      required: true
+      schema:
+        type: string
 
   responses:
     Unauthorized:
@@ -1268,59 +1359,115 @@ components:
           type: string
 
     # ── コーチング記録 ──
+    # 教材選定の選定教材 / セッションの新教材追加（割り当ての元データ）
+    CoachingSelectedTextbook:
+      type: object
+      required: [textbookId]
+      properties:
+        textbookId:
+          type: string
+        dailyGoalMinutes:
+          type: integer
+          nullable: true
+        note:
+          type: string
+    # 初回・通常コーチングのテスト内容（未選択は保存しない＝実施済み/未実施のみ）
+    CoachingTextbookTest:
+      type: object
+      required: [textbookId, testStatus]
+      properties:
+        textbookId:
+          type: string
+        testStatus:
+          type: string
+          enum: [実施済み, 未実施]
+        range:
+          type: string
+        format:
+          type: string
+        score:
+          type: string
+        note:
+          type: string
+        nextStatus:
+          type: string
+          enum: [卒業, 継続]
     CoachingRecord:
       type: object
+      required: [id, memberId, type, date, coachName]
       properties:
         id:
           type: string
         memberId:
           type: string
+        type:
+          type: string
+          enum: [教材選定, オリエンテーション, 初回コーチング, 通常コーチング, その他]
         date:
           type: string
           format: date
-        coachId:
-          type: string
         coachName:
           type: string
-        type:
-          type: string
-          enum: [教材選定, オリエンテーション, 初回コーチング, 通常コーチング]
+        # 教材選定
         selectedTextbooks:
           type: array
           items:
-            $ref: '#/components/schemas/TextbookAssignment'
+            $ref: '#/components/schemas/CoachingSelectedTextbook'
         sharedNote:
           type: string
-        internalNote:
+        # 初回・通常
+        coachingNumber:
+          type: integer
+        textbookTests:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachingTextbookTest'
+        # 自由記述（オリエン・初回・通常・その他）
+        monthlyReview:
           type: string
-        continuationDecision:
+        coachAdvice:
           type: string
-          enum: [継続, 卒業]
-        createdAt:
+        otherNotes:
           type: string
-          format: date-time
 
     CoachingRecordInput:
       type: object
-      required: [date, type]
+      required: [type, date, coachName]
       properties:
+        type:
+          type: string
+          enum: [教材選定, オリエンテーション, 初回コーチング, 通常コーチング, その他]
         date:
           type: string
           format: date
-        type:
+        coachName:
           type: string
-          enum: [教材選定, オリエンテーション, 初回コーチング, 通常コーチング]
+        # 教材選定
         selectedTextbooks:
           type: array
           items:
-            $ref: '#/components/schemas/TextbookAssignment'
+            $ref: '#/components/schemas/CoachingSelectedTextbook'
         sharedNote:
           type: string
-        internalNote:
+        # 初回・通常
+        coachingNumber:
+          type: integer
+        textbookTests:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachingTextbookTest'
+        # 「＋新教材を追加」での新規割り当て（テスト内容とは別）
+        newAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachingSelectedTextbook'
+        # 自由記述
+        monthlyReview:
           type: string
-        continuationDecision:
+        coachAdvice:
           type: string
-          enum: [継続, 卒業]
+        otherNotes:
+          type: string
 
     TextbookAssignment:
       type: object
@@ -1411,46 +1558,62 @@ components:
         note:
           type: string
 
-    # ── PROGOS ──
+    # ── PROGOS（スピーキング・CEFR） ──
+    ProgosSkillSet:
+      type: object
+      required: [range, accuracy, fluency, interaction, coherence, phonology]
+      properties:
+        range:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        accuracy:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        fluency:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        interaction:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        coherence:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
+        phonology:
+          type: string
+          enum: [A1, A2, B1, B2, C1, C2]
     ProgosScore:
       type: object
+      required: [id, memberId, examDate, overall, skills]
       properties:
         id:
           type: string
         memberId:
           type: string
-        date:
+        examDate:
           type: string
           format: date
-        level:
+        overall:
           type: string
-          example: A2
-        reading:
-          type: integer
-        writing:
-          type: integer
-        listening:
-          type: integer
-        speaking:
-          type: integer
+          enum: [A1, A2, B1, B2, C1, C2]
+        skills:
+          $ref: '#/components/schemas/ProgosSkillSet'
+        comment:
+          type: string
 
     ProgosScoreInput:
       type: object
-      required: [date, level]
+      required: [examDate, overall, skills]
       properties:
-        date:
+        examDate:
           type: string
           format: date
-        level:
+        overall:
           type: string
-        reading:
-          type: integer
-        writing:
-          type: integer
-        listening:
-          type: integer
-        speaking:
-          type: integer
+          enum: [A1, A2, B1, B2, C1, C2]
+        skills:
+          $ref: '#/components/schemas/ProgosSkillSet'
+        comment:
+          type: string
 
     # ── 教材マスター ──
     Textbook:

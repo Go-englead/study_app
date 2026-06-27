@@ -85,12 +85,14 @@ async function seedMemberWithRelations(): Promise<string> {
   await db
     .insert(schema.learningLogs)
     .values({ memberId: id, textbookId, studiedOn: '2026-06-01', durationMinutes: 30 });
-  await db.insert(schema.coachingRecords).values({
-    memberId: id,
-    type: '通常コーチング',
-    heldOn: '2026-06-01',
-    coachName: '見本コーチ',
+  const [cr] = await db
+    .insert(schema.coachingRecords)
+    .values({ memberId: id, type: '通常コーチング', heldOn: '2026-06-01', coachName: '見本コーチ' })
+    .returning({ id: schema.coachingRecords.id });
+  await db.insert(schema.crCoachingSessions).values({
+    coachingRecordId: cr.id,
     coachingNumber: 2,
+    monthlyReview: '順調',
   });
   await db.insert(schema.progosScores).values({
     memberId: id,
@@ -156,6 +158,8 @@ describe('DELETE /v1/admin/members/:memberId', () => {
     expect(await countWhere(schema.textbookAssignments, schema.textbookAssignments.memberId, id)).toBe(0);
     expect(await countWhere(schema.learningLogs, schema.learningLogs.memberId, id)).toBe(0);
     expect(await countWhere(schema.coachingRecords, schema.coachingRecords.memberId, id)).toBe(0);
+    // CTI 子テーブルも親の CASCADE で消える
+    expect((await db.select().from(schema.crCoachingSessions)).length).toBe(0);
     expect(await countWhere(schema.progosScores, schema.progosScores.memberId, id)).toBe(0);
     expect(await countWhere(schema.continuationPlans, schema.continuationPlans.memberId, id)).toBe(0);
   });

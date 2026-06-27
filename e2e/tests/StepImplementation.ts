@@ -527,4 +527,119 @@ export default class StepImpl {
     await expect(p().locator('[data-testid^="member-row-"]')).toHaveCount(expected.length);
     expect(await currentRowNames()).toEqual(expected);
   }
+
+  // ── コーチング記録（会員カルテ） ──
+  @Step('コーチング記録用のデータを準備する')
+  public async prepareCoachingData(): Promise<void> {
+    // 会員（見本一郎）は BeforeScenario で投入済み。教材5件を用意する。
+    await seedTextbooks();
+  }
+
+  @Step('会員カルテメニューをクリックする')
+  public async clickKarteMenu(): Promise<void> {
+    await p().getByRole('link', { name: '会員カルテ' }).click();
+    await expect(p().getByTestId('karte-members')).toBeVisible();
+  }
+
+  @Step('カルテで会員 <name> を選択する')
+  public async selectKarteMember(name: string): Promise<void> {
+    const re = new RegExp(name.replace(/\s/g, '').split('').join('\\s*'));
+    await p().locator('[data-testid^="karte-member-"]').filter({ hasText: re }).first().click();
+    await expect(p().getByTestId('coaching-card')).toBeVisible();
+  }
+
+  @Step('コーチングを記録ボタンをクリックする')
+  public async openCoachingModal(): Promise<void> {
+    await p().getByTestId('coaching-add').click();
+    await expect(p().getByTestId('cr-modal')).toBeVisible();
+  }
+
+  @Step('コーチング種別を <type> にする')
+  public async selectCoachingType(type: string): Promise<void> {
+    await p().getByTestId('cr-type').selectOption(type);
+  }
+
+  @Step('教材選定に教材 <code> を目標 <minutes> 分・メモ <note> で追加する')
+  public async addSelectionTextbook(code: string, minutes: string, note: string): Promise<void> {
+    await p().getByTestId('cr-selection-add').click();
+    const sel = p().getByTestId('cr-selection-textbook-0');
+    const value = await sel.locator('option').filter({ hasText: code }).first().getAttribute('value');
+    await sel.selectOption(value!);
+    await p().getByTestId('cr-selection-goal-0').fill(minutes);
+    await p().getByTestId('cr-selection-note-0').fill(note);
+  }
+
+  @Step('コーチング記録を保存する')
+  public async saveCoaching(): Promise<void> {
+    await p().getByTestId('cr-submit').click();
+    await expect(p().getByTestId('cr-modal')).toBeHidden();
+  }
+
+  @Step('コーチング記録を保存しようとする')
+  public async trySaveCoaching(): Promise<void> {
+    await p().getByTestId('cr-submit').click();
+  }
+
+  @Step('コーチング記録一覧に <text> が表示される')
+  public async assertCoachingListContains(text: string): Promise<void> {
+    await expect(p().getByTestId('coaching-card').locator('.cr-table')).toContainText(text);
+  }
+
+  @Step('コーチング記録のエラーに <text> が表示される')
+  public async assertCoachingError(text: string): Promise<void> {
+    await expect(p().getByTestId('cr-error')).toContainText(text);
+  }
+
+  // ── 学習記録（カルテ） ──
+  @Step('カルテ用のデータを準備する')
+  public async prepareKarteData(): Promise<void> {
+    await seedTextbooks();
+  }
+
+  @Step('学習記録を追加ボタンをクリックする')
+  public async openLogModal(): Promise<void> {
+    await p().getByTestId('log-add-open').click();
+    await expect(p().getByTestId('log-modal')).toBeVisible();
+  }
+
+  @Step('学習記録フォームで教材 <code> を <minutes> 分・コメント <comment> で追加する')
+  public async submitLog(code: string, minutes: string, comment: string): Promise<void> {
+    const sel = p().getByTestId('log-textbook');
+    const value = await sel.locator('option').filter({ hasText: code }).first().getAttribute('value');
+    await sel.selectOption(value!);
+    await p().getByTestId('log-minutes').fill(minutes);
+    await p().getByTestId('log-comment').fill(comment);
+    await p().getByTestId('log-submit').click();
+    await expect(p().getByTestId('log-modal')).toBeHidden();
+  }
+
+  @Step('学習記録一覧に <text> が表示される')
+  public async assertLogListContains(text: string): Promise<void> {
+    await expect(p().getByTestId('learning-logs-card').locator('.log-table')).toContainText(text);
+  }
+
+  @Step('達成サマリーの学習時間に <text> が表示される')
+  public async assertSummaryHours(text: string): Promise<void> {
+    await expect(p().getByTestId('summary-hours')).toContainText(text);
+  }
+
+  // ── PROGOSスコア（カルテ） ──
+  @Step('PROGOSスコアを登録ボタンをクリックする')
+  public async openProgosModal(): Promise<void> {
+    await p().getByTestId('progos-add-open').click();
+    await expect(p().getByTestId('progos-modal')).toBeVisible();
+  }
+
+  @Step('PROGOSフォームで総合 <overall> ・やり取り <interaction> で登録する')
+  public async submitProgos(overall: string, interaction: string): Promise<void> {
+    await p().getByTestId('progos-overall').selectOption(overall);
+    await p().getByTestId('progos-skill-interaction').selectOption(interaction);
+    await p().getByTestId('progos-submit').click();
+    await expect(p().getByTestId('progos-modal')).toBeHidden();
+  }
+
+  @Step('PROGOS一覧に総合 <overall> が表示される')
+  public async assertProgosListContains(overall: string): Promise<void> {
+    await expect(p().getByTestId('progos-card').locator('.progos-table')).toContainText(overall);
+  }
 }

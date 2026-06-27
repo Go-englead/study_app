@@ -3,6 +3,7 @@ import * as driver from '../driver/textbookAssignmentDriver';
 import { TextbookAssignmentRow } from '../driver/textbookAssignmentDriver';
 import { MemberId } from '../domain/member/member';
 import { TextbookId } from '../domain/textbook/textbook';
+import { DateOnly } from '../domain/shared/value-objects';
 import { TextbookAssignment } from '../domain/textbook-assignment/textbook-assignment';
 import { TextbookAssignmentRepository } from '../domain/textbook-assignment/textbook-assignment-repository';
 
@@ -12,6 +13,7 @@ function toDomain(r: TextbookAssignmentRow): TextbookAssignment {
     textbookId: r.textbookId as TextbookId,
     dailyGoalMinutes: r.dailyGoalMinutes ?? null,
     note: r.note,
+    graduatedOn: (r.graduatedOn ?? null) as DateOnly | null,
   };
 }
 
@@ -21,6 +23,7 @@ function toRow(a: TextbookAssignment): driver.NewTextbookAssignmentRow {
     textbookId: a.textbookId,
     dailyGoalMinutes: a.dailyGoalMinutes,
     note: a.note,
+    graduatedOn: a.graduatedOn,
   };
 }
 
