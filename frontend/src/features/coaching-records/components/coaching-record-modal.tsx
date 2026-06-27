@@ -187,7 +187,7 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
   // 教材選定で追加候補（未選定の教材）
   const selectionCandidates = useMemo(() => {
     const chosen = new Set(selection.fields.map((_, i) => watch(`selectedTextbooks.${i}.textbookId`)))
-    return textbooks.filter((t) => !chosen.has(t.id))
+    return textbooks.filter((t) => !chosen.has(t.id!))
   }, [textbooks, selection.fields, watch])
 
   // 新教材追加候補（テスト行に無い教材）

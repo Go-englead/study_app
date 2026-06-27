@@ -1,10 +1,22 @@
-allowBuilds:
-  cpu-features: true
-  esbuild: true
-  protobufjs: true
-  ssh2: true
+# ───────── サプライチェーン対策（pnpm） ─────────
+# ① インストール時スクリプトの管理：
+#    pnpm は既定で依存の install/postinstall 等のビルドスクリプトをブロックする。
+#    allowBuilds で「明示的に true にした依存」だけがスクリプトを実行できる。
+#    新たに build スクリプトを持つ依存が混入すると pnpm がここで承認を要求する
+#    （= 知らないうちに任意コードが走らない。承認の記録が差分に残る）。
+#    下記はいずれも testcontainers / tsx / vitest が必要とする native ビルド。
 onlyBuiltDependencies:
   - cpu-features
   - esbuild
   - protobufjs
   - ssh2
+allowBuilds:
+  cpu-features: true   # testcontainers（Docker接続のnative）
+  esbuild: true        # tsx / vitest
+  protobufjs: true     # testcontainers
+  ssh2: true           # testcontainers（Docker接続）
+
+# ② 新しすぎるバージョンの隔離（公開直後の乗っ取りリリースを掴まない）：
+#    公開からこの分数(=14日)未満のバージョンは解決対象にしない。
+#    pnpm add / update / 新規解決時に適用。CI の --frozen-lockfile でも検証される。
+minimumReleaseAge: 20160
