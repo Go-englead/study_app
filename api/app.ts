@@ -19,6 +19,12 @@ import { registerLearningLogRoutes } from './controller/LearningLogController';
 import { ProgosScoreRepositoryImpl } from './gateway/ProgosScoreRepositoryImpl';
 import { ProgosScoreUseCase } from './usecase/progos-score/ProgosScoreUseCase';
 import { registerProgosScoreRoutes } from './controller/ProgosScoreController';
+import { StaffAuthRepositoryImpl } from './gateway/StaffAuthRepositoryImpl';
+import { Argon2PasswordHasher } from './gateway/Argon2PasswordHasher';
+import { StaffLoginUseCase } from './usecase/auth/StaffLoginUseCase';
+import { RegisterStaffUseCase } from './usecase/staff/RegisterStaffUseCase';
+import { registerAuthRoutes } from './controller/AuthController';
+import { registerStaffRoutes } from './controller/StaffController';
 import { memberAuth, adminAuth, MemberAuthVariables, AdminAuthVariables } from './middleware/auth';
 import { DomainError } from './domain/shared/domain-error';
 
@@ -64,8 +70,18 @@ export function createApp(databaseUrl: string) {
     textbookRepository,
   );
   const progosUseCase = new ProgosScoreUseCase(new ProgosScoreRepositoryImpl(db), memberRepository);
+  const passwordHasher = new Argon2PasswordHasher();
+  const staffAuthRepository = new StaffAuthRepositoryImpl(db);
+  const staffLoginUseCase = new StaffLoginUseCase(staffAuthRepository, passwordHasher);
+  const registerStaffUseCase = new RegisterStaffUseCase(staffAuthRepository, passwordHasher);
 
   const app = new Hono();
+
+  // ── 認証API（/v1/auth/*・未認証で叩ける）──
+  const auth = new Hono();
+  registerAuthRoutes(auth, staffLoginUseCase);
+  applyErrorHandler(auth);
+  app.route('/v1/auth', auth);
 
   // ── 会員が叩くAPI（/v1/member/*）──
   const member = new Hono<{ Variables: MemberAuthVariables }>();
@@ -83,6 +99,7 @@ export function createApp(databaseUrl: string) {
   registerCoachingRecordRoutes(admin, coachingUseCase);
   registerLearningLogRoutes(admin, learningLogUseCase);
   registerProgosScoreRoutes(admin, progosUseCase);
+  registerStaffRoutes(admin, registerStaffUseCase);
   applyErrorHandler(admin);
   app.route('/v1/admin', admin);
 

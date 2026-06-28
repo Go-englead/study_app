@@ -1,26 +1,66 @@
-import { sign } from 'hono/jwt';
+import { eq } from 'drizzle-orm';
+import { createDatabase } from '../../db/client';
+import { staff, staffCredentials } from '../../db/schema';
+import { Argon2PasswordHasher } from '../../gateway/Argon2PasswordHasher';
 
 /**
- * テスト用 JWT 発行ヘルパー。
- * secret はミドルウェアと同じ（既定 'test-key'）。期限はほぼ永遠（2100年）。
+ * テスト用の認証ヘルパー。
+ * 無敵JWT（期限ほぼ無限の手製トークン）は廃止し、実際のログインAPI経由で
+ * Bearer トークンを取得する（＝テストも本番と同じ認証経路を通る）。
  */
-const SECRET = process.env.JWT_SECRET ?? 'test-key';
-const FAR_FUTURE = 4102444800; // 2100-01-01T00:00:00Z（exp）
 
-/** 会員用トークン（claim: memberId） */
-export function memberToken(memberId: string): Promise<string> {
-  return sign({ memberId, exp: FAR_FUTURE }, SECRET);
+export const SEED_STAFF = {
+  staffCode: 'S001',
+  name: 'コーチA',
+  role: 'Coach',
+  email: 'coach_001@example.jp',
+  password: 'coach001',
+} as const;
+
+/**
+ * ログイン用の職員を確実に用意する（冪等）。
+ * 一部テスト（会員削除など）が staff を全削除するため、各ファイルの beforeAll で呼んで
+ * ログインできる状態を保証する。
+ */
+export async function ensureLoginStaff(databaseUrl: string): Promise<void> {
+  const { db, pool } = createDatabase(databaseUrl);
+  try {
+    await db.delete(staff).where(eq(staff.staffCode, SEED_STAFF.staffCode)); // 既存なら作り直す（credはCASCADE）
+    const [s] = await db
+      .insert(staff)
+      .values({ staffCode: SEED_STAFF.staffCode, name: SEED_STAFF.name, role: SEED_STAFF.role })
+      .returning({ id: staff.id });
+    const passwordHash = await new Argon2PasswordHasher().hash(SEED_STAFF.password);
+    await db.insert(staffCredentials).values({
+      staffId: s.id,
+      loginId: SEED_STAFF.email,
+      passwordHash,
+    });
+  } finally {
+    await pool.end();
+  }
 }
 
-/** 職員（管理）用トークン（claim: adminId） */
-export function adminToken(adminId: string): Promise<string> {
-  return sign({ adminId, exp: FAR_FUTURE }, SECRET);
+/** API 経由で職員ログインし、Authorization ヘッダ値（'Bearer ...'）を返す。 */
+export async function loginAsStaff(
+  apiUrl: string,
+  email: string = SEED_STAFF.email,
+  password: string = SEED_STAFF.password,
+): Promise<string> {
+  const res = await fetch(`${apiUrl}/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (res.status !== 200) {
+    throw new Error(`ログイン失敗: ${res.status} ${await res.text()}`);
+  }
+  const body = (await res.json()) as { token: string };
+  return `Bearer ${body.token}`;
 }
 
-/** Authorization ヘッダ値を組み立てる */
-export async function memberBearer(memberId: string): Promise<string> {
-  return `Bearer ${await memberToken(memberId)}`;
-}
-export async function adminBearer(adminId: string): Promise<string> {
-  return `Bearer ${await adminToken(adminId)}`;
+/** 職員シードを保証してからログインし、Bearer を返す（各テストの beforeAll 用）。 */
+export async function seedAndLogin(databaseUrl: string, apiUrl: string): Promise<string> {
+  await ensureLoginStaff(databaseUrl);
+  return loginAsStaff(apiUrl);
 }

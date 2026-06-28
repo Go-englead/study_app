@@ -59,7 +59,8 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
   const update = useUpdateCoachingRecord(memberId, coachingRecordId ?? '')
   const remove = useDeleteCoachingRecord(memberId)
   const pending = create.isPending || update.isPending
-  const error = (create.error ?? update.error) as { message?: string } | null
+  // 保存（作成/更新）に加え、削除エラー（整合性違反など）も表示する
+  const error = (create.error ?? update.error ?? remove.error) as { message?: string } | null
 
   const { register, handleSubmit, watch, control, reset, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -233,13 +234,19 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
             </label>
 
             {type === '教材選定' && (
-              <SelectionSection
-                fields={selection.fields}
-                append={selection.append}
-                remove={selection.remove}
-                register={register}
-                candidates={selectionCandidates.map((t) => ({ id: t.id!, label: `${t.textbookCode}：${t.name}` }))}
-              />
+              <>
+                <SelectionSection
+                  fields={selection.fields}
+                  append={selection.append}
+                  remove={selection.remove}
+                  register={register}
+                  candidates={selectionCandidates.map((t) => ({ id: t.id!, label: `${t.textbookCode}：${t.name}` }))}
+                />
+                <label className="form-group" style={{ display: 'block', marginTop: 12 }}>
+                  共有事項（任意）
+                  <textarea data-testid="cr-sharedNote" rows={3} {...register('sharedNote')} />
+                </label>
+              </>
             )}
 
             {hasTestContent(type) && (
@@ -380,10 +387,10 @@ function TestSection({
             {status === '実施済み' && (
               <div style={{ marginTop: 10, padding: 10, background: '#F8F9FA', borderRadius: 4 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                  <label className="form-group">範囲<input {...register(`tests.${i}.range` as const)} placeholder="例：全範囲、Day1〜30" /></label>
-                  <label className="form-group">形式<input {...register(`tests.${i}.format` as const)} placeholder="例：筆記、口頭" /></label>
+                  <label className="form-group">範囲<input {...register(`tests.${i}.range` as const)} placeholder="例：全範囲、Day1〜30" data-testid={`cr-test-range-${i}`} /></label>
+                  <label className="form-group">形式<input {...register(`tests.${i}.format` as const)} placeholder="例：筆記、口頭" data-testid={`cr-test-format-${i}`} /></label>
                   <label className="form-group">点数<input {...register(`tests.${i}.score` as const)} placeholder="例：80点、合格" data-testid={`cr-test-score-${i}`} /></label>
-                  <label className="form-group">備考<input {...register(`tests.${i}.note` as const)} placeholder="例：発音注意" /></label>
+                  <label className="form-group">備考<input {...register(`tests.${i}.note` as const)} placeholder="例：発音注意" data-testid={`cr-test-note-${i}`} /></label>
                 </div>
                 <label className="form-group" style={{ display: 'block' }}>
                   ⭐ 次回ステータス

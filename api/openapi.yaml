@@ -858,6 +858,24 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Staff'
+    post:
+      tags: [staff]
+      summary: スタッフ登録（パスワードはハッシュ化して別テーブルに保存）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRegisterInput'
+      responses:
+        '201':
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffSummary'
 
   # ── ダッシュボード（職員用） ──────────────────────
   /v1/admin/dashboard/stats:
@@ -980,7 +998,47 @@ components:
           type: string
         role:
           type: string
-          enum: [member, coach, consultant, cs]
+
+    # 職員登録の入力／応答
+    StaffRegisterInput:
+      type: object
+      required: [staffCode, name, role, email, password]
+      properties:
+        staffCode:
+          type: string
+          example: S001
+        name:
+          type: string
+        role:
+          type: string
+          enum: [Coach, Teacher, Consultant, CS]
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        iconUrl:
+          type: string
+        meetUrl:
+          type: string
+        groupContent:
+          type: string
+    StaffSummary:
+      type: object
+      required: [id, staffCode, name, role, email]
+      properties:
+        id:
+          type: string
+        staffCode:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        email:
+          type: string
+          format: email
 
     # ── 会員 ──
     MemberStatus:

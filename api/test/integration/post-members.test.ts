@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 import { Pool } from 'pg';
-import { adminBearer } from '../helpers/auth';
+import { seedAndLogin } from '../helpers/auth';
 
 const apiUrl = inject('apiUrl');
 const db = new Pool({ connectionString: inject('databaseUrl') });
@@ -12,7 +12,7 @@ let csId: string;
 let coachId: string;
 
 beforeAll(async () => {
-  auth = await adminBearer('MW001');
+  auth = await seedAndLogin(inject('databaseUrl'), apiUrl);
 });
 
 afterAll(async () => {

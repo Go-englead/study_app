@@ -64,7 +64,10 @@
 ## 🧪 テスト規約
 
 - **API 結合テスト**：Testcontainers + Vitest。実行は `pnpm test`（`TESTCONTAINERS_RYUK_DISABLED=true` 済み）。**テストデータは Drizzle で投入**（生SQL書かない）、**分割テーブルそれぞれを検証**。
-- **E2E**：`e2e/specs/` の **Gauge spec＝仕様書**（1ファイル＝1ユーザーストーリー、「誰は〜できる」）。ステップ実装は React 向け（`tests/StepImplementation.ts`、要素は **data-testid**、`@BeforeScenario` で API 経由 clean&seed、ログインは dev トークンのため no-op）。`BASE_URL` は :8080（or dev :5173）。
+- **E2E**：`e2e/specs/` の **Gauge spec＝仕様書**（1ファイル＝1ユーザーストーリー、「誰は〜できる」）。ステップ実装は React 向け（`tests/StepImplementation.ts`、要素は **data-testid**、`@BeforeScenario` で API 経由 clean&seed）。`BASE_URL` は :8080（or dev :5173）。
+- **E2E は必ずログイン起点（無敵JWTは廃止）**：**1 spec（シナリオ）につき専用の職員を1人作成し、UI のログイン操作から各シナリオを開始する**。
+  - `@BeforeScenario` で「①ブートストラップ職員（`coach_001@example.jp`／seed）でAPIログイン → トークンを `apiHeaders` に → ②データ clean&seed → ③このシナリオ専用の職員を作成（`createScenarioStaff`）」。各 spec の冒頭は `* ログインページを開く` → `* 職員アカウントでログインする`（`scenarioStaff` でUIログイン）で始める。
+  - ブートストラップ職員（`S001`/coach_001）は DB に常設シード。テスト用トークンは `JWT_SECRET` 未設定＝`test-key`。
 
 ---
 

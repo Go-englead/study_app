@@ -8,9 +8,12 @@ const API_URL = process.env['API_URL'] ?? 'http://localhost:3000'; // テスト�
 const HEADLESS = process.env['HEADLESS'] !== 'false';
 const SLOW_MO = parseInt(process.env['SLOW_MO'] ?? '0', 10);
 
-// 開発用 admin JWT（フロントと同じ。secret 'test-key' / claim {adminId} / 期限ほぼ無限）
-const ADMIN_BEARER =
-  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbklkIjoiTVcwMDEiLCJleHAiOjQxMDI0NDQ4MDB9.avt56lg_LrJVbBEu8iq4SQN6E0l3uMuQcQCug-YP-eQ';
+// 認証は実ログインAPIで取得（無敵JWTは廃止）。
+// BeforeScenario で「ブートストラップ職員」としてAPIログインし、apiHeaders にトークンをセット。
+// さらに各シナリオ専用の職員を1人作成し、その資格情報でUIログインする（1 spec = 1 職員）。
+const BOOTSTRAP_STAFF = { email: 'coach_001@example.jp', password: 'coach001' };
+let scenarioStaff = { email: '', password: '' };
+let staffCounter = 0;
 
 // ── ブラウザ状態 ────────────────────────────────────────────────────────────────
 let browser: Browser | null = null;
@@ -22,7 +25,33 @@ const p = (): Page => {
 };
 
 // ── API ヘルパ（テストデータ投入。dev トークンで API を直接叩く） ────────────────
-const apiHeaders = { 'Content-Type': 'application/json', Authorization: ADMIN_BEARER };
+const apiHeaders: Record<string, string> = { 'Content-Type': 'application/json', Authorization: '' };
+
+/** API 経由でログインして 'Bearer ...' を返す。 */
+async function loginApi(email: string, password: string): Promise<string> {
+  const res = await fetch(`${API_URL}/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (res.status !== 200) throw new Error(`ログイン失敗: ${res.status} ${await res.text()}`);
+  return `Bearer ${((await res.json()) as { token: string }).token}`;
+}
+
+/** このシナリオ専用の職員を1人作成し、資格情報を返す（ブートストラップ職員の権限で作成）。 */
+async function createScenarioStaff(): Promise<{ email: string; password: string }> {
+  const n = ++staffCounter;
+  const stamp = `${n}_${process.hrtime.bigint()}`;
+  const email = `e2e_staff_${stamp}@example.jp`;
+  const password = 'e2epass123';
+  const res = await fetch(`${API_URL}/v1/admin/staff`, {
+    method: 'POST',
+    headers: apiHeaders,
+    body: JSON.stringify({ staffCode: `E2E_${stamp}`, name: `E2Eコーチ${n}`, role: 'Coach', email, password }),
+  });
+  if (res.status !== 201) throw new Error(`職員作成失敗: ${res.status} ${await res.text()}`);
+  return { email, password };
+}
 
 async function apiListMembers(): Promise<Array<{ id: string }>> {
   const res = await fetch(`${API_URL}/v1/admin/members`, { headers: apiHeaders });
@@ -184,7 +213,10 @@ export default class StepImpl {
 
   @BeforeScenario()
   public async beforeScenario(): Promise<void> {
+    // ブートストラップ職員でAPI認証 → データ投入 → このシナリオ専用の職員を作成
+    apiHeaders.Authorization = await loginApi(BOOTSTRAP_STAFF.email, BOOTSTRAP_STAFF.password);
     await resetAndSeed();
+    scenarioStaff = await createScenarioStaff();
     context = await browser!.newContext({ baseURL: BASE_URL });
     page = await context.newPage();
     // confirm() は自動承認（削除確認など）
@@ -198,27 +230,36 @@ export default class StepImpl {
     page = null;
   }
 
-  // ── ログイン（React は開発用トークン認証のためログインUIは無い。
-  //    "開く" はアプリ起点へ遷移、ID/PW入力とボタン押下は no-op） ──
+  // ── ログイン（UI操作で実ログイン。各シナリオは専用職員でログインしてから開始する）──
   @Step('ログインページを開く')
   public async openLogin(): Promise<void> {
-    await p().goto('/');
+    await p().goto('/login');
+    await expect(p().getByTestId('login-submit')).toBeVisible();
+  }
+
+  @Step('職員アカウントでログインする')
+  public async loginAsScenarioStaff(): Promise<void> {
+    await p().getByTestId('login-id').fill(scenarioStaff.email);
+    await p().getByTestId('login-password').fill(scenarioStaff.password);
+    await p().getByTestId('login-submit').click();
     await expect(p()).toHaveURL(/\/dashboard/);
   }
 
-  @Step('ログインIDに <email> を入力する')
-  public async fillLoginId(_email: string): Promise<void> {
-    /* React: ログインUIなし（dev トークン認証）。仕様維持のため no-op */
+  // ── セッション失効 → ログイン画面遷移（401ハンドリング）──
+  @Step('セッションを無効にする')
+  public async invalidateSession(): Promise<void> {
+    await p().evaluate(() => localStorage.setItem('staff_token', 'invalid.token.value'));
   }
 
-  @Step('パスワードに <password> を入力する')
-  public async fillPassword(_password: string): Promise<void> {
-    /* no-op */
+  @Step('会員管理ページに直接アクセスする')
+  public async gotoMembersDirect(): Promise<void> {
+    await p().goto('/members');
   }
 
-  @Step('ログインボタンを押す')
-  public async clickLogin(): Promise<void> {
-    /* no-op（既に認証済み） */
+  @Step('ログイン画面が表示される')
+  public async assertOnLogin(): Promise<void> {
+    await expect(p()).toHaveURL(/\/login/);
+    await expect(p().getByTestId('login-submit')).toBeVisible();
   }
 
   // ── ナビゲーション ──
@@ -588,6 +629,104 @@ export default class StepImpl {
   @Step('コーチング記録のエラーに <text> が表示される')
   public async assertCoachingError(text: string): Promise<void> {
     await expect(p().getByTestId('cr-error')).toContainText(text);
+  }
+
+  @Step('テスト内容で教材 <code> を実施済み・点数 <score>・次回 <next> にする')
+  public async fillTestContent(code: string, score: string, next: string): Promise<void> {
+    // テスト行は index 付き testid。教材コードで行を特定し、その行内の要素を操作する。
+    const row = p().locator('[data-testid^="cr-test-row-"]').filter({ hasText: code });
+    await row.locator('[data-testid^="cr-test-status-"]').selectOption('実施済み');
+    await row.locator('[data-testid^="cr-test-score-"]').fill(score);
+    await row.locator('[data-testid^="cr-test-next-"]').selectOption(next);
+  }
+
+  @Step('テスト内容に新教材 <code> を追加する')
+  public async addNewTestTextbook(code: string): Promise<void> {
+    const sel = p().getByTestId('cr-new-textbook-select');
+    const value = await sel.locator('option').filter({ hasText: code }).first().getAttribute('value');
+    await sel.selectOption(value!);
+    await p().getByTestId('cr-new-textbook-add').click();
+    await expect(p().locator('[data-testid^="cr-test-row-"]').filter({ hasText: code })).toBeVisible();
+  }
+
+  @Step('月次振り返りに <text> と入力する')
+  public async fillMonthlyReview(text: string): Promise<void> {
+    await p().getByTestId('cr-monthlyReview').fill(text);
+  }
+
+  @Step('コーチング記録一覧の <type> を編集する')
+  public async editCoachingByType(type: string): Promise<void> {
+    const row = p().locator('[data-testid^="coaching-row-"]').filter({ hasText: type }).first();
+    await row.getByRole('button', { name: '編集' }).click();
+    await expect(p().getByTestId('cr-modal')).toBeVisible();
+  }
+
+  @Step('コーチング記録を削除する')
+  public async deleteCoaching(): Promise<void> {
+    // confirm() は @BeforeScenario で自動承認済み。
+    await p().getByTestId('cr-delete').click();
+    await expect(p().getByTestId('cr-modal')).toBeHidden();
+  }
+
+  @Step('コーチング記録一覧に <text> が表示されない')
+  public async assertCoachingListNotContains(text: string): Promise<void> {
+    await expect(p().getByTestId('coaching-card')).not.toContainText(text);
+  }
+
+  @Step('共有事項に <text> と入力する')
+  public async fillSharedNote(text: string): Promise<void> {
+    await p().getByTestId('cr-sharedNote').fill(text);
+  }
+
+  @Step('自由記述を 振り返り <review> ・アドバイス <advice> ・その他 <other> で入力する')
+  public async fillFreeText(review: string, advice: string, other: string): Promise<void> {
+    await p().getByTestId('cr-monthlyReview').fill(review);
+    await p().getByTestId('cr-coachAdvice').fill(advice);
+    await p().getByTestId('cr-otherNotes').fill(other);
+  }
+
+  @Step('テスト内容で教材 <code> を 範囲 <range> ・形式 <format> ・点数 <score> ・備考 <note> ・次回 <next> で実施済みにする')
+  public async fillTestContentFull(
+    code: string,
+    range: string,
+    format: string,
+    score: string,
+    note: string,
+    next: string,
+  ): Promise<void> {
+    const row = p().locator('[data-testid^="cr-test-row-"]').filter({ hasText: code });
+    await row.locator('[data-testid^="cr-test-status-"]').selectOption('実施済み');
+    await row.locator('[data-testid^="cr-test-range-"]').fill(range);
+    await row.locator('[data-testid^="cr-test-format-"]').fill(format);
+    await row.locator('[data-testid^="cr-test-score-"]').fill(score);
+    await row.locator('[data-testid^="cr-test-note-"]').fill(note);
+    await row.locator('[data-testid^="cr-test-next-"]').selectOption(next);
+  }
+
+  @Step('編集中のコーチングの <field> が <value> である')
+  public async assertCoachingField(field: string, value: string): Promise<void> {
+    const map: Record<string, string> = {
+      実施日: 'cr-date',
+      担当コーチ: 'cr-coachName',
+      月次振り返り: 'cr-monthlyReview',
+      アドバイス: 'cr-coachAdvice',
+      その他: 'cr-otherNotes',
+      共有事項: 'cr-sharedNote',
+    };
+    const tid = map[field];
+    if (!tid) throw new Error(`不明なフィールド: ${field}`);
+    await expect(p().getByTestId(tid)).toHaveValue(value);
+  }
+
+  @Step('コーチング記録を削除しようとする')
+  public async tryDeleteCoaching(): Promise<void> {
+    await p().getByTestId('cr-delete').click();
+  }
+
+  @Step('コーチング記録モーダルを閉じる')
+  public async closeCoachingModal(): Promise<void> {
+    await p().getByTestId('cr-close').click();
+    await expect(p().getByTestId('cr-modal')).toBeHidden();
   }
 
   // ── 学習記録（カルテ） ──

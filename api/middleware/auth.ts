@@ -2,6 +2,7 @@ import { createMiddleware } from 'hono/factory';
 import { verify } from 'hono/jwt';
 import { MemberId } from '../domain/member/member';
 import { StaffId } from '../domain/staff/staff';
+import { jwtSecret } from '../config/secrets';
 
 /**
  * 認証ミドルウェア（シーム）。
@@ -13,8 +14,6 @@ import { StaffId } from '../domain/staff/staff';
  * アカウント基盤ができたら verify を JWKS 等に差し替えるだけで、
  * 「抽出 → Context → Controller」の継ぎ目は不変。
  */
-
-const JWT_SECRET = process.env.JWT_SECRET ?? 'test-key';
 
 export interface JwtClaims {
   /** 会員用エンドポイントの主体 */
@@ -36,7 +35,8 @@ export async function verifyJwt(authHeader?: string): Promise<JwtClaims | null> 
   if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
   const token = authHeader.slice('Bearer '.length);
   try {
-    return (await verify(token, JWT_SECRET, 'HS256')) as JwtClaims;
+    // 期限切れ・改ざんは verify が例外 → null（呼び出し側で 401）。
+    return (await verify(token, jwtSecret(), 'HS256')) as JwtClaims;
   } catch {
     return null;
   }

@@ -1,6 +1,13 @@
-import { createRootRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
+import { createRootRoute, Link, Outlet, redirect, useRouterState } from '@tanstack/react-router'
+import { getToken, getUser, clearAuth } from '../../lib/auth'
 
 export const Route = createRootRoute({
+  beforeLoad: ({ location }) => {
+    // 未ログインで /login 以外にアクセスしたらログイン画面へ
+    if (!getToken() && location.pathname !== '/login') {
+      throw redirect({ to: '/login' })
+    }
+  },
   component: RootLayout,
 })
 
@@ -16,8 +23,19 @@ const NAV = [
 
 const TITLES: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.to, n.label]))
 
+function logout() {
+  clearAuth()
+  window.location.assign('/login')
+}
+
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+
+  // ログイン画面はサイドバー等を出さない（ベアレイアウト）
+  if (pathname === '/login') {
+    return <Outlet />
+  }
+
   const title = TITLES[`/${pathname.split('/')[1]}`] ?? 'ダッシュボード'
   const today = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric',
@@ -25,6 +43,8 @@ function RootLayout() {
     day: 'numeric',
     weekday: 'short',
   })
+  const user = getUser()
+  const initial = (user?.name ?? 'コ').charAt(0)
 
   return (
     <div className="layout">
@@ -62,12 +82,15 @@ function RootLayout() {
           </div>
           <div className="topbar-right">
             <div className="admin-info">
-              <div className="admin-avatar">コ</div>
+              <div className="admin-avatar">{initial}</div>
               <div>
-                <div className="admin-name">コーチA</div>
-                <div className="admin-role">Coach</div>
+                <div className="admin-name">{user?.name ?? '-'}</div>
+                <div className="admin-role">{user?.role ?? ''}</div>
               </div>
             </div>
+            <button className="logout-btn" data-testid="logout" onClick={logout}>
+              ログアウト
+            </button>
           </div>
         </header>
 

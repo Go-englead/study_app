@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './app/routes/__root'
 import { Route as TextbooksRouteImport } from './app/routes/textbooks'
 import { Route as StaffRouteImport } from './app/routes/staff'
 import { Route as ProgosRouteImport } from './app/routes/progos'
+import { Route as LoginRouteImport } from './app/routes/login'
 import { Route as KarteRouteImport } from './app/routes/karte'
 import { Route as DashboardRouteImport } from './app/routes/dashboard'
 import { Route as IndexRouteImport } from './app/routes/index'
@@ -30,6 +31,11 @@ const StaffRoute = StaffRouteImport.update({
 const ProgosRoute = ProgosRouteImport.update({
   id: '/progos',
   path: '/progos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KarteRoute = KarteRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/karte': typeof KarteRoute
+  '/login': typeof LoginRoute
   '/progos': typeof ProgosRoute
   '/staff': typeof StaffRoute
   '/textbooks': typeof TextbooksRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/karte': typeof KarteRoute
+  '/login': typeof LoginRoute
   '/progos': typeof ProgosRoute
   '/staff': typeof StaffRoute
   '/textbooks': typeof TextbooksRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/karte': typeof KarteRoute
+  '/login': typeof LoginRoute
   '/progos': typeof ProgosRoute
   '/staff': typeof StaffRoute
   '/textbooks': typeof TextbooksRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/karte'
+    | '/login'
     | '/progos'
     | '/staff'
     | '/textbooks'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/karte'
+    | '/login'
     | '/progos'
     | '/staff'
     | '/textbooks'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/karte'
+    | '/login'
     | '/progos'
     | '/staff'
     | '/textbooks'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   KarteRoute: typeof KarteRoute
+  LoginRoute: typeof LoginRoute
   ProgosRoute: typeof ProgosRoute
   StaffRoute: typeof StaffRoute
   TextbooksRoute: typeof TextbooksRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/progos'
       fullPath: '/progos'
       preLoaderRoute: typeof ProgosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/karte': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   KarteRoute: KarteRoute,
+  LoginRoute: LoginRoute,
   ProgosRoute: ProgosRoute,
   StaffRoute: StaffRoute,
   TextbooksRoute: TextbooksRoute,

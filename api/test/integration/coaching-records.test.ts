@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'v
 import { randomUUID } from 'node:crypto';
 import { createDatabase } from '../../db/client';
 import * as schema from '../../db/schema';
-import { adminBearer } from '../helpers/auth';
+import { seedAndLogin } from '../helpers/auth';
 
 const apiUrl = inject('apiUrl');
 const { db, pool } = createDatabase(inject('databaseUrl'));
@@ -13,7 +13,7 @@ let t1: string; // 教材T01
 let t2: string; // 教材T02
 
 beforeAll(async () => {
-  auth = await adminBearer('MW001');
+  auth = await seedAndLogin(inject('databaseUrl'), apiUrl);
 });
 afterAll(async () => {
   await pool.end();
@@ -267,6 +267,74 @@ describe('DELETE', () => {
     expect(parent.rows).toHaveLength(0);
     const items = await pool.query('SELECT * FROM cr_selection_items WHERE coaching_record_id=$1', [id]);
     expect(items.rows).toHaveLength(0);
+  });
+});
+
+// 削除・編集の整合性（ドメインルールを壊す操作を拒否）
+const put = (id: string, body: unknown) =>
+  fetch(recUrl(id), { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
+const del = (id: string) => fetch(recUrl(id), { method: 'DELETE', headers: headers() });
+const FIRST = (date = '2026-06-03') => ({ type: '初回コーチング', date, coachName: '見本コーチ' });
+const REGULAR = (date = '2026-06-04') => ({ type: '通常コーチング', date, coachName: '見本コーチ' });
+const idOf = async (res: Response) => (await res.json()).id as string;
+
+describe('削除の整合性', () => {
+  it('通常コーチングがあると初回コーチングは削除できない（400・残る）', async () => {
+    await create(ORIENT());
+    const firstId = await idOf(await create(FIRST()));
+    await create(REGULAR());
+    const res = await del(firstId);
+    expect(res.status).toBe(400);
+    const { rows } = await pool.query('SELECT 1 FROM coaching_records WHERE id=$1', [firstId]);
+    expect(rows).toHaveLength(1); // 残っている
+  });
+
+  it('初回/通常があるとオリエンは削除できない（400）', async () => {
+    const orientId = await idOf(await create(ORIENT()));
+    await create(FIRST());
+    await create(REGULAR());
+    expect((await del(orientId)).status).toBe(400);
+  });
+
+  it('通常コーチングは削除できる（204）', async () => {
+    await create(ORIENT());
+    await create(FIRST());
+    const regId = await idOf(await create(REGULAR()));
+    expect((await del(regId)).status).toBe(204);
+  });
+
+  it('教材選定・その他は削除できる（204）', async () => {
+    const selId = await idOf(await create(SELECTION()));
+    expect((await del(selId)).status).toBe(204);
+    const otherId = await idOf(await create({ type: 'その他', date: '2026-06-05', coachName: '見本コーチ' }));
+    expect((await del(otherId)).status).toBe(204);
+  });
+});
+
+describe('編集の整合性', () => {
+  it('初回コーチングを通常コーチングへ編集できない（400）', async () => {
+    await create(ORIENT());
+    const firstId = await idOf(await create(FIRST()));
+    expect((await put(firstId, REGULAR())).status).toBe(400);
+  });
+
+  it('初回が無い状態で通常へ編集できない（400）', async () => {
+    await create(ORIENT());
+    const otherId = await idOf(await create({ type: 'その他', date: '2026-06-05', coachName: '見本コーチ' }));
+    expect((await put(otherId, REGULAR())).status).toBe(400);
+  });
+
+  it('初回がある状態でオリエンを別種別へ編集すると孤児化するので拒否（400）', async () => {
+    const orientId = await idOf(await create(ORIENT()));
+    await create(FIRST());
+    const res = await put(orientId, { type: 'その他', date: '2026-06-02', coachName: '見本コーチ' });
+    expect(res.status).toBe(400);
+  });
+
+  it('依存が無ければオリエンを別種別へ編集できる（200）', async () => {
+    const orientId = await idOf(await create(ORIENT()));
+    const res = await put(orientId, { type: 'その他', date: '2026-06-02', coachName: '見本コーチ', otherNotes: 'メモ' });
+    expect(res.status).toBe(200);
   });
 });
 

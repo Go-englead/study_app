@@ -1311,7 +1311,31 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** スタッフ登録（パスワードはハッシュ化して別テーブルに保存） */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StaffRegisterInput"];
+                };
+            };
+            responses: {
+                /** @description 登録成功 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffSummary"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1407,8 +1431,28 @@ export interface components {
             /** Format: email */
             email?: string;
             name?: string;
+            role?: string;
+        };
+        StaffRegisterInput: {
+            /** @example S001 */
+            staffCode: string;
+            name: string;
             /** @enum {string} */
-            role?: "member" | "coach" | "consultant" | "cs";
+            role: "Coach" | "Teacher" | "Consultant" | "CS";
+            /** Format: email */
+            email: string;
+            password: string;
+            iconUrl?: string;
+            meetUrl?: string;
+            groupContent?: string;
+        };
+        StaffSummary: {
+            id: string;
+            staffCode: string;
+            name: string;
+            role: string;
+            /** Format: email */
+            email: string;
         };
         /** @enum {string} */
         MemberStatus: "入学手続き中" | "受講中" | "休会中" | "卒業" | "継続中" | "再入学手続き中" | "途中退会";

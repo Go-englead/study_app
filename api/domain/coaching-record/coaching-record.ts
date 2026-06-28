@@ -480,3 +480,53 @@ function withFutureCheck(date: DateOnly): DateOnly {
   if (isFuture(date)) throw new DomainError('実施日は本日以前の日付を指定してください');
   return date;
 }
+
+// ───────────────────── 集合整合性（削除・編集後の検証） ─────────────────────
+/**
+ * 会員のコーチング記録「集合全体」が不変条件を満たすか検証する。
+ * 削除後・編集後の集合に対して呼び、依存関係を壊す操作（初回を残したままオリエン削除、
+ * 通常を残したまま初回削除、オリエンを別種別へ変更して初回を孤児化 等）を拒否する。
+ */
+export function assertCoachingSetConsistent(records: readonly CoachingRecord[]): void {
+  // 教材選定/オリエン/初回 は各1回まで
+  for (const t of ['教材選定', 'オリエンテーション', '初回コーチング'] as const) {
+    if (records.filter((r) => r.type === t).length > 1) {
+      throw new DomainError(`${t}が重複しています`);
+    }
+  }
+  // 通常コーチングの回数は一意
+  const numbers = records
+    .filter((r): r is RegularCoachingRecord => r.type === '通常コーチング')
+    .map((r) => r.coachingNumber);
+  if (new Set(numbers).size !== numbers.length) {
+    throw new DomainError('通常コーチングの回数が重複しています');
+  }
+
+  const orient = records.find((r) => r.type === 'オリエンテーション');
+  const first = records.find((r) => r.type === '初回コーチング');
+  const regulars = records.filter((r) => r.type === '通常コーチング');
+
+  // 初回コーチングには オリエンテーション が前提（日付順序含む）
+  if (first) {
+    if (!orient) {
+      throw new DomainError('オリエンテーションは初回コーチングの前提のため、この操作はできません');
+    }
+    if (!dateLte(orient.date, first.date)) {
+      throw new DomainError('実施日の順序が不正になります（オリエンテーション→初回コーチング）');
+    }
+  }
+  // 通常コーチングには オリエン＋初回 が前提
+  if (regulars.length > 0) {
+    if (!orient) {
+      throw new DomainError('オリエンテーションは通常コーチングの前提のため、この操作はできません');
+    }
+    if (!first) {
+      throw new DomainError('初回コーチングは通常コーチングの前提のため、この操作はできません');
+    }
+    for (const r of regulars) {
+      if (!dateLte(first.date, r.date)) {
+        throw new DomainError('実施日の順序が不正になります（初回コーチング→通常コーチング）');
+      }
+    }
+  }
+}

@@ -7,6 +7,27 @@ import { Pool } from 'pg';
 import { serve } from '@hono/node-server';
 import type { GlobalSetupContext } from 'vitest/node';
 import { createApp } from '../../app';
+import { createDatabase } from '../../db/client';
+import { Argon2PasswordHasher } from '../../gateway/Argon2PasswordHasher';
+import { StaffAuthRepositoryImpl } from '../../gateway/StaffAuthRepositoryImpl';
+import { RegisterStaffUseCase } from '../../usecase/staff/RegisterStaffUseCase';
+
+/** ログイン用の職員を1人投入する（テストはこの資格情報でログインする）。 */
+async function seedStaff(connectionString: string): Promise<void> {
+  const { db, pool } = createDatabase(connectionString);
+  try {
+    const uc = new RegisterStaffUseCase(new StaffAuthRepositoryImpl(db), new Argon2PasswordHasher());
+    await uc.register({
+      staffCode: 'S001',
+      name: 'コーチA',
+      role: 'Coach',
+      email: 'coach_001@example.jp',
+      password: 'coach001',
+    });
+  } finally {
+    await pool.end();
+  }
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations');
@@ -38,6 +59,7 @@ export default async function ({ provide }: GlobalSetupContext) {
   const databaseUrl = container.getConnectionUri();
 
   await applyMigrations(databaseUrl);
+  await seedStaff(databaseUrl);
 
   const { app, close } = createApp(databaseUrl);
   const server = serve({ fetch: app.fetch, port: 0 });

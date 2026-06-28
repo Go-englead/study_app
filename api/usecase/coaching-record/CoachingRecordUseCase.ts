@@ -22,6 +22,7 @@ import {
   createFirstCoachingRecord,
   createRegularCoachingRecord,
   createOtherRecord,
+  assertCoachingSetConsistent,
 } from '../../domain/coaching-record/coaching-record';
 import { CoachingRecordRepository } from '../../domain/coaching-record/coaching-record-repository';
 import { CoachingRecordDto } from './CoachingRecordDto';
@@ -89,13 +90,21 @@ export class CoachingRecordUseCase {
     const existingExceptSelf = all.filter((r) => (r.id as string) !== id);
     const result = this.build(id, memberId, input, existingExceptSelf);
 
+    // 編集後の集合が整合するか（依存先を壊す型変更などを拒否）
+    assertCoachingSetConsistent([...existingExceptSelf, result.record]);
+
     await this.persist(memberId, result);
     return toDto(result.record);
   }
 
-  /** 削除（子テーブルは CASCADE）。 */
+  /** 削除（子テーブルは CASCADE）。依存先を孤児化する削除は拒否。 */
   async delete(id: string): Promise<void> {
-    await this.records.delete(id as unknown as CoachingRecordId);
+    const target = await this.records.findById(createCoachingRecordId(id));
+    if (!target) return; // 冪等
+    const all = await this.records.findByMember(target.memberId);
+    const remaining = all.filter((r) => (r.id as string) !== id);
+    assertCoachingSetConsistent(remaining);
+    await this.records.delete(createCoachingRecordId(id));
   }
 
   // ───────────────────── 内部 ─────────────────────

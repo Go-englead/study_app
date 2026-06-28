@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'v
 import { randomUUID } from 'node:crypto';
 import { createDatabase } from '../../db/client';
 import * as schema from '../../db/schema';
-import { adminBearer } from '../helpers/auth';
+import { seedAndLogin } from '../helpers/auth';
 
 const apiUrl = inject('apiUrl');
 const { db, pool } = createDatabase(inject('databaseUrl'));
@@ -13,7 +13,7 @@ let csId: string;
 let coachId: string;
 
 beforeAll(async () => {
-  auth = await adminBearer('MW001');
+  auth = await seedAndLogin(inject('databaseUrl'), apiUrl);
 });
 
 afterAll(async () => {
