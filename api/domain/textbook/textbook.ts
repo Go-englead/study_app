@@ -1,41 +1,27 @@
-import { Brand } from '../shared/brand';
 import { DomainError } from '../shared/domain-error';
 
-// ═══════════════════════ 識別子 ═══════════════════════
-export type TextbookId = Brand<string, 'TextbookId'>;
-
-export function createTextbookId(raw: string): TextbookId {
-  const value = (raw ?? '').trim();
-  if (!value) throw new DomainError('教材IDは必須です');
-  return value as TextbookId;
-}
-
-// ═══════════════════════ 値オブジェクト ═══════════════════════
-/** 進捗の単位 */
-export type TextbookUnit = 'Day' | 'Chapter' | 'Lesson' | '回';
-
-const UNITS: readonly TextbookUnit[] = ['Day', 'Chapter', 'Lesson', '回'];
-
-export function createTextbookUnit(raw: string): TextbookUnit {
-  if (!(UNITS as readonly string[]).includes(raw)) {
-    throw new DomainError(`単位が不正です: ${raw}`);
+// ═══════════════════════ 値オブジェクト（生成・検証は create に閉じる） ═══════════════════════
+export class TextbookId {
+  private constructor(readonly value: string) {}
+  static create(raw: string): TextbookId {
+    const v = (raw ?? '').trim();
+    if (!v) throw new DomainError('教材IDは必須です');
+    return new TextbookId(v);
   }
-  return raw as TextbookUnit;
 }
 
-// ═══════════════════════ 集約ルート：Textbook ═══════════════════════
-export interface Textbook {
-  /** システムID（UUID）。アプリ側で採番。 */
-  readonly id: TextbookId;
-  /** 教材コード（業務キー。例 'T01'）。id(UUID) とは別の自然キー。 */
-  readonly code: string;
-  readonly name: string;
-  readonly category: string;
-  readonly unit: TextbookUnit;
-  readonly color: string;
-  readonly iconUrl?: string;
-  readonly manualUrl?: string;
-  readonly note?: string;
+export type TextbookUnitName = 'Day' | 'Chapter' | 'Lesson' | '回';
+
+/** 進捗の単位。 */
+export class TextbookUnit {
+  private static readonly NAMES: readonly TextbookUnitName[] = ['Day', 'Chapter', 'Lesson', '回'];
+  private constructor(readonly value: TextbookUnitName) {}
+  static create(raw: string): TextbookUnit {
+    if (!(TextbookUnit.NAMES as readonly string[]).includes(raw)) {
+      throw new DomainError(`単位が不正です: ${raw}`);
+    }
+    return new TextbookUnit(raw as TextbookUnitName);
+  }
 }
 
 export interface CreateTextbookInput {
@@ -52,23 +38,6 @@ export interface CreateTextbookInput {
   note?: string;
 }
 
-export function createTextbook(input: CreateTextbookInput): Textbook {
-  if (!input.code?.trim()) throw new DomainError('教材コードは必須です');
-  if (!input.name?.trim()) throw new DomainError('教材名は必須です');
-  if (!input.category?.trim()) throw new DomainError('カテゴリは必須です');
-  return {
-    id: createTextbookId(input.id),
-    code: input.code,
-    name: input.name,
-    category: input.category,
-    unit: createTextbookUnit(input.unit),
-    color: input.color?.trim() || '#1A5276',
-    iconUrl: input.iconUrl,
-    manualUrl: input.manualUrl,
-    note: input.note,
-  };
-}
-
 export interface UpdateTextbookInput {
   name?: string;
   category?: string;
@@ -79,21 +48,79 @@ export interface UpdateTextbookInput {
   note?: string;
 }
 
-export function updateTextbook(current: Textbook, patch: UpdateTextbookInput): Textbook {
-  if (patch.name !== undefined && !patch.name.trim()) {
-    throw new DomainError('教材名は必須です');
+// ═══════════════════════ 集約ルート：Textbook ═══════════════════════
+export class Textbook {
+  constructor(
+    /** システムID（UUID）。アプリ側で採番。 */
+    readonly id: TextbookId,
+    /** 教材コード（業務キー。例 'T01'）。id(UUID) とは別の自然キー。 */
+    readonly code: string,
+    readonly name: string,
+    readonly category: string,
+    readonly unit: TextbookUnit,
+    readonly color: string,
+    readonly iconUrl?: string,
+    readonly manualUrl?: string,
+    readonly note?: string,
+  ) {}
+
+  /** プロフィール更新（不変条件をカプセル化）。 */
+  update(patch: UpdateTextbookInput): Textbook {
+    if (patch.name !== undefined && !patch.name.trim()) throw new DomainError('教材名は必須です');
+    if (patch.category !== undefined && !patch.category.trim()) throw new DomainError('カテゴリは必須です');
+    return new Textbook(
+      this.id,
+      this.code,
+      patch.name ?? this.name,
+      patch.category ?? this.category,
+      patch.unit !== undefined ? TextbookUnit.create(patch.unit) : this.unit,
+      patch.color ?? this.color,
+      patch.iconUrl ?? this.iconUrl,
+      patch.manualUrl ?? this.manualUrl,
+      patch.note ?? this.note,
+    );
   }
-  if (patch.category !== undefined && !patch.category.trim()) {
-    throw new DomainError('カテゴリは必須です');
+
+  /** 新規作成（入力検証つき）。 */
+  static create(input: CreateTextbookInput): Textbook {
+    if (!input.code?.trim()) throw new DomainError('教材コードは必須です');
+    if (!input.name?.trim()) throw new DomainError('教材名は必須です');
+    if (!input.category?.trim()) throw new DomainError('カテゴリは必須です');
+    return new Textbook(
+      TextbookId.create(input.id),
+      input.code,
+      input.name,
+      input.category,
+      TextbookUnit.create(input.unit),
+      input.color?.trim() || '#1A5276',
+      input.iconUrl,
+      input.manualUrl,
+      input.note,
+    );
   }
-  return {
-    ...current,
-    name: patch.name ?? current.name,
-    category: patch.category ?? current.category,
-    unit: patch.unit !== undefined ? createTextbookUnit(patch.unit) : current.unit,
-    color: patch.color ?? current.color,
-    iconUrl: patch.iconUrl ?? current.iconUrl,
-    manualUrl: patch.manualUrl ?? current.manualUrl,
-    note: patch.note ?? current.note,
-  };
+
+  /** 永続データから復元。 */
+  static fromRecord(r: {
+    id: string;
+    code: string;
+    name: string;
+    category: string;
+    unit: string;
+    color: string;
+    iconUrl?: string;
+    manualUrl?: string;
+    note?: string;
+  }): Textbook {
+    return new Textbook(
+      TextbookId.create(r.id),
+      r.code,
+      r.name,
+      r.category,
+      TextbookUnit.create(r.unit),
+      r.color,
+      r.iconUrl,
+      r.manualUrl,
+      r.note,
+    );
+  }
 }

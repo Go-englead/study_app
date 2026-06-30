@@ -1,21 +1,20 @@
-import { Brand } from '../shared/brand';
 import { DomainError } from '../shared/domain-error';
-import { DateOnly, createDateOnly, dateLte, isFuture } from '../shared/value-objects';
-import { MemberId, createMemberId } from '../member/member';
-import { TextbookId, createTextbookId } from '../textbook/textbook';
+import { DateOnly } from '../shared/value-objects';
+import { MemberId } from '../member/member';
+import { TextbookId } from '../textbook/textbook';
 
-export type CoachingRecordId = Brand<string, 'CoachingRecordId'>;
-
-export function createCoachingRecordId(raw: string): CoachingRecordId {
-  const value = (raw ?? '').trim();
-  if (!value) throw new DomainError('コーチング記録IDは必須です');
-  return value as CoachingRecordId;
+export class CoachingRecordId {
+  private constructor(readonly value: string) {}
+  static create(raw: string): CoachingRecordId {
+    const v = (raw ?? '').trim();
+    if (!v) throw new DomainError('コーチング記録IDは必須です');
+    return new CoachingRecordId(v);
+  }
 }
 
 // ───────────────────── 教材割り当てへの効果（effects） ─────────────────────
 // コーチング記録集約は「教材割り当て集約をどう操作すべきか」を純粋に値で返す。
 // 実際の永続化（textbook_assignments の追加/解除/卒業）は usecase が冪等に適用する。
-
 export interface AssignmentEffect {
   readonly textbookId: TextbookId;
   readonly dailyGoalMinutes: number | null;
@@ -31,16 +30,13 @@ export interface AssignmentEffects {
   readonly toGraduate: readonly TextbookId[];
 }
 
-const NO_EFFECTS: AssignmentEffects = { toAdd: [], toRemove: [], toGraduate: [] };
-
 /** create/update の戻り値：自分自身の記録＋教材割り当てへの効果。 */
 export interface CoachingResult<T extends CoachingRecord> {
   readonly record: T;
   readonly effects: AssignmentEffects;
 }
 
-// ───────────────────── 値オブジェクト ─────────────────────
-
+// ───────────────────── 値オブジェクト（構造体は interface・検証は CoachingRecords の static に集約） ─────────────────────
 /** 教材選定で選ぶ教材（割り当ての元データ）。 */
 export interface SelectedTextbook {
   readonly textbookId: TextbookId;
@@ -53,29 +49,6 @@ export type SelectedTextbookInput = {
   dailyGoalMinutes?: number | null;
   note?: string;
 };
-
-export function createSelectedTextbook(input: SelectedTextbookInput): SelectedTextbook {
-  const goal = input.dailyGoalMinutes;
-  if (goal !== null && goal !== undefined && (!Number.isFinite(goal) || goal < 0)) {
-    throw new DomainError('教材の1日目標分数は0以上で指定してください');
-  }
-  return {
-    textbookId: createTextbookId(input.textbookId),
-    dailyGoalMinutes: goal ?? null,
-    note: input.note ?? '',
-  };
-}
-
-function toEffect(s: SelectedTextbook): AssignmentEffect {
-  return { textbookId: s.textbookId, dailyGoalMinutes: s.dailyGoalMinutes, note: s.note };
-}
-
-function assertNoDuplicateTextbooks(items: readonly { textbookId: TextbookId }[]): void {
-  const ids = items.map((s) => s.textbookId);
-  if (new Set(ids).size !== ids.length) {
-    throw new DomainError('同一教材を重複して指定することはできません');
-  }
-}
 
 /** テスト実施状態（未選択はそもそも保存しない）。 */
 export type TestStatus = '実施済み' | '未実施';
@@ -103,23 +76,7 @@ export type TextbookTestInput = {
   nextStatus?: NextTextbookStatus;
 };
 
-export function createTextbookTest(input: TextbookTestInput): TextbookTest {
-  if (input.testStatus !== '実施済み' && input.testStatus !== '未実施') {
-    throw new DomainError('テスト状態は「実施済み」または「未実施」で指定してください');
-  }
-  return {
-    textbookId: createTextbookId(input.textbookId),
-    testStatus: input.testStatus,
-    range: input.range ?? '',
-    format: input.format ?? '',
-    score: input.score ?? '',
-    note: input.note ?? '',
-    nextStatus: input.nextStatus ?? '継続',
-  };
-}
-
 // ───────────────────── 種別ごとの具象型（判別可能ユニオン） ─────────────────────
-
 export type CoachingType =
   | '教材選定'
   | 'オリエンテーション'
@@ -188,49 +145,7 @@ export type CoachingSessionRecord = FirstCoachingRecord | RegularCoachingRecord;
 /** 自由記述のみの種別（オリエン・その他）。 */
 export type FreeTextRecord = OrientationRecord | OtherRecord;
 
-// ───────────────────── 共通ヘルパー ─────────────────────
-
-function baseFrom(input: { id: string; memberId: string; date: string; coachName: string }): CoachingRecordBase {
-  if (!input.coachName?.trim()) throw new DomainError('担当コーチは必須です');
-  const date = createDateOnly(input.date);
-  if (isFuture(date)) throw new DomainError('実施日は本日以前の日付を指定してください');
-  return {
-    id: createCoachingRecordId(input.id),
-    memberId: createMemberId(input.memberId),
-    date,
-    coachName: input.coachName,
-  };
-}
-
-function freeTextFrom(input: { monthlyReview?: string; coachAdvice?: string; otherNotes?: string }): FreeTextFields {
-  return {
-    monthlyReview: input.monthlyReview ?? '',
-    coachAdvice: input.coachAdvice ?? '',
-    otherNotes: input.otherNotes ?? '',
-  };
-}
-
-function findByType<T extends CoachingType>(
-  existing: readonly CoachingRecord[],
-  type: T,
-): Extract<CoachingRecord, { type: T }> | undefined {
-  return existing.find((r) => r.type === type) as Extract<CoachingRecord, { type: T }> | undefined;
-}
-
-/** セッションのテスト内容から教材割り当てへの効果を導く。 */
-function sessionEffects(
-  newAssignments: readonly SelectedTextbook[],
-  tests: readonly TextbookTest[],
-): AssignmentEffects {
-  return {
-    toAdd: newAssignments.map(toEffect),
-    toRemove: [],
-    toGraduate: tests.filter((t) => t.nextStatus === '卒業').map((t) => t.textbookId),
-  };
-}
-
-// ───────────────────── create（種別ごと。existing は会員の全コーチング記録） ─────────────────────
-
+// ───────────────────── 入力型 ─────────────────────
 export interface CreateTextbookSelectionInput {
   id: string;
   memberId: string;
@@ -238,25 +153,6 @@ export interface CreateTextbookSelectionInput {
   coachName: string;
   selectedTextbooks: SelectedTextbookInput[];
   sharedNote?: string;
-}
-
-export function createTextbookSelectionRecord(
-  input: CreateTextbookSelectionInput,
-  existing: readonly CoachingRecord[] = [],
-): CoachingResult<TextbookSelectionRecord> {
-  if (findByType(existing, '教材選定')) {
-    throw new DomainError('教材選定は既に登録されています（1回のみ登録可能です）');
-  }
-  const selected = (input.selectedTextbooks ?? []).map(createSelectedTextbook);
-  assertNoDuplicateTextbooks(selected);
-  const record: TextbookSelectionRecord = {
-    ...baseFrom(input),
-    type: '教材選定',
-    selectedTextbooks: selected,
-    sharedNote: input.sharedNote ?? '',
-  };
-  const effects: AssignmentEffects = { toAdd: selected.map(toEffect), toRemove: [], toGraduate: [] };
-  return { record, effects };
 }
 
 export interface CreateSessionInput {
@@ -272,137 +168,15 @@ export interface CreateSessionInput {
   newAssignments?: SelectedTextbookInput[];
 }
 
-export function createOrientationRecord(
-  input: CreateSessionInput,
-  existing: readonly CoachingRecord[] = [],
-): CoachingResult<OrientationRecord> {
-  if (findByType(existing, 'オリエンテーション')) {
-    throw new DomainError('オリエンテーションは既に登録されています（1回のみ登録可能です）');
-  }
-  const record: OrientationRecord = {
-    ...baseFrom(input),
-    type: 'オリエンテーション',
-    ...freeTextFrom(input),
-  };
-  return { record, effects: NO_EFFECTS };
-}
-
-export function createFirstCoachingRecord(
-  input: CreateSessionInput,
-  existing: readonly CoachingRecord[] = [],
-): CoachingResult<FirstCoachingRecord> {
-  if (findByType(existing, '初回コーチング')) {
-    throw new DomainError('初回コーチングは既に登録されています（1回のみ登録可能です）');
-  }
-  const orient = findByType(existing, 'オリエンテーション');
-  if (!orient) {
-    throw new DomainError('オリエンテーションが完了していないので、初回コーチングは登録できません');
-  }
-  const base = baseFrom(input);
-  if (!dateLte(orient.date, base.date)) {
-    throw new DomainError('初回コーチングの実施日はオリエンテーションの実施日以降である必要があります');
-  }
-  const tests = (input.textbookTests ?? []).map(createTextbookTest);
-  assertNoDuplicateTextbooks(tests);
-  const newAssignments = (input.newAssignments ?? []).map(createSelectedTextbook);
-  const record: FirstCoachingRecord = {
-    ...base,
-    type: '初回コーチング',
-    coachingNumber: 1,
-    ...freeTextFrom(input),
-    textbookTests: tests,
-  };
-  return { record, effects: sessionEffects(newAssignments, tests) };
-}
-
 export interface CreateRegularCoachingInput extends CreateSessionInput {
   coachingNumber: number;
 }
-
-export function createRegularCoachingRecord(
-  input: CreateRegularCoachingInput,
-  existing: readonly CoachingRecord[] = [],
-): CoachingResult<RegularCoachingRecord> {
-  if (!Number.isInteger(input.coachingNumber) || input.coachingNumber < 2) {
-    throw new DomainError('通常コーチングの回数は2以上で指定してください');
-  }
-  const orient = findByType(existing, 'オリエンテーション');
-  const first = findByType(existing, '初回コーチング');
-  if (!orient) {
-    throw new DomainError('オリエンテーションが完了していないので、通常コーチングは登録できません');
-  }
-  if (!first) {
-    throw new DomainError('初回コーチングが完了していないので、通常コーチングは登録できません');
-  }
-  const duplicated = existing.some(
-    (r) => r.type === '通常コーチング' && r.coachingNumber === input.coachingNumber,
-  );
-  if (duplicated) {
-    throw new DomainError(`${input.coachingNumber}回目の通常コーチングは既に登録されています`);
-  }
-  const base = baseFrom(input);
-  if (!dateLte(first.date, base.date)) {
-    throw new DomainError('通常コーチングの実施日は初回コーチングの実施日以降である必要があります');
-  }
-  const tests = (input.textbookTests ?? []).map(createTextbookTest);
-  assertNoDuplicateTextbooks(tests);
-  const newAssignments = (input.newAssignments ?? []).map(createSelectedTextbook);
-  const record: RegularCoachingRecord = {
-    ...base,
-    type: '通常コーチング',
-    coachingNumber: input.coachingNumber,
-    ...freeTextFrom(input),
-    textbookTests: tests,
-  };
-  return { record, effects: sessionEffects(newAssignments, tests) };
-}
-
-export function createOtherRecord(
-  input: CreateSessionInput,
-  _existing: readonly CoachingRecord[] = [],
-): CoachingResult<OtherRecord> {
-  // その他は制約なし（複数登録可）。
-  const record: OtherRecord = { ...baseFrom(input), type: 'その他', ...freeTextFrom(input) };
-  return { record, effects: NO_EFFECTS };
-}
-
-// ───────────────────── update（種別・回数は変更不可。existing は自分を除く既存記録） ─────────────────────
 
 export interface UpdateTextbookSelectionInput {
   date?: string;
   coachName?: string;
   selectedTextbooks?: SelectedTextbookInput[];
   sharedNote?: string;
-}
-
-export function updateTextbookSelectionRecord(
-  current: TextbookSelectionRecord,
-  patch: UpdateTextbookSelectionInput,
-): CoachingResult<TextbookSelectionRecord> {
-  let selectedTextbooks = current.selectedTextbooks;
-  if (patch.selectedTextbooks) {
-    const selected = patch.selectedTextbooks.map(createSelectedTextbook);
-    assertNoDuplicateTextbooks(selected);
-    selectedTextbooks = selected;
-  }
-  const date = patch.date ? withFutureCheck(createDateOnly(patch.date)) : current.date;
-  const record: TextbookSelectionRecord = {
-    ...current,
-    date,
-    coachName: patch.coachName ?? current.coachName,
-    selectedTextbooks,
-    sharedNote: patch.sharedNote ?? current.sharedNote,
-  };
-  // 効果：新しい選定を全て upsert（冪等）／前回あって今回ない教材は解除。
-  const prevIds = new Set(current.selectedTextbooks.map((s) => s.textbookId as string));
-  const nextIds = new Set(selectedTextbooks.map((s) => s.textbookId as string));
-  const toRemove = [...prevIds].filter((id) => !nextIds.has(id)) as TextbookId[];
-  const effects: AssignmentEffects = {
-    toAdd: selectedTextbooks.map(toEffect),
-    toRemove,
-    toGraduate: [],
-  };
-  return { record, effects };
 }
 
 export interface UpdateCoachingSessionInput {
@@ -415,42 +189,6 @@ export interface UpdateCoachingSessionInput {
   newAssignments?: SelectedTextbookInput[];
 }
 
-/** 初回・通常を型を保ったまま更新（種別・回数は変更不可）。日付の順序制約を再検証。 */
-export function updateCoachingSessionRecord<T extends CoachingSessionRecord>(
-  current: T,
-  patch: UpdateCoachingSessionInput,
-  existing: readonly CoachingRecord[] = [],
-): CoachingResult<T> {
-  const date = patch.date ? withFutureCheck(createDateOnly(patch.date)) : current.date;
-  if (current.type === '初回コーチング') {
-    const orient = findByType(existing, 'オリエンテーション');
-    if (orient && !dateLte(orient.date, date)) {
-      throw new DomainError('初回コーチングの実施日はオリエンテーションの実施日以降である必要があります');
-    }
-  } else {
-    const first = findByType(existing, '初回コーチング');
-    if (first && !dateLte(first.date, date)) {
-      throw new DomainError('通常コーチングの実施日は初回コーチングの実施日以降である必要があります');
-    }
-  }
-  let tests = current.textbookTests;
-  if (patch.textbookTests) {
-    tests = patch.textbookTests.map(createTextbookTest);
-    assertNoDuplicateTextbooks(tests);
-  }
-  const newAssignments = (patch.newAssignments ?? []).map(createSelectedTextbook);
-  const record: T = {
-    ...current,
-    date,
-    coachName: patch.coachName ?? current.coachName,
-    monthlyReview: patch.monthlyReview ?? current.monthlyReview,
-    coachAdvice: patch.coachAdvice ?? current.coachAdvice,
-    otherNotes: patch.otherNotes ?? current.otherNotes,
-    textbookTests: tests,
-  };
-  return { record, effects: sessionEffects(newAssignments, tests) };
-}
-
 export interface UpdateFreeTextInput {
   date?: string;
   coachName?: string;
@@ -459,74 +197,327 @@ export interface UpdateFreeTextInput {
   otherNotes?: string;
 }
 
-/** オリエン・その他を型を保ったまま更新（自由記述のみ・効果なし）。 */
-export function updateFreeTextRecord<T extends FreeTextRecord>(
-  current: T,
-  patch: UpdateFreeTextInput,
-): CoachingResult<T> {
-  const date = patch.date ? withFutureCheck(createDateOnly(patch.date)) : current.date;
-  const record: T = {
-    ...current,
-    date,
-    coachName: patch.coachName ?? current.coachName,
-    monthlyReview: patch.monthlyReview ?? current.monthlyReview,
-    coachAdvice: patch.coachAdvice ?? current.coachAdvice,
-    otherNotes: patch.otherNotes ?? current.otherNotes,
-  };
-  return { record, effects: NO_EFFECTS };
-}
+// ═══════════════════════ コーチング記録の生成・更新・整合性（全て static に集約） ═══════════════════════
+export class CoachingRecords {
+  private static readonly NO_EFFECTS: AssignmentEffects = { toAdd: [], toRemove: [], toGraduate: [] };
 
-function withFutureCheck(date: DateOnly): DateOnly {
-  if (isFuture(date)) throw new DomainError('実施日は本日以前の日付を指定してください');
-  return date;
-}
-
-// ───────────────────── 集合整合性（削除・編集後の検証） ─────────────────────
-/**
- * 会員のコーチング記録「集合全体」が不変条件を満たすか検証する。
- * 削除後・編集後の集合に対して呼び、依存関係を壊す操作（初回を残したままオリエン削除、
- * 通常を残したまま初回削除、オリエンを別種別へ変更して初回を孤児化 等）を拒否する。
- */
-export function assertCoachingSetConsistent(records: readonly CoachingRecord[]): void {
-  // 教材選定/オリエン/初回 は各1回まで
-  for (const t of ['教材選定', 'オリエンテーション', '初回コーチング'] as const) {
-    if (records.filter((r) => r.type === t).length > 1) {
-      throw new DomainError(`${t}が重複しています`);
+  // ── 値オブジェクト生成 ──
+  static selectedTextbook(input: SelectedTextbookInput): SelectedTextbook {
+    const goal = input.dailyGoalMinutes;
+    if (goal !== null && goal !== undefined && (!Number.isFinite(goal) || goal < 0)) {
+      throw new DomainError('教材の1日目標分数は0以上で指定してください');
     }
-  }
-  // 通常コーチングの回数は一意
-  const numbers = records
-    .filter((r): r is RegularCoachingRecord => r.type === '通常コーチング')
-    .map((r) => r.coachingNumber);
-  if (new Set(numbers).size !== numbers.length) {
-    throw new DomainError('通常コーチングの回数が重複しています');
+    return {
+      textbookId: TextbookId.create(input.textbookId),
+      dailyGoalMinutes: goal ?? null,
+      note: input.note ?? '',
+    };
   }
 
-  const orient = records.find((r) => r.type === 'オリエンテーション');
-  const first = records.find((r) => r.type === '初回コーチング');
-  const regulars = records.filter((r) => r.type === '通常コーチング');
+  static textbookTest(input: TextbookTestInput): TextbookTest {
+    if (input.testStatus !== '実施済み' && input.testStatus !== '未実施') {
+      throw new DomainError('テスト状態は「実施済み」または「未実施」で指定してください');
+    }
+    return {
+      textbookId: TextbookId.create(input.textbookId),
+      testStatus: input.testStatus,
+      range: input.range ?? '',
+      format: input.format ?? '',
+      score: input.score ?? '',
+      note: input.note ?? '',
+      nextStatus: input.nextStatus ?? '継続',
+    };
+  }
 
-  // 初回コーチングには オリエンテーション が前提（日付順序含む）
-  if (first) {
+  // ── create（種別ごと。existing は会員の全コーチング記録） ──
+  static textbookSelection(
+    input: CreateTextbookSelectionInput,
+    existing: readonly CoachingRecord[] = [],
+  ): CoachingResult<TextbookSelectionRecord> {
+    if (CoachingRecords.findByType(existing, '教材選定')) {
+      throw new DomainError('教材選定は既に登録されています（1回のみ登録可能です）');
+    }
+    const selected = (input.selectedTextbooks ?? []).map((s) => CoachingRecords.selectedTextbook(s));
+    CoachingRecords.assertNoDuplicate(selected);
+    const record: TextbookSelectionRecord = {
+      ...CoachingRecords.baseFrom(input),
+      type: '教材選定',
+      selectedTextbooks: selected,
+      sharedNote: input.sharedNote ?? '',
+    };
+    const effects: AssignmentEffects = { toAdd: selected.map(CoachingRecords.toEffect), toRemove: [], toGraduate: [] };
+    return { record, effects };
+  }
+
+  static orientation(
+    input: CreateSessionInput,
+    existing: readonly CoachingRecord[] = [],
+  ): CoachingResult<OrientationRecord> {
+    if (CoachingRecords.findByType(existing, 'オリエンテーション')) {
+      throw new DomainError('オリエンテーションは既に登録されています（1回のみ登録可能です）');
+    }
+    const record: OrientationRecord = {
+      ...CoachingRecords.baseFrom(input),
+      type: 'オリエンテーション',
+      ...CoachingRecords.freeTextFrom(input),
+    };
+    return { record, effects: CoachingRecords.NO_EFFECTS };
+  }
+
+  static firstCoaching(
+    input: CreateSessionInput,
+    existing: readonly CoachingRecord[] = [],
+  ): CoachingResult<FirstCoachingRecord> {
+    if (CoachingRecords.findByType(existing, '初回コーチング')) {
+      throw new DomainError('初回コーチングは既に登録されています（1回のみ登録可能です）');
+    }
+    const orient = CoachingRecords.findByType(existing, 'オリエンテーション');
     if (!orient) {
-      throw new DomainError('オリエンテーションは初回コーチングの前提のため、この操作はできません');
+      throw new DomainError('オリエンテーションが完了していないので、初回コーチングは登録できません');
     }
-    if (!dateLte(orient.date, first.date)) {
-      throw new DomainError('実施日の順序が不正になります（オリエンテーション→初回コーチング）');
+    const base = CoachingRecords.baseFrom(input);
+    if (!orient.date.lte(base.date)) {
+      throw new DomainError('初回コーチングの実施日はオリエンテーションの実施日以降である必要があります');
     }
+    const tests = (input.textbookTests ?? []).map((t) => CoachingRecords.textbookTest(t));
+    CoachingRecords.assertNoDuplicate(tests);
+    const newAssignments = (input.newAssignments ?? []).map((s) => CoachingRecords.selectedTextbook(s));
+    const record: FirstCoachingRecord = {
+      ...base,
+      type: '初回コーチング',
+      coachingNumber: 1,
+      ...CoachingRecords.freeTextFrom(input),
+      textbookTests: tests,
+    };
+    return { record, effects: CoachingRecords.sessionEffects(newAssignments, tests) };
   }
-  // 通常コーチングには オリエン＋初回 が前提
-  if (regulars.length > 0) {
+
+  static regularCoaching(
+    input: CreateRegularCoachingInput,
+    existing: readonly CoachingRecord[] = [],
+  ): CoachingResult<RegularCoachingRecord> {
+    if (!Number.isInteger(input.coachingNumber) || input.coachingNumber < 2) {
+      throw new DomainError('通常コーチングの回数は2以上で指定してください');
+    }
+    const orient = CoachingRecords.findByType(existing, 'オリエンテーション');
+    const first = CoachingRecords.findByType(existing, '初回コーチング');
     if (!orient) {
-      throw new DomainError('オリエンテーションは通常コーチングの前提のため、この操作はできません');
+      throw new DomainError('オリエンテーションが完了していないので、通常コーチングは登録できません');
     }
     if (!first) {
-      throw new DomainError('初回コーチングは通常コーチングの前提のため、この操作はできません');
+      throw new DomainError('初回コーチングが完了していないので、通常コーチングは登録できません');
     }
-    for (const r of regulars) {
-      if (!dateLte(first.date, r.date)) {
-        throw new DomainError('実施日の順序が不正になります（初回コーチング→通常コーチング）');
+    const duplicated = existing.some(
+      (r) => r.type === '通常コーチング' && r.coachingNumber === input.coachingNumber,
+    );
+    if (duplicated) {
+      throw new DomainError(`${input.coachingNumber}回目の通常コーチングは既に登録されています`);
+    }
+    const base = CoachingRecords.baseFrom(input);
+    if (!first.date.lte(base.date)) {
+      throw new DomainError('通常コーチングの実施日は初回コーチングの実施日以降である必要があります');
+    }
+    const tests = (input.textbookTests ?? []).map((t) => CoachingRecords.textbookTest(t));
+    CoachingRecords.assertNoDuplicate(tests);
+    const newAssignments = (input.newAssignments ?? []).map((s) => CoachingRecords.selectedTextbook(s));
+    const record: RegularCoachingRecord = {
+      ...base,
+      type: '通常コーチング',
+      coachingNumber: input.coachingNumber,
+      ...CoachingRecords.freeTextFrom(input),
+      textbookTests: tests,
+    };
+    return { record, effects: CoachingRecords.sessionEffects(newAssignments, tests) };
+  }
+
+  static other(
+    input: CreateSessionInput,
+    _existing: readonly CoachingRecord[] = [],
+  ): CoachingResult<OtherRecord> {
+    // その他は制約なし（複数登録可）。
+    const record: OtherRecord = { ...CoachingRecords.baseFrom(input), type: 'その他', ...CoachingRecords.freeTextFrom(input) };
+    return { record, effects: CoachingRecords.NO_EFFECTS };
+  }
+
+  // ── update（種別・回数は変更不可。existing は自分を除く既存記録） ──
+  static updateTextbookSelection(
+    current: TextbookSelectionRecord,
+    patch: UpdateTextbookSelectionInput,
+  ): CoachingResult<TextbookSelectionRecord> {
+    let selectedTextbooks = current.selectedTextbooks;
+    if (patch.selectedTextbooks) {
+      const selected = patch.selectedTextbooks.map((s) => CoachingRecords.selectedTextbook(s));
+      CoachingRecords.assertNoDuplicate(selected);
+      selectedTextbooks = selected;
+    }
+    const date = patch.date ? CoachingRecords.notFuture(DateOnly.create(patch.date)) : current.date;
+    const record: TextbookSelectionRecord = {
+      ...current,
+      date,
+      coachName: patch.coachName ?? current.coachName,
+      selectedTextbooks,
+      sharedNote: patch.sharedNote ?? current.sharedNote,
+    };
+    const prevIds = new Set(current.selectedTextbooks.map((s) => s.textbookId.value));
+    const nextIds = new Set(selectedTextbooks.map((s) => s.textbookId.value));
+    const toRemove = [...prevIds].filter((id) => !nextIds.has(id)).map((id) => TextbookId.create(id));
+    const effects: AssignmentEffects = {
+      toAdd: selectedTextbooks.map(CoachingRecords.toEffect),
+      toRemove,
+      toGraduate: [],
+    };
+    return { record, effects };
+  }
+
+  /** 初回・通常を型を保ったまま更新（種別・回数は変更不可）。日付の順序制約を再検証。 */
+  static updateCoachingSession<T extends CoachingSessionRecord>(
+    current: T,
+    patch: UpdateCoachingSessionInput,
+    existing: readonly CoachingRecord[] = [],
+  ): CoachingResult<T> {
+    const date = patch.date ? CoachingRecords.notFuture(DateOnly.create(patch.date)) : current.date;
+    if (current.type === '初回コーチング') {
+      const orient = CoachingRecords.findByType(existing, 'オリエンテーション');
+      if (orient && !orient.date.lte(date)) {
+        throw new DomainError('初回コーチングの実施日はオリエンテーションの実施日以降である必要があります');
+      }
+    } else {
+      const first = CoachingRecords.findByType(existing, '初回コーチング');
+      if (first && !first.date.lte(date)) {
+        throw new DomainError('通常コーチングの実施日は初回コーチングの実施日以降である必要があります');
       }
     }
+    let tests = current.textbookTests;
+    if (patch.textbookTests) {
+      tests = patch.textbookTests.map((t) => CoachingRecords.textbookTest(t));
+      CoachingRecords.assertNoDuplicate(tests);
+    }
+    const newAssignments = (patch.newAssignments ?? []).map((s) => CoachingRecords.selectedTextbook(s));
+    const record: T = {
+      ...current,
+      date,
+      coachName: patch.coachName ?? current.coachName,
+      monthlyReview: patch.monthlyReview ?? current.monthlyReview,
+      coachAdvice: patch.coachAdvice ?? current.coachAdvice,
+      otherNotes: patch.otherNotes ?? current.otherNotes,
+      textbookTests: tests,
+    };
+    return { record, effects: CoachingRecords.sessionEffects(newAssignments, tests) };
+  }
+
+  /** オリエン・その他を型を保ったまま更新（自由記述のみ・効果なし）。 */
+  static updateFreeText<T extends FreeTextRecord>(
+    current: T,
+    patch: UpdateFreeTextInput,
+  ): CoachingResult<T> {
+    const date = patch.date ? CoachingRecords.notFuture(DateOnly.create(patch.date)) : current.date;
+    const record: T = {
+      ...current,
+      date,
+      coachName: patch.coachName ?? current.coachName,
+      monthlyReview: patch.monthlyReview ?? current.monthlyReview,
+      coachAdvice: patch.coachAdvice ?? current.coachAdvice,
+      otherNotes: patch.otherNotes ?? current.otherNotes,
+    };
+    return { record, effects: CoachingRecords.NO_EFFECTS };
+  }
+
+  // ── 集合整合性（削除・編集後の検証） ──
+  /**
+   * 会員のコーチング記録「集合全体」が不変条件を満たすか検証する。
+   * 削除後・編集後の集合に対して呼び、依存関係を壊す操作を拒否する。
+   */
+  static assertSetConsistent(records: readonly CoachingRecord[]): void {
+    for (const t of ['教材選定', 'オリエンテーション', '初回コーチング'] as const) {
+      if (records.filter((r) => r.type === t).length > 1) {
+        throw new DomainError(`${t}が重複しています`);
+      }
+    }
+    const numbers = records
+      .filter((r): r is RegularCoachingRecord => r.type === '通常コーチング')
+      .map((r) => r.coachingNumber);
+    if (new Set(numbers).size !== numbers.length) {
+      throw new DomainError('通常コーチングの回数が重複しています');
+    }
+
+    const orient = records.find((r) => r.type === 'オリエンテーション');
+    const first = records.find((r) => r.type === '初回コーチング');
+    const regulars = records.filter((r) => r.type === '通常コーチング');
+
+    if (first) {
+      if (!orient) {
+        throw new DomainError('オリエンテーションは初回コーチングの前提のため、この操作はできません');
+      }
+      if (!orient.date.lte(first.date)) {
+        throw new DomainError('実施日の順序が不正になります（オリエンテーション→初回コーチング）');
+      }
+    }
+    if (regulars.length > 0) {
+      if (!orient) {
+        throw new DomainError('オリエンテーションは通常コーチングの前提のため、この操作はできません');
+      }
+      if (!first) {
+        throw new DomainError('初回コーチングは通常コーチングの前提のため、この操作はできません');
+      }
+      for (const r of regulars) {
+        if (!first.date.lte(r.date)) {
+          throw new DomainError('実施日の順序が不正になります（初回コーチング→通常コーチング）');
+        }
+      }
+    }
+  }
+
+  // ── 内部ヘルパー ──
+  private static toEffect(s: SelectedTextbook): AssignmentEffect {
+    return { textbookId: s.textbookId, dailyGoalMinutes: s.dailyGoalMinutes, note: s.note };
+  }
+
+  private static assertNoDuplicate(items: readonly { textbookId: TextbookId }[]): void {
+    const ids = items.map((s) => s.textbookId.value);
+    if (new Set(ids).size !== ids.length) {
+      throw new DomainError('同一教材を重複して指定することはできません');
+    }
+  }
+
+  private static baseFrom(input: { id: string; memberId: string; date: string; coachName: string }): CoachingRecordBase {
+    if (!input.coachName?.trim()) throw new DomainError('担当コーチは必須です');
+    const date = CoachingRecords.notFuture(DateOnly.create(input.date));
+    return {
+      id: CoachingRecordId.create(input.id),
+      memberId: MemberId.create(input.memberId),
+      date,
+      coachName: input.coachName,
+    };
+  }
+
+  private static freeTextFrom(input: { monthlyReview?: string; coachAdvice?: string; otherNotes?: string }): FreeTextFields {
+    return {
+      monthlyReview: input.monthlyReview ?? '',
+      coachAdvice: input.coachAdvice ?? '',
+      otherNotes: input.otherNotes ?? '',
+    };
+  }
+
+  private static findByType<T extends CoachingType>(
+    existing: readonly CoachingRecord[],
+    type: T,
+  ): Extract<CoachingRecord, { type: T }> | undefined {
+    return existing.find((r) => r.type === type) as Extract<CoachingRecord, { type: T }> | undefined;
+  }
+
+  private static sessionEffects(
+    newAssignments: readonly SelectedTextbook[],
+    tests: readonly TextbookTest[],
+  ): AssignmentEffects {
+    return {
+      toAdd: newAssignments.map(CoachingRecords.toEffect),
+      toRemove: [],
+      toGraduate: tests.filter((t) => t.nextStatus === '卒業').map((t) => t.textbookId),
+    };
+  }
+
+  private static notFuture(date: DateOnly): DateOnly {
+    if (date.isFuture()) throw new DomainError('実施日は本日以前の日付を指定してください');
+    return date;
   }
 }

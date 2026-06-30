@@ -1,9 +1,6 @@
-import { createMemberId } from '../../domain/member/member';
-import { createTextbookId } from '../../domain/textbook/textbook';
-import {
-  createTextbookAssignment,
-  TextbookAssignment,
-} from '../../domain/textbook-assignment/textbook-assignment';
+import { MemberId } from '../../domain/member/member';
+import { Textbook, TextbookId } from '../../domain/textbook/textbook';
+import { TextbookAssignment } from '../../domain/textbook-assignment/textbook-assignment';
 import { TextbookAssignmentRepository } from '../../domain/textbook-assignment/textbook-assignment-repository';
 import { TextbookRepository } from '../../domain/textbook/textbook-repository';
 import { MemberRepository } from '../../domain/member/member-repository';
@@ -24,11 +21,11 @@ export class TextbookAssignmentUseCase {
 
   /** 会員の割り当て教材一覧（教材マスタ情報を結合して返す）。 */
   async listByMember(memberId: string): Promise<AssignedTextbookDto[]> {
-    const mid = createMemberId(memberId);
+    const mid = MemberId.create(memberId);
     const assigns = await this.assignments.findByMember(mid);
     const masters = await this.textbooks.findAll();
-    const byId = new Map(masters.map((t) => [t.id as string, t]));
-    return assigns.map((a) => this.toDto(a, byId.get(a.textbookId as string)));
+    const byId = new Map(masters.map((t) => [t.id.value, t]));
+    return assigns.map((a) => this.toDto(a, byId.get(a.textbookId.value)));
   }
 
   /** 会員に教材を割り当て（会員・教材の存在を確認）。 */
@@ -36,12 +33,12 @@ export class TextbookAssignmentUseCase {
     memberId: string,
     input: { textbookId: string; dailyGoalMinutes?: number | null; note?: string },
   ): Promise<AssignedTextbookDto> {
-    const member = await this.members.findById(createMemberId(memberId));
+    const member = await this.members.findById(MemberId.create(memberId));
     if (!member) throw new DomainError('会員が見つかりません');
-    const textbook = await this.textbooks.findById(createTextbookId(input.textbookId));
+    const textbook = await this.textbooks.findById(TextbookId.create(input.textbookId));
     if (!textbook) throw new DomainError('教材が見つかりません');
 
-    const assignment = createTextbookAssignment({
+    const assignment = TextbookAssignment.create({
       memberId,
       textbookId: input.textbookId,
       dailyGoalMinutes: input.dailyGoalMinutes,
@@ -53,19 +50,19 @@ export class TextbookAssignmentUseCase {
 
   /** 割り当て解除。 */
   async unassign(memberId: string, textbookId: string): Promise<void> {
-    await this.assignments.delete(createMemberId(memberId), createTextbookId(textbookId));
+    await this.assignments.delete(MemberId.create(memberId), TextbookId.create(textbookId));
   }
 
   private toDto(
     a: TextbookAssignment,
-    textbook?: { code: string; name: string; category: string; unit: string; color: string },
+    textbook?: Textbook,
   ): AssignedTextbookDto {
     return {
-      textbookId: a.textbookId,
+      textbookId: a.textbookId.value,
       textbookCode: textbook?.code ?? '',
       name: textbook?.name ?? '(削除済み教材)',
       category: textbook?.category ?? '',
-      unit: textbook?.unit ?? '',
+      unit: textbook?.unit.value ?? '',
       color: textbook?.color ?? '#999999',
       dailyGoalMinutes: a.dailyGoalMinutes,
       note: a.note,

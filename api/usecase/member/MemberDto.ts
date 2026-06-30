@@ -1,11 +1,13 @@
-import {
-  Member,
-  MemberStatus,
-  EnglishScores,
-  displayName,
-  initial,
-  computeMemberStatus,
-} from '../../domain/member/member';
+import { Member, MemberStatus, EnglishScores } from '../../domain/member/member';
+
+export interface ContinuationPlanDto {
+  id: string;
+  planType: string;
+  months: number;
+  startDate: string;
+  endDate: string;
+  note?: string;
+}
 
 /**
  * UseCase 専用 DTO（アプリケーション層の出力）。
@@ -57,15 +59,16 @@ export interface MemberDto {
   consultantStaffId?: string;
   csStaffId?: string;
   orientStaffId?: string;
+  continuationPlans: ContinuationPlanDto[];
 }
 
 /** ドメイン Member → UseCase DTO（ステータスは compute-on-read） */
 export function toMemberDto(member: Member): MemberDto {
   return {
-    id: member.id,
+    id: member.id.value,
     code: member.code,
-    name: displayName(member.name),
-    initial: initial(member.name),
+    name: member.displayName,
+    initial: member.initial,
     lastNameKanji: member.name.lastNameKanji,
     firstNameKanji: member.name.firstNameKanji,
     lastNameKana: member.name.lastNameKana,
@@ -73,26 +76,26 @@ export function toMemberDto(member: Member): MemberDto {
     lastNameAlpha: member.name.lastNameAlpha,
     firstNameAlpha: member.name.firstNameAlpha,
     nickname: member.name.nickname,
-    email: member.email,
-    status: computeMemberStatus(member),
-    plan: member.plan,
+    email: member.email.value,
+    status: member.computeStatus(),
+    plan: member.plan.name,
     gender: member.gender,
-    birthDate: member.birthDate,
+    birthDate: member.birthDate?.value,
     phone: member.phone,
     occupation: member.occupation,
     occupationNote: member.occupationNote,
     residence: member.residence,
     residenceOverseas: member.residenceOverseas,
-    enrollmentDate: member.enrollmentDate,
-    startDate: member.enrollmentPeriod.startDate,
-    graduateDate: member.enrollmentPeriod.graduateDate,
+    enrollmentDate: member.enrollmentDate?.value,
+    startDate: member.enrollmentPeriod.startDate?.value,
+    graduateDate: member.enrollmentPeriod.graduateDate?.value,
     initialClass: member.classLevel.initial,
     currentClass: member.classLevel.current,
     nativecamp: member.nativecamp,
     dailyTargetMinutes: member.dailyTargetMinutes,
     travelCountry: member.travelPlan?.country,
     travelCity: member.travelPlan?.city,
-    travelDate: member.travelPlan?.travelDate,
+    travelDate: member.travelPlan?.travelDate?.value,
     travelReason: member.travelPlan?.reason,
     travelNote: member.travelPlan?.note,
     englishScores: member.englishScores,
@@ -101,5 +104,13 @@ export function toMemberDto(member: Member): MemberDto {
     consultantStaffId: member.consultantStaffId,
     csStaffId: member.csStaffId,
     orientStaffId: member.orientStaffId,
+    continuationPlans: member.continuationPlans.map((p) => ({
+      id: p.id.value,
+      planType: p.planType.name,
+      months: p.months,
+      startDate: p.startDate.value,
+      endDate: p.endDate.value,
+      note: p.note,
+    })),
   };
 }

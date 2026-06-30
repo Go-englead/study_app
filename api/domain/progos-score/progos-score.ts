@@ -1,14 +1,15 @@
-import { Brand } from '../shared/brand';
 import { DomainError } from '../shared/domain-error';
-import { DateOnly, createDateOnly, CefrLevel, createCefrLevel, compareCefr } from '../shared/value-objects';
-import { MemberId, createMemberId } from '../member/member';
+import { DateOnly, CefrLevel } from '../shared/value-objects';
+import { MemberId } from '../member/member';
+import { CoachStaff } from '../staff/staff';
 
-export type ProgosScoreId = Brand<string, 'ProgosScoreId'>;
-
-export function createProgosScoreId(raw: string): ProgosScoreId {
-  const value = (raw ?? '').trim();
-  if (!value) throw new DomainError('PROGOSスコアIDは必須です');
-  return value as ProgosScoreId;
+export class ProgosScoreId {
+  private constructor(readonly value: string) {}
+  static create(raw: string): ProgosScoreId {
+    const v = (raw ?? '').trim();
+    if (!v) throw new DomainError('PROGOSスコアIDは必須です');
+    return new ProgosScoreId(v);
+  }
 }
 
 /** 6技能スコア（各 CEFR） */
@@ -19,27 +20,6 @@ export interface ProgosSkillSet {
   readonly interaction: CefrLevel;
   readonly coherence: CefrLevel;
   readonly phonology: CefrLevel;
-}
-
-const SKILL_KEYS = ['range', 'accuracy', 'fluency', 'interaction', 'coherence', 'phonology'] as const;
-
-function createProgosSkillSet(input: Record<string, string>): ProgosSkillSet {
-  const result = {} as Record<string, CefrLevel>;
-  for (const key of SKILL_KEYS) {
-    if (!input[key]) throw new DomainError(`PROGOS技能スコア(${key})は必須です`);
-    result[key] = createCefrLevel(input[key]);
-  }
-  return result as unknown as ProgosSkillSet;
-}
-
-// ═══════════════════════ 集約ルート：ProgosScore ═══════════════════════
-export interface ProgosScore {
-  readonly id: ProgosScoreId;
-  readonly memberId: MemberId;
-  readonly examDate: DateOnly;
-  readonly overall: CefrLevel;
-  readonly skills: ProgosSkillSet;
-  readonly comment?: string;
 }
 
 export interface CreateProgosScoreInput {
@@ -58,17 +38,6 @@ export interface CreateProgosScoreInput {
   comment?: string;
 }
 
-export function createProgosScore(input: CreateProgosScoreInput): ProgosScore {
-  return {
-    id: createProgosScoreId(input.id),
-    memberId: createMemberId(input.memberId),
-    examDate: createDateOnly(input.examDate),
-    overall: createCefrLevel(input.overall),
-    skills: createProgosSkillSet(input.skills),
-    comment: input.comment,
-  };
-}
-
 export interface UpdateProgosScoreInput {
   examDate?: string;
   overall?: string;
@@ -76,23 +45,81 @@ export interface UpdateProgosScoreInput {
   comment?: string;
 }
 
-export function updateProgosScore(current: ProgosScore, patch: UpdateProgosScoreInput): ProgosScore {
-  return {
-    ...current,
-    examDate: patch.examDate ? createDateOnly(patch.examDate) : current.examDate,
-    overall: patch.overall ? createCefrLevel(patch.overall) : current.overall,
-    skills: patch.skills ? createProgosSkillSet(patch.skills) : current.skills,
-    comment: patch.comment ?? current.comment,
-  };
-}
-
-// ═══════════════════════ ドメインサービス：レベル変動 ═══════════════════════
 export type ProgosTrend = 'up' | 'flat' | 'down';
 
-/** 前回 vs 最新の overall を比較してレベル変動を判定する */
-export function analyzeProgosTrend(previous: ProgosScore, latest: ProgosScore): ProgosTrend {
-  const diff = compareCefr(latest.overall, previous.overall);
-  if (diff > 0) return 'up';
-  if (diff < 0) return 'down';
-  return 'flat';
+const SKILL_KEYS = ['range', 'accuracy', 'fluency', 'interaction', 'coherence', 'phonology'] as const;
+
+// ═══════════════════════ 集約ルート：ProgosScore ═══════════════════════
+export class ProgosScore {
+  constructor(
+    readonly id: ProgosScoreId,
+    readonly memberId: MemberId,
+    readonly examDate: DateOnly,
+    readonly overall: CefrLevel,
+    readonly skills: ProgosSkillSet,
+    readonly comment?: string,
+  ) {}
+
+  update(patch: UpdateProgosScoreInput): ProgosScore {
+    return new ProgosScore(
+      this.id,
+      this.memberId,
+      patch.examDate ? DateOnly.create(patch.examDate) : this.examDate,
+      patch.overall ? CefrLevel.create(patch.overall) : this.overall,
+      patch.skills ? ProgosScore.skillSet(patch.skills) : this.skills,
+      patch.comment ?? this.comment,
+    );
+  }
+
+  /** 前回 vs この回の overall を比較してレベル変動を判定する。 */
+  trendFrom(previous: ProgosScore): ProgosTrend {
+    const diff = this.overall.compareTo(previous.overall);
+    if (diff > 0) return 'up';
+    if (diff < 0) return 'down';
+    return 'flat';
+  }
+
+  /**
+   * PROGOSスコアを記録する。記録できるのは Coach のみ＝引数で CoachStaff を要求することで
+   * 「コーチでなければ記録できない」というルールを“型”で物語る（ここで権限の throw はしない）。
+   * 実行時に actor を CoachStaff へ確定できなければ、呼び出し元の UseCase が弾く。
+   */
+  static create(input: CreateProgosScoreInput, recordedBy: CoachStaff): ProgosScore {
+    void recordedBy;
+    return new ProgosScore(
+      ProgosScoreId.create(input.id),
+      MemberId.create(input.memberId),
+      DateOnly.create(input.examDate),
+      CefrLevel.create(input.overall),
+      ProgosScore.skillSet(input.skills),
+      input.comment,
+    );
+  }
+
+  static fromRecord(r: {
+    id: string;
+    memberId: string;
+    examDate: string;
+    overall: string;
+    skills: CreateProgosScoreInput['skills'];
+    comment?: string;
+  }): ProgosScore {
+    return new ProgosScore(
+      ProgosScoreId.create(r.id),
+      MemberId.create(r.memberId),
+      DateOnly.create(r.examDate),
+      CefrLevel.create(r.overall),
+      ProgosScore.skillSet(r.skills),
+      r.comment,
+    );
+  }
+
+  private static skillSet(input: Record<string, string>): ProgosSkillSet {
+    const result = {} as Record<string, CefrLevel>;
+    for (const key of SKILL_KEYS) {
+      if (!input[key]) throw new DomainError(`PROGOS技能スコア(${key})は必須です`);
+      result[key] = CefrLevel.create(input[key]);
+    }
+    return result as unknown as ProgosSkillSet;
+  }
 }

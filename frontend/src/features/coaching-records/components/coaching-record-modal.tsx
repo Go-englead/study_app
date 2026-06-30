@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useForm, useFieldArray, type Control, type UseFormRegister, type UseFormWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useTextbooks } from '../../textbooks/api/get-textbooks'
 import { useMemberAssignments } from '../../textbook-assignments/api/get-member-assignments'
 import { useCoachingRecord } from '../api/get-coaching-record'
@@ -7,6 +8,8 @@ import { useCreateCoachingRecord } from '../api/create-coaching-record'
 import { useUpdateCoachingRecord } from '../api/update-coaching-record'
 import { useDeleteCoachingRecord } from '../api/delete-coaching-record'
 import { COACHING_TYPES, hasFreeText, hasTestContent, type CoachingRecordInput } from '../types'
+import { coachingFormSchema } from '../schemas'
+import { alertServerError } from '../../../lib/form-error'
 
 interface Props {
   memberId: string
@@ -59,10 +62,17 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
   const update = useUpdateCoachingRecord(memberId, coachingRecordId ?? '')
   const remove = useDeleteCoachingRecord(memberId)
   const pending = create.isPending || update.isPending
-  // 保存（作成/更新）に加え、削除エラー（整合性違反など）も表示する
-  const error = (create.error ?? update.error ?? remove.error) as { message?: string } | null
 
-  const { register, handleSubmit, watch, control, reset, setValue } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    control,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(coachingFormSchema),
     defaultValues: {
       type: '',
       date: today(),
@@ -174,7 +184,7 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
         .filter((t) => t.isNew && t.textbookId)
         .map((t) => ({ textbookId: t.textbookId, dailyGoalMinutes: t.dailyGoalMinutes ? Number(t.dailyGoalMinutes) : null, note: '' }))
     }
-    const onDone = { onSuccess: onClose }
+    const onDone = { onSuccess: onClose, onError: (e: unknown) => alertServerError(e) }
     if (isEdit) update.mutate(body, onDone)
     else create.mutate(body, onDone)
   })
@@ -182,7 +192,7 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
   const onDelete = () => {
     if (!coachingRecordId) return
     if (!confirm('このコーチング記録を削除します。よろしいですか？')) return
-    remove.mutate(coachingRecordId, { onSuccess: onClose })
+    remove.mutate(coachingRecordId, { onSuccess: onClose, onError: (e) => alertServerError(e, '削除に失敗しました') })
   }
 
   // 教材選定で追加候補（未選定の教材）
@@ -206,8 +216,6 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
         </div>
         <form onSubmit={submit} className="karte-form">
           <div className="center-modal-body">
-            {error && <p className="form-error" data-testid="cr-error">{error.message ?? '保存に失敗しました'}</p>}
-
             <div className="cr-target" data-testid="cr-target">
               対象会員：<strong>{memberName}</strong> さん{memberCode ? `（${memberCode}）` : ''}
             </div>
@@ -215,22 +223,24 @@ export function CoachingRecordModal({ memberId, memberName, memberCode, coachNam
             <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
               <label className="form-group">
                 実施日 *
-                <input type="date" data-testid="cr-date" max={today()} {...register('date', { required: true })} />
+                <input type="date" data-testid="cr-date" max={today()} {...register('date')} />
+                {errors.date && <span className="form-error" data-testid="cr-error-date">{errors.date.message}</span>}
               </label>
               <label className="form-group">
                 担当コーチ
-                <input data-testid="cr-coachName" readOnly {...register('coachName')} />
+                <input data-testid="cr-coachName" readOnly className="input-locked" {...register('coachName')} />
               </label>
             </div>
 
             <label className="form-group" style={{ display: 'block', marginTop: 8 }}>
               タイプ *
-              <select data-testid="cr-type" {...register('type', { required: true })}>
+              <select data-testid="cr-type" {...register('type')}>
                 <option value="">選択してください</option>
                 {COACHING_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
+              {errors.type && <span className="form-error" data-testid="cr-error-type">{errors.type.message}</span>}
             </label>
 
             {type === '教材選定' && (

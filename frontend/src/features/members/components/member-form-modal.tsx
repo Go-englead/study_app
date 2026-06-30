@@ -1,5 +1,6 @@
 import { MemberForm } from './member-form'
 import { useCreateMember } from '../api/create-member'
+import { alertServerError } from '../../../lib/form-error'
 
 interface Props {
   onClose: () => void
@@ -23,9 +24,6 @@ export function MemberFormModal({ onClose, onRegistered }: Props) {
           <button className="panel-close" data-testid="member-modal-close" onClick={onClose}>×</button>
         </div>
         <div className="center-modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-          {create.isError && (
-            <p className="form-error">{(create.error as { message?: string })?.message ?? '登録に失敗しました'}</p>
-          )}
           <MemberForm
             submitLabel="登録する"
             submitting={create.isPending}
@@ -36,6 +34,7 @@ export function MemberFormModal({ onClose, onRegistered }: Props) {
                   onRegistered?.(res.tempPassword ?? '(なし)')
                   onClose()
                 },
+                onError: (e) => alertServerError(e, '登録に失敗しました'),
               })
             }
           />

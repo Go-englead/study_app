@@ -19,6 +19,8 @@ let staffCounter = 0;
 let browser: Browser | null = null;
 let context: BrowserContext | null = null;
 let page: Page | null = null;
+// 直近に表示されたダイアログ（alert/confirm）のメッセージ。データ整合性違反は alert で通知されるため捕捉する。
+let lastDialogMessage = '';
 const p = (): Page => {
   if (!page) throw new Error('page 未初期化');
   return page;
@@ -70,6 +72,21 @@ async function apiCreateMember(body: Record<string, unknown>): Promise<void> {
   if (res.status !== 201) throw new Error(`seed 失敗: ${res.status} ${await res.text()}`);
 }
 
+async function apiListStaff(): Promise<Array<{ id: string; staffCode: string }>> {
+  const res = await fetch(`${API_URL}/v1/admin/staff`, { headers: apiHeaders });
+  const body = (await res.json()) as { staff?: Array<{ id: string; staffCode: string }> };
+  return body.staff ?? [];
+}
+async function apiDeleteStaff(id: string): Promise<void> {
+  await fetch(`${API_URL}/v1/admin/staff/${id}`, { method: 'DELETE', headers: apiHeaders });
+}
+/** テストで作った職員（staffCode が E2E で始まる）を一掃。ブートストラップ S001 は残す。 */
+async function cleanTestStaff(): Promise<void> {
+  for (const s of await apiListStaff()) {
+    if (s.staffCode.startsWith('E2E')) await apiDeleteStaff(s.id);
+  }
+}
+
 // シナリオ前の基準データ（見本一郎を1人だけ）
 const MIHON = {
   code: '10001',
@@ -91,6 +108,7 @@ const MIHON = {
 async function resetAndSeed(): Promise<void> {
   for (const m of await apiListMembers()) await apiDeleteMember(m.id);
   await apiCreateMember(MIHON);
+  await cleanTestStaff();
 }
 
 // 検索 spec 用のテストデータ（10名）。氏名・ニックネーム・会員ID・職業・受講開始月で数件ヒットするよう設計。
@@ -192,6 +210,10 @@ function memberRow(name: string) {
 function field(name: string) {
   return p().getByTestId(`member-field-${name}`);
 }
+
+function staffField(name: string) {
+  return p().getByTestId(`staff-field-${name}`);
+}
 async function setField(name: string, value: string): Promise<void> {
   const el = field(name);
   const tag = await el.evaluate((e) => e.tagName);
@@ -219,8 +241,12 @@ export default class StepImpl {
     scenarioStaff = await createScenarioStaff();
     context = await browser!.newContext({ baseURL: BASE_URL });
     page = await context.newPage();
-    // confirm() は自動承認（削除確認など）
-    page.on('dialog', (d) => d.accept().catch(() => {}));
+    lastDialogMessage = '';
+    // ダイアログは自動承認（削除確認など）。メッセージは整合性違反 alert の検証用に記録する。
+    page.on('dialog', (d) => {
+      lastDialogMessage = d.message();
+      d.accept().catch(() => {});
+    });
   }
 
   @AfterScenario()
@@ -340,6 +366,37 @@ export default class StepImpl {
   public async clickDelete(): Promise<void> {
     await p().getByTestId('member-delete').click();
     await expect(p().getByTestId('member-modal')).toBeHidden();
+  }
+
+  @Step('会員の途中退会を切り替える')
+  public async toggleWithdrawn(): Promise<void> {
+    // 確認ダイアログは自動承認される。
+    await p().getByTestId('member-withdraw-toggle').click();
+  }
+
+  @Step('会員ステータスが <text> である')
+  public async assertMemberStatus(text: string): Promise<void> {
+    await expect(p().getByTestId('member-status')).toHaveText(text);
+  }
+
+  @Step('継続プラン追加ボタンをクリックする')
+  public async openContinuationPlan(): Promise<void> {
+    await p().getByTestId('cp-add-open').click();
+    await expect(p().getByTestId('cp-modal')).toBeVisible();
+  }
+
+  @Step('継続プランフォームで種類 <planType> 期間 <months> 開始日 <startDate> を入力して保存する')
+  public async submitContinuationPlan(planType: string, months: string, startDate: string): Promise<void> {
+    await p().getByTestId('cp-field-planType').selectOption(planType);
+    await p().getByTestId('cp-field-months').selectOption(months);
+    await p().getByTestId('cp-field-startDate').fill(startDate);
+    await p().getByTestId('cp-submit').click();
+    await expect(p().getByTestId('cp-modal')).toBeHidden();
+  }
+
+  @Step('継続プラン履歴に種類 <planType> が表示される')
+  public async assertContinuationPlanRow(planType: string): Promise<void> {
+    await expect(p().getByTestId('cp-table')).toContainText(planType);
   }
 
   // ── 教材 ──
@@ -628,7 +685,8 @@ export default class StepImpl {
 
   @Step('コーチング記録のエラーに <text> が表示される')
   public async assertCoachingError(text: string): Promise<void> {
-    await expect(p().getByTestId('cr-error')).toContainText(text);
+    // データ整合性違反（オリエン前提・削除制約など）は alert で通知される。
+    await expect.poll(() => lastDialogMessage, { timeout: 5000 }).toContain(text);
   }
 
   @Step('テスト内容で教材 <code> を実施済み・点数 <score>・次回 <next> にする')
@@ -781,4 +839,125 @@ export default class StepImpl {
   public async assertProgosListContains(overall: string): Promise<void> {
     await expect(p().getByTestId('progos-card').locator('.progos-table')).toContainText(overall);
   }
+
+  // ── バリデーション（共通） ─────────────────────────────────────────────────────
+  // フィールド単位のバリデーションエラーは各フィールド下に赤文字（data-testid="<feature>-error-<field>"）で表示される。
+  @Step('ボタン <testid> を押す')
+  public async clickByTestId(testid: string): Promise<void> {
+    await p().getByTestId(testid).click();
+  }
+
+  @Step('フォームエラー <testid> が表示される')
+  public async assertFieldError(testid: string): Promise<void> {
+    await expect(p().getByTestId(testid)).toBeVisible();
+  }
+
+  // ── スタッフ管理 ──────────────────────────────────────────────────────────────
+  @Step('スタッフ管理メニューをクリックする')
+  public async clickStaffMenu(): Promise<void> {
+    await p().getByRole('link', { name: 'スタッフ管理' }).click();
+    await expect(p().getByTestId('staff-table-card')).toBeVisible();
+  }
+
+  @Step('新規スタッフ登録ボタンをクリックする')
+  public async openStaffCreate(): Promise<void> {
+    await p().getByTestId('staff-create-open').click();
+    await expect(p().getByTestId('staff-modal')).toBeVisible();
+  }
+
+  @Step('スタッフフォームに社員ID <code> 氏名 <name> 役割 <role> メール <email> パスワード <password> を入力する')
+  public async fillStaffForm(code: string, name: string, role: string, email: string, password: string): Promise<void> {
+    await staffField('staffCode').fill(code);
+    await staffField('name').fill(name);
+    await staffField('role').selectOption({ label: role });
+    await staffField('email').fill(email);
+    await staffField('password').fill(password);
+  }
+
+  @Step('スタッフフォームを保存する')
+  public async saveStaff(): Promise<void> {
+    await p().getByTestId('staff-submit').click();
+    await expect(p().getByTestId('staff-modal')).toBeHidden();
+  }
+
+  @Step('スタッフ一覧の <code> に <name> が表示される')
+  public async assertStaffRowVisible(code: string, name: string): Promise<void> {
+    await expect(p().getByTestId(`staff-row-${code}`)).toContainText(name);
+  }
+
+  @Step('スタッフ一覧に <code> が表示されない')
+  public async assertStaffRowHidden(code: string): Promise<void> {
+    await expect(p().getByTestId(`staff-row-${code}`)).toHaveCount(0);
+  }
+
+  @Step('スタッフを <keyword> で検索する')
+  public async searchStaff(keyword: string): Promise<void> {
+    // 入力（onChange）で debounce 検索が走る。結果の検証は後続ステップの自動リトライで待つ。
+    await p().getByTestId('staff-search').fill(keyword);
+  }
+
+  @Step('スタッフ <code> の編集を開く')
+  public async openStaffEdit(code: string): Promise<void> {
+    await p().getByTestId(`staff-edit-${code}`).click();
+    await expect(p().getByTestId('staff-modal')).toBeVisible();
+  }
+
+  @Step('編集中スタッフの役割を <role> に変更しメールを <email> に変更する')
+  public async editStaffRoleEmail(role: string, email: string): Promise<void> {
+    await staffField('role').selectOption({ label: role });
+    await staffField('email').fill(email);
+  }
+
+  @Step('スタッフ編集を保存する')
+  public async saveStaffEdit(): Promise<void> {
+    await p().getByTestId('staff-submit').click();
+    await expect(p().getByTestId('staff-modal')).toBeHidden();
+  }
+
+  @Step('編集中スタッフの役割が <role> メールが <email> と表示される')
+  public async assertStaffEditValues(role: string, email: string): Promise<void> {
+    await expect(staffField('role')).toHaveValue(roleValue(role));
+    await expect(staffField('email')).toHaveValue(email);
+  }
+
+  @Step('スタッフ削除ボタンをクリックする')
+  public async deleteStaff(): Promise<void> {
+    await p().getByTestId('staff-delete').click();
+    await expect(p().getByTestId('staff-modal')).toBeHidden();
+  }
+
+  @Step('スタッフ <code> 氏名 <name> 役割 <role> メール <email> パスワード <password> をAPIで作成する')
+  public async createStaffViaApi(code: string, name: string, role: string, email: string, password: string): Promise<void> {
+    const res = await fetch(`${API_URL}/v1/admin/staff`, {
+      method: 'POST',
+      headers: apiHeaders,
+      body: JSON.stringify({ staffCode: code, name, role, email, password }),
+    });
+    if (res.status !== 201) throw new Error(`スタッフ作成失敗: ${res.status} ${await res.text()}`);
+  }
+
+  @Step('メール <email> パスワード <password> でログインを試みる')
+  public async attemptLogin(email: string, password: string): Promise<void> {
+    await p().getByTestId('login-id').fill(email);
+    await p().getByTestId('login-password').fill(password);
+    await p().getByTestId('login-submit').click();
+  }
+
+  @Step('ログインが拒否される')
+  public async assertLoginRejected(): Promise<void> {
+    await expect(p()).not.toHaveURL(/\/dashboard/);
+    await expect(p().getByTestId('login-error')).toBeVisible();
+  }
+}
+
+/** 役割の表示ラベル → select の value（ロール識別子）。 */
+function roleValue(label: string): string {
+  const map: Record<string, string> = {
+    コーチ: 'Coach',
+    講師: 'Teacher',
+    コンサルタント: 'Consultant',
+    CS: 'CS',
+    運営: 'Staff',
+  };
+  return map[label] ?? label;
 }

@@ -204,14 +204,12 @@ describe('GET /v1/admin/members/:id - コーチ入力', () => {
 
 // ─────────── 4.継続プラン履歴 / 5.休会管理（ダミー） ───────────
 
-describe('GET /v1/admin/members/:id - 継続プラン履歴・休会管理（ダミー）', () => {
-  it('継続プラン履歴をダミーで返す', async () => {
+describe('GET /v1/admin/members/:id - 継続プラン履歴・休会管理', () => {
+  it('継続プラン履歴は実データ（プラン未登録の会員は空配列）', async () => {
     const id = await seedFullMember();
     const { body } = await getDetail(id);
     expect(Array.isArray(body.continuationPlans)).toBe(true);
-    expect(body.continuationPlans.length).toBeGreaterThan(0);
-    expect(body.continuationPlans[0]).toHaveProperty('planType');
-    expect(body.continuationPlans[0]).toHaveProperty('months');
+    expect(body.continuationPlans.length).toBe(0);
   });
 
   it('休会管理をダミーで返す', async () => {

@@ -14,6 +14,7 @@ import {
 type MemberResponse = components['schemas']['Member'];
 type MemberSummaryResponse = components['schemas']['MemberSummary'];
 type MemberInputBody = components['schemas']['MemberInput'];
+type ContinuationPlanInputBody = components['schemas']['ContinuationPlanInput'];
 
 // ───────── リクエスト（flat な client 形）→ ドメイン入力 へマッピング ─────────
 function toEnglishScores(b: MemberInputBody): EnglishScores | undefined {
@@ -78,8 +79,7 @@ function toCreateInput(b: MemberInputBody): CreateMemberInput {
     name: toNameInput(b),
     email: b.email ?? '',
     plan: b.plan ?? '',
-    // status は日付から計算するため、手動でしか決まらない「途中退会」のみ反映
-    manualStatusOverride: b.status === '途中退会' ? '途中退会' : undefined,
+    // ステータスは日付から自動算出。手動の「途中退会」は専用エンドポイント（withdraw）で設定するため、登録では指定しない。
     enrollmentDate: b.enrollmentDate,
     startDate: b.startDate,
     graduateDate: b.graduateDate,
@@ -133,22 +133,12 @@ function toUpdateInput(b: MemberInputBody): UpdateMemberInput {
   if (travel) patch.travel = travel;
   const scores = toEnglishScores(b);
   if (scores) patch.englishScores = scores;
-  if (b.status === '途中退会') patch.manualStatusOverride = '途中退会';
+  // ステータスは編集不可（日付から自動算出）。途中退会は専用エンドポイント（withdraw）で操作する。
   return patch;
 }
 
-// ───────── ダミーデータ（機能未実装の 4.継続プラン履歴 / 5.休会管理 用） ─────────
-// TODO: 継続プラン機能・休会機能の実装時に実データへ差し替える。
-const DUMMY_CONTINUATION_PLANS: components['schemas']['ContinuationPlanHistoryItem'][] = [
-  {
-    id: '00000000-0000-0000-0000-0000000000c1',
-    planType: '給付金6ヶ月プラン',
-    months: 6,
-    startDate: '2026-01-10',
-    endDate: '2026-07-10',
-    note: 'ダミーデータ',
-  },
-];
+// ───────── ダミーデータ（機能未実装の 5.休会管理 用） ─────────
+// TODO: 休会機能の実装時に実データへ差し替える。
 const DUMMY_SUSPENSION: components['schemas']['Suspension'] = {
   suspendedFrom: '2026-03-01',
   suspendedUntil: '2026-03-31',
@@ -244,10 +234,10 @@ export function registerMemberRoutes(app: Hono<any>, usecase: MemberUseCase): vo
   app.get('/members/:memberId', async (c) => {
     const dto = await usecase.get(c.req.param('memberId'));
     if (!dto) return c.json({ message: '会員が見つかりません' }, 404);
-    // 4.継続プラン履歴 / 5.休会管理 は機能未実装のためダミーを返す（実装時に実データへ）。
+    // 継続プランは実データ。5.休会管理 は機能未実装のためダミーを返す（実装時に実データへ）。
     return c.json({
       ...toMemberResponse(dto),
-      continuationPlans: DUMMY_CONTINUATION_PLANS,
+      continuationPlans: dto.continuationPlans,
       suspension: DUMMY_SUSPENSION,
     });
   });
@@ -272,5 +262,52 @@ export function registerMemberRoutes(app: Hono<any>, usecase: MemberUseCase): vo
   app.delete('/members/:memberId', async (c) => {
     await usecase.remove(c.req.param('memberId'));
     return c.body(null, 204);
+  });
+
+  // POST /members/{memberId}/withdraw（途中退会にする）
+  app.post('/members/:memberId/withdraw', async (c) => {
+    const dto = await usecase.withdraw(c.req.param('memberId'));
+    if (!dto) return c.json({ message: '会員が見つかりません' }, 404);
+    return c.json(toMemberResponse(dto));
+  });
+
+  // DELETE /members/{memberId}/withdraw（途中退会を取り消す）
+  app.delete('/members/:memberId/withdraw', async (c) => {
+    const dto = await usecase.reinstate(c.req.param('memberId'));
+    if (!dto) return c.json({ message: '会員が見つかりません' }, 404);
+    return c.json(toMemberResponse(dto));
+  });
+
+  // ── 継続プラン（会員保存トランザクションで永続化） ──
+  // POST /members/{memberId}/continuation-plans（追加）
+  app.post('/members/:memberId/continuation-plans', async (c) => {
+    const b = (await c.req.json()) as ContinuationPlanInputBody;
+    const dto = await usecase.addContinuationPlan(
+      c.req.param('memberId'),
+      { planType: b.planType ?? '', months: b.months ?? 0, startDate: b.startDate ?? '', note: b.note },
+      b.applyGraduateDate ?? false,
+    );
+    if (!dto) return c.json({ message: '会員が見つかりません' }, 404);
+    return c.json({ continuationPlans: dto.continuationPlans, status: dto.status, graduateDate: dto.graduateDate }, 201);
+  });
+
+  // PUT /members/{memberId}/continuation-plans/{planId}（更新）
+  app.put('/members/:memberId/continuation-plans/:planId', async (c) => {
+    const b = (await c.req.json()) as ContinuationPlanInputBody;
+    const dto = await usecase.updateContinuationPlan(
+      c.req.param('memberId'),
+      c.req.param('planId'),
+      { planType: b.planType ?? '', months: b.months ?? 0, startDate: b.startDate ?? '', note: b.note },
+      b.applyGraduateDate ?? false,
+    );
+    if (!dto) return c.json({ message: '会員が見つかりません' }, 404);
+    return c.json({ continuationPlans: dto.continuationPlans, status: dto.status, graduateDate: dto.graduateDate });
+  });
+
+  // DELETE /members/{memberId}/continuation-plans/{planId}（削除）
+  app.delete('/members/:memberId/continuation-plans/:planId', async (c) => {
+    const dto = await usecase.removeContinuationPlan(c.req.param('memberId'), c.req.param('planId'));
+    if (!dto) return c.json({ message: '会員が見つかりません' }, 404);
+    return c.json({ continuationPlans: dto.continuationPlans, status: dto.status, graduateDate: dto.graduateDate });
   });
 }

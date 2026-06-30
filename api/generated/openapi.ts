@@ -586,6 +586,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/members/{memberId}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 途中退会にする
+         * @description ステータスを「途中退会」に設定する（手動オーバーライド）。
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 更新後の会員 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Member"];
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        /**
+         * 途中退会を取り消す
+         * @description 手動オーバーライドを解除し、ステータスを日付からの自動算出へ戻す。
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 更新後の会員 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Member"];
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/members/{memberId}/continuation-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 継続プランを追加 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ContinuationPlanInput"];
+                };
+            };
+            responses: {
+                /** @description 追加後の継続プラン履歴・ステータス */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContinuationPlanResult"];
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/members/{memberId}/continuation-plans/{planId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 継続プランを更新 */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                    planId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ContinuationPlanInput"];
+                };
+            };
+            responses: {
+                /** @description 更新後の継続プラン履歴・ステータス */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContinuationPlanResult"];
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        post?: never;
+        /** 継続プランを削除 */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: components["parameters"]["memberId"];
+                    planId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 削除後の継続プラン履歴・ステータス */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContinuationPlanResult"];
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/members/{memberId}/learning-logs": {
         parameters: {
             query?: never;
@@ -842,70 +1021,6 @@ export interface paths {
                 };
             };
         };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/admin/members/{memberId}/continuation-plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 継続プラン一覧取得 */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    memberId: components["parameters"]["memberId"];
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description 継続プラン一覧 */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ContinuationPlan"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /** 継続プラン追加 */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    memberId: components["parameters"]["memberId"];
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ContinuationPlanInput"];
-                };
-            };
-            responses: {
-                /** @description 追加成功 */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ContinuationPlan"];
-                    };
-                };
-            };
-        };
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1289,10 +1404,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** スタッフ一覧取得 */
+        /** スタッフ一覧取得／検索 */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description 社員ID・氏名・メールの部分一致で検索（未指定は全件） */
+                    keyword?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1305,7 +1423,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Staff"][];
+                        "application/json": {
+                            staff: components["schemas"]["StaffSummary"][];
+                        };
                     };
                 };
             };
@@ -1337,6 +1457,97 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/staff/{staffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** スタッフ詳細取得 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    staffId: components["parameters"]["staffId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description スタッフ */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffSummary"];
+                    };
+                };
+                /** @description 見つからない */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** スタッフ更新（パスワードは指定時のみ変更） */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    staffId: components["parameters"]["staffId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StaffUpdateInput"];
+                };
+            };
+            responses: {
+                /** @description 更新成功 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffSummary"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** スタッフ削除 */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    staffId: components["parameters"]["staffId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 削除成功 */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1438,7 +1649,7 @@ export interface components {
             staffCode: string;
             name: string;
             /** @enum {string} */
-            role: "Coach" | "Teacher" | "Consultant" | "CS";
+            role: "Coach" | "Teacher" | "Consultant" | "CS" | "Staff";
             /** Format: email */
             email: string;
             password: string;
@@ -1453,6 +1664,15 @@ export interface components {
             role: string;
             /** Format: email */
             email: string;
+        };
+        StaffUpdateInput: {
+            name?: string;
+            /** @enum {string} */
+            role?: "Coach" | "Teacher" | "Consultant" | "CS" | "Staff";
+            /** Format: email */
+            email?: string;
+            /** @description 指定時のみ変更（空なら据え置き） */
+            password?: string;
         };
         /** @enum {string} */
         MemberStatus: "入学手続き中" | "受講中" | "休会中" | "卒業" | "継続中" | "再入学手続き中" | "途中退会";
@@ -1562,11 +1782,29 @@ export interface components {
             continuationPlans?: components["schemas"]["ContinuationPlanHistoryItem"][];
             suspension?: components["schemas"]["Suspension"];
         };
+        /** @description 継続プランの登録/編集入力（終了日は開始日＋月数−1日で自動算出） */
+        ContinuationPlanInput: {
+            /** @enum {string} */
+            planType: "タビプラプラン" | "英語講座プラン" | "英語コーチングプラン";
+            months: number;
+            /** Format: date */
+            startDate: string;
+            note?: string;
+            /** @description true のとき会員の卒業予定日をプラン終了日に更新する */
+            applyGraduateDate?: boolean;
+        };
+        /** @description 継続プラン操作後の結果（履歴＋自動算出ステータス＋卒業予定日） */
+        ContinuationPlanResult: {
+            continuationPlans: components["schemas"]["ContinuationPlanHistoryItem"][];
+            status?: components["schemas"]["MemberStatus"];
+            /** Format: date */
+            graduateDate?: string;
+        };
         /** @description 継続プラン履歴の1行（カルテ表示用。planType/months/期間/備考） */
         ContinuationPlanHistoryItem: {
             /** Format: uuid */
             id?: string;
-            /** @example 給付金6ヶ月プラン */
+            /** @example タビプラプラン */
             planType?: string;
             /** @example 6 */
             months?: number;
@@ -1635,8 +1873,6 @@ export interface components {
             residenceOverseas?: string;
             /** @description 【入会プラン】（必須）6ヶ月プラン / 給付金6ヶ月プラン / 給付金9ヶ月プラン / 給付金12ヶ月プラン */
             plan?: string;
-            /** @description 【ステータス】（必須）入学手続き中 / 再入学手続き中 / 受講中 / 継続中 / 休会中 / 卒業 / 途中退会。日付から算出できないもの（途中退会 等）のみ反映 */
-            status?: components["schemas"]["MemberStatus"];
             /**
              * Format: date
              * @description 【オリエン実施日】（任意）
@@ -1802,16 +2038,6 @@ export interface components {
             note?: string;
             /** Format: date-time */
             createdAt?: string;
-        };
-        ContinuationPlanInput: {
-            /** @enum {string} */
-            type: "継続" | "休会" | "再入会";
-            plan?: string;
-            /** Format: date */
-            startDate: string;
-            /** Format: date */
-            endDate?: string;
-            note?: string;
         };
         ProgosSkillSet: {
             /** @enum {string} */
@@ -1993,6 +2219,7 @@ export interface components {
         logId: string;
         textbookId: string;
         coachingRecordId: string;
+        staffId: string;
     };
     requestBodies: never;
     headers: never;

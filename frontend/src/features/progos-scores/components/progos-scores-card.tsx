@@ -1,7 +1,11 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useProgosScores } from '../api/get-progos-scores'
 import { useAddProgosScore } from '../api/add-progos-score'
-import { CEFR_LEVELS, PROGOS_SKILLS, type ProgosSkillSet, type ProgosScoreInput } from '../types'
+import { CEFR_LEVELS, PROGOS_SKILLS, type ProgosScoreInput } from '../types'
+import { progosFormSchema, type ProgosFormValues } from '../schemas'
+import { alertServerError } from '../../../lib/form-error'
 
 interface Props {
   memberId: string
@@ -69,20 +73,34 @@ export function ProgosScoresCard({ memberId }: Props) {
 
 function AddProgosModal({ memberId, onClose }: { memberId: string; onClose: () => void }) {
   const add = useAddProgosScore(memberId)
-  const [examDate, setExamDate] = useState(today())
-  const [overall, setOverall] = useState('B1')
-  const [skills, setSkills] = useState<ProgosSkillSet>({
-    range: 'B1', accuracy: 'B1', fluency: 'B1', interaction: 'B1', coherence: 'B1', phonology: 'B1',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProgosFormValues>({
+    resolver: zodResolver(progosFormSchema),
+    defaultValues: {
+      examDate: today(),
+      overall: 'B1',
+      skills: { range: 'B1', accuracy: 'B1', fluency: 'B1', interaction: 'B1', coherence: 'B1', phonology: 'B1' },
+      comment: '',
+    },
   })
-  const [comment, setComment] = useState('')
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const err = (testid: string, message?: string) =>
+    message ? <span className="form-error" data-testid={`progos-error-${testid}`}>{message}</span> : null
+
+  const submit = handleSubmit((v) => {
     add.mutate(
-      { examDate, overall: overall as ProgosScoreInput['overall'], skills, comment: comment || undefined },
-      { onSuccess: onClose },
+      {
+        examDate: v.examDate,
+        overall: v.overall as ProgosScoreInput['overall'],
+        skills: v.skills as ProgosScoreInput['skills'],
+        comment: v.comment || undefined,
+      },
+      { onSuccess: onClose, onError: (e) => alertServerError(e, '登録に失敗しました') },
     )
-  }
+  })
 
   return (
     <div className="center-modal-overlay show" onClick={onClose}>
@@ -93,30 +111,25 @@ function AddProgosModal({ memberId, onClose }: { memberId: string; onClose: () =
         </div>
         <form onSubmit={submit}>
           <div className="center-modal-body">
-            {add.isError && (
-              <p className="form-error" data-testid="progos-error">{(add.error as { message?: string })?.message ?? '登録に失敗しました'}</p>
-            )}
             <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
               <label className="form-group">
                 受験日 *
-                <input type="date" data-testid="progos-date" max={today()} value={examDate} onChange={(e) => setExamDate(e.target.value)} />
+                <input type="date" data-testid="progos-date" max={today()} {...register('examDate')} />
+                {err('examDate', errors.examDate?.message)}
               </label>
               <label className="form-group">
                 総合 *
-                <select data-testid="progos-overall" value={overall} onChange={(e) => setOverall(e.target.value)}>
+                <select data-testid="progos-overall" {...register('overall')}>
                   {CEFR_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
                 </select>
+                {err('overall', errors.overall?.message)}
               </label>
             </div>
             <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: 8 }}>
               {PROGOS_SKILLS.map((s) => (
                 <label key={s.key} className="form-group">
                   {s.label}
-                  <select
-                    data-testid={`progos-skill-${s.key}`}
-                    value={skills[s.key]}
-                    onChange={(e) => setSkills((prev) => ({ ...prev, [s.key]: e.target.value }))}
-                  >
+                  <select data-testid={`progos-skill-${s.key}`} {...register(`skills.${s.key}` as const)}>
                     {CEFR_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </label>
@@ -124,7 +137,7 @@ function AddProgosModal({ memberId, onClose }: { memberId: string; onClose: () =
             </div>
             <label className="form-group" style={{ display: 'block', marginTop: 8 }}>
               コメント
-              <input data-testid="progos-comment" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="所感など" />
+              <input data-testid="progos-comment" {...register('comment')} placeholder="所感など" />
             </label>
           </div>
           <div className="center-modal-footer" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

@@ -1,7 +1,5 @@
 import { createMiddleware } from 'hono/factory';
 import { verify } from 'hono/jwt';
-import { MemberId } from '../domain/member/member';
-import { StaffId } from '../domain/staff/staff';
 import { jwtSecret } from '../config/secrets';
 
 /**
@@ -20,14 +18,20 @@ export interface JwtClaims {
   memberId?: string;
   /** 職員（管理）用エンドポイントの主体 */
   adminId?: string;
+  /** 職員の役割（Coach/Teacher/...）。権限判定に使う。 */
+  role?: string;
 }
 
 /** Context 変数（型付き）。ミドルウェアが set し、Controller が get する。 */
 export interface MemberAuthVariables {
-  memberId: MemberId;
+  /** 会員ID（JWT claim の生値）。ドメインでは MemberId.create で VO 化する。 */
+  memberId: string;
 }
 export interface AdminAuthVariables {
-  staffId: StaffId;
+  /** 職員ID（JWT claim の生値。ドメインでは StaffId.create で VO 化する）。 */
+  staffId: string;
+  /** ログイン職員の役割（権限判定用）。 */
+  role: string;
 }
 
 /** Authorization: Bearer <JWT> を HS256 検証し、claims を返す。失敗時は null。 */
@@ -48,7 +52,7 @@ export const memberAuth = createMiddleware<{ Variables: MemberAuthVariables }>(a
   if (!claims?.memberId) {
     return c.json({ message: '認証が必要です（会員）' }, 401);
   }
-  c.set('memberId', claims.memberId as MemberId);
+  c.set('memberId', claims.memberId);
   await next();
 });
 
@@ -58,6 +62,7 @@ export const adminAuth = createMiddleware<{ Variables: AdminAuthVariables }>(asy
   if (!claims?.adminId) {
     return c.json({ message: '認証が必要です（職員）' }, 401);
   }
-  c.set('staffId', claims.adminId as StaffId);
+  c.set('staffId', claims.adminId);
+  c.set('role', claims.role ?? '');
   await next();
 });

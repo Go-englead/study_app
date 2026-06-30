@@ -427,6 +427,119 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ── 途中退会（唯一の手動ステータス操作。日付では判断できないため人が切替） ───────────
+  /v1/admin/members/{memberId}/withdraw:
+    post:
+      tags: [members]
+      summary: 途中退会にする
+      description: ステータスを「途中退会」に設定する（手動オーバーライド）。
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: 更新後の会員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [members]
+      summary: 途中退会を取り消す
+      description: 手動オーバーライドを解除し、ステータスを日付からの自動算出へ戻す。
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      responses:
+        '200':
+          description: 更新後の会員
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── 継続プラン（会員のサテライト。会員保存トランザクションで永続化） ───────────
+  /v1/admin/members/{memberId}/continuation-plans:
+    post:
+      tags: [members]
+      summary: 継続プランを追加
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContinuationPlanInput'
+      responses:
+        '201':
+          description: 追加後の継続プラン履歴・ステータス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContinuationPlanResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/members/{memberId}/continuation-plans/{planId}:
+    put:
+      tags: [members]
+      summary: 継続プランを更新
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+        - name: planId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContinuationPlanInput'
+      responses:
+        '200':
+          description: 更新後の継続プラン履歴・ステータス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContinuationPlanResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [members]
+      summary: 継続プランを削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/memberId'
+        - name: planId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 削除後の継続プラン履歴・ステータス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContinuationPlanResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   # ── 学習記録（職員が特定会員のログを参照） ───────────
   /v1/admin/members/{memberId}/learning-logs:
     get:
@@ -579,45 +692,6 @@ paths:
       responses:
         '204':
           description: 削除成功
-
-  # ── 継続プラン ────────────────────────────────────
-  /v1/admin/members/{memberId}/continuation-plans:
-    get:
-      tags: [members]
-      summary: 継続プラン一覧取得
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/memberId'
-      responses:
-        '200':
-          description: 継続プラン一覧
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ContinuationPlan'
-    post:
-      tags: [members]
-      summary: 継続プラン追加
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/memberId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContinuationPlanInput'
-      responses:
-        '201':
-          description: 追加成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContinuationPlan'
 
   # ── PROGOS ───────────────────────────────────────
   /v1/admin/members/{memberId}/progos:
@@ -846,18 +920,29 @@ paths:
   /v1/admin/staff:
     get:
       tags: [staff]
-      summary: スタッフ一覧取得
+      summary: スタッフ一覧取得／検索
       security:
         - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 社員ID・氏名・メールの部分一致で検索（未指定は全件）
       responses:
         '200':
           description: スタッフ一覧
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Staff'
+                type: object
+                required: [staff]
+                properties:
+                  staff:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StaffSummary'
     post:
       tags: [staff]
       summary: スタッフ登録（パスワードはハッシュ化して別テーブルに保存）
@@ -876,6 +961,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StaffSummary'
+
+  /v1/admin/staff/{staffId}:
+    get:
+      tags: [staff]
+      summary: スタッフ詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/staffId'
+      responses:
+        '200':
+          description: スタッフ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffSummary'
+        '404':
+          description: 見つからない
+    put:
+      tags: [staff]
+      summary: スタッフ更新（パスワードは指定時のみ変更）
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/staffId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffUpdateInput'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffSummary'
+    delete:
+      tags: [staff]
+      summary: スタッフ削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/staffId'
+      responses:
+        '204':
+          description: 削除成功
 
   # ── ダッシュボード（職員用） ──────────────────────
   /v1/admin/dashboard/stats:
@@ -952,6 +1085,12 @@ components:
       required: true
       schema:
         type: string
+    staffId:
+      name: staffId
+      in: path
+      required: true
+      schema:
+        type: string
 
   responses:
     Unauthorized:
@@ -1011,7 +1150,7 @@ components:
           type: string
         role:
           type: string
-          enum: [Coach, Teacher, Consultant, CS]
+          enum: [Coach, Teacher, Consultant, CS, Staff]
         email:
           type: string
           format: email
@@ -1039,6 +1178,21 @@ components:
         email:
           type: string
           format: email
+    StaffUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [Coach, Teacher, Consultant, CS, Staff]
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: 指定時のみ変更（空なら据え置き）
+          minLength: 8
 
     # ── 会員 ──
     MemberStatus:
@@ -1199,6 +1353,42 @@ components:
             suspension:
               $ref: '#/components/schemas/Suspension'
 
+    ContinuationPlanInput:
+      type: object
+      description: 継続プランの登録/編集入力（終了日は開始日＋月数−1日で自動算出）
+      required: [planType, months, startDate]
+      properties:
+        planType:
+          type: string
+          enum: [タビプラプラン, 英語講座プラン, 英語コーチングプラン]
+        months:
+          type: integer
+          minimum: 1
+          maximum: 6
+        startDate:
+          type: string
+          format: date
+        note:
+          type: string
+        applyGraduateDate:
+          type: boolean
+          description: true のとき会員の卒業予定日をプラン終了日に更新する
+
+    ContinuationPlanResult:
+      type: object
+      description: 継続プラン操作後の結果（履歴＋自動算出ステータス＋卒業予定日）
+      required: [continuationPlans]
+      properties:
+        continuationPlans:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContinuationPlanHistoryItem'
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+        graduateDate:
+          type: string
+          format: date
+
     ContinuationPlanHistoryItem:
       type: object
       description: 継続プラン履歴の1行（カルテ表示用。planType/months/期間/備考）
@@ -1208,7 +1398,7 @@ components:
           format: uuid
         planType:
           type: string
-          example: 給付金6ヶ月プラン
+          example: タビプラプラン
         months:
           type: integer
           example: 6
@@ -1299,9 +1489,6 @@ components:
         plan:
           type: string
           description: '【入会プラン】（必須）6ヶ月プラン / 給付金6ヶ月プラン / 給付金9ヶ月プラン / 給付金12ヶ月プラン'
-        status:
-          $ref: '#/components/schemas/MemberStatus'
-          description: '【ステータス】（必須）入学手続き中 / 再入学手続き中 / 受講中 / 継続中 / 休会中 / 卒業 / 途中退会。日付から算出できないもの（途中退会 等）のみ反映'
         enrollmentDate:
           type: string
           format: date
@@ -1597,24 +1784,6 @@ components:
         createdAt:
           type: string
           format: date-time
-
-    ContinuationPlanInput:
-      type: object
-      required: [type, startDate]
-      properties:
-        type:
-          type: string
-          enum: [継続, 休会, 再入会]
-        plan:
-          type: string
-        startDate:
-          type: string
-          format: date
-        endDate:
-          type: string
-          format: date
-        note:
-          type: string
 
     # ── PROGOS（スピーキング・CEFR） ──
     ProgosSkillSet:

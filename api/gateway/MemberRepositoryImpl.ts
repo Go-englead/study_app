@@ -11,6 +11,7 @@ import {
   PlanType,
   EnglishScores,
 } from '../domain/member/member';
+import { ContinuationPlan } from '../domain/continuation-plan/continuation-plan';
 import { MemberRepository, MemberSearchCriteria } from '../domain/member/member-repository';
 
 // ───────────────────── Row → ドメイン（保存済みデータは検証済みとして信頼） ─────────────────────
@@ -30,8 +31,8 @@ function toDomain(r: MemberFullRow): Member {
   const hasTravel =
     r.travelCountry || r.travelCity || r.travelDate || r.travelReason || r.travelNote;
   const staffIdOf = (role: string) => r.assignments.find((a) => a.role === role)?.staffId;
-  return {
-    id: r.id as MemberId,
+  return Member.reconstitute({
+    id: MemberId.create(r.id),
     code: r.memberCode,
     name: {
       lastNameKanji: r.lastNameKanji,
@@ -43,24 +44,24 @@ function toDomain(r: MemberFullRow): Member {
       nickname: r.nickname ?? undefined,
     },
     // 連絡先メール（member_contacts 由来）。認証情報は member_credentials 由来。
-    email: r.email as Email,
+    email: Email.create(r.email),
     credential:
       r.passwordHash != null
         ? { password: r.passwordHash, requirePasswordChange: r.requirePasswordChange ?? false }
         : undefined,
     gender: r.gender ?? undefined,
-    birthDate: (r.birthDate ?? undefined) as DateOnly | undefined,
+    birthDate: r.birthDate ? DateOnly.create(r.birthDate) : undefined,
     phone: r.phone ?? undefined,
     occupation: r.occupation ?? undefined,
     occupationNote: r.occupationNote ?? undefined,
     residence: r.residence ?? undefined,
     residenceOverseas: r.residenceOverseas ?? undefined,
-    plan: r.plan as PlanType,
+    plan: PlanType.create(r.plan),
     manualStatusOverride: (r.manualStatusOverride ?? undefined) as MemberStatus | undefined,
-    enrollmentDate: (r.enrollmentDate ?? undefined) as DateOnly | undefined,
+    enrollmentDate: r.enrollmentDate ? DateOnly.create(r.enrollmentDate) : undefined,
     enrollmentPeriod: {
-      startDate: (r.startDate ?? undefined) as DateOnly | undefined,
-      graduateDate: (r.graduateDate ?? undefined) as DateOnly | undefined,
+      startDate: r.startDate ? DateOnly.create(r.startDate) : undefined,
+      graduateDate: r.graduateDate ? DateOnly.create(r.graduateDate) : undefined,
     },
     classLevel: { initial: r.initialClass, current: r.currentClass },
     nativecamp: r.nativecamp as NativecampStatus,
@@ -69,7 +70,7 @@ function toDomain(r: MemberFullRow): Member {
       ? {
           country: r.travelCountry ?? undefined,
           city: r.travelCity ?? undefined,
-          travelDate: (r.travelDate ?? undefined) as DateOnly | undefined,
+          travelDate: r.travelDate ? DateOnly.create(r.travelDate) : undefined,
           reason: r.travelReason ?? undefined,
           note: r.travelNote ?? undefined,
         }
@@ -81,22 +82,32 @@ function toDomain(r: MemberFullRow): Member {
     csStaffId: staffIdOf('CS'),
     orientStaffId: staffIdOf('Orient'),
     dismissedCoachingReminderId: r.dismissedCoachingReminderId ?? undefined,
-  };
+    continuationPlans: r.continuationPlans.map((p) =>
+      ContinuationPlan.fromRecord({
+        id: p.id,
+        planType: p.planType,
+        months: p.months,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        note: p.note ?? undefined,
+      }),
+    ),
+  });
 }
 
 // ───────────────────── ドメイン → 全テーブル行のバンドル ─────────────────────
 function toBundle(m: Member): MemberRowBundle {
   const assignments: NewMemberStaffAssignmentRow[] = [];
   if (m.consultantStaffId)
-    assignments.push({ memberId: m.id, role: 'Consultant', staffId: m.consultantStaffId });
-  if (m.csStaffId) assignments.push({ memberId: m.id, role: 'CS', staffId: m.csStaffId });
+    assignments.push({ memberId: m.id.value, role: 'Consultant', staffId: m.consultantStaffId });
+  if (m.csStaffId) assignments.push({ memberId: m.id.value, role: 'CS', staffId: m.csStaffId });
   if (m.orientStaffId)
-    assignments.push({ memberId: m.id, role: 'Orient', staffId: m.orientStaffId });
+    assignments.push({ memberId: m.id.value, role: 'Orient', staffId: m.orientStaffId });
 
   return {
     // 1. 基本情報
     member: {
-      id: m.id,
+      id: m.id.value,
       memberCode: m.code,
       lastNameKanji: m.name.lastNameKanji,
       firstNameKanji: m.name.firstNameKanji,
@@ -106,25 +117,25 @@ function toBundle(m: Member): MemberRowBundle {
       firstNameAlpha: m.name.firstNameAlpha,
       nickname: m.name.nickname ?? null,
       gender: m.gender ?? null,
-      birthDate: m.birthDate ?? null,
+      birthDate: m.birthDate?.value ?? null,
       occupation: m.occupation ?? null,
       occupationNote: m.occupationNote ?? null,
       dismissedCoachingReminderId: m.dismissedCoachingReminderId ?? null,
     },
     // 2. 連絡先
     contact: {
-      memberId: m.id,
-      email: m.email,
+      memberId: m.id.value,
+      email: m.email.value,
       phone: m.phone ?? null,
     },
     // 3. 受講情報
     enrollment: {
-      memberId: m.id,
-      plan: m.plan,
+      memberId: m.id.value,
+      plan: m.plan.name,
       manualStatusOverride: m.manualStatusOverride ?? null,
-      enrollmentDate: m.enrollmentDate ?? null,
-      startDate: m.enrollmentPeriod.startDate ?? null,
-      graduateDate: m.enrollmentPeriod.graduateDate ?? null,
+      enrollmentDate: m.enrollmentDate?.value ?? null,
+      startDate: m.enrollmentPeriod.startDate?.value ?? null,
+      graduateDate: m.enrollmentPeriod.graduateDate?.value ?? null,
       initialClass: m.classLevel.initial,
       currentClass: m.classLevel.current,
       nativecamp: m.nativecamp,
@@ -132,18 +143,18 @@ function toBundle(m: Member): MemberRowBundle {
     },
     // 5. 在住・渡航
     residenceTravel: {
-      memberId: m.id,
+      memberId: m.id.value,
       residence: m.residence ?? null,
       residenceOverseas: m.residenceOverseas ?? null,
       travelCountry: m.travelPlan?.country ?? null,
       travelCity: m.travelPlan?.city ?? null,
-      travelDate: m.travelPlan?.travelDate ?? null,
+      travelDate: m.travelPlan?.travelDate?.value ?? null,
       travelReason: m.travelPlan?.reason ?? null,
       travelNote: m.travelPlan?.note ?? null,
     },
     // 6. 英語スコア
     englishScore: {
-      memberId: m.id,
+      memberId: m.id.value,
       toeicLr: m.englishScores?.toeicLR ?? null,
       toeicSw: m.englishScores?.toeicSW ?? null,
       toefl: m.englishScores?.toefl ?? null,
@@ -153,19 +164,29 @@ function toBundle(m: Member): MemberRowBundle {
     },
     // 7. コーチ入力
     coachInput: {
-      memberId: m.id,
+      memberId: m.id.value,
       coachLearningGoal: m.coachLearningGoal ?? null,
       note: m.note ?? null,
     },
     // 認証情報
     credential: {
-      memberId: m.id,
-      loginId: m.email,
+      memberId: m.id.value,
+      loginId: m.email.value,
       passwordHash: m.credential?.password ?? null,
       requirePasswordChange: m.credential?.requirePasswordChange ?? null,
     },
     // 4. 担当者（「その他」は含めない）
     assignments,
+    // 継続プラン履歴（会員保存トランザクションで全置換）
+    continuationPlans: m.continuationPlans.map((p) => ({
+      id: p.id.value,
+      memberId: m.id.value,
+      planType: p.planType.name,
+      months: p.months,
+      startDate: p.startDate.value,
+      endDate: p.endDate.value,
+      note: p.note ?? null,
+    })),
   };
 }
 
@@ -174,12 +195,12 @@ export class MemberRepositoryImpl implements MemberRepository {
   constructor(private readonly db: Database) {}
 
   async findById(id: MemberId): Promise<Member | undefined> {
-    const row = await memberDriver.findById(this.db, id);
+    const row = await memberDriver.findById(this.db, id.value);
     return row ? toDomain(row) : undefined;
   }
 
   async findByEmail(email: Email): Promise<Member | undefined> {
-    const row = await memberDriver.findByEmail(this.db, email);
+    const row = await memberDriver.findByEmail(this.db, email.value);
     return row ? toDomain(row) : undefined;
   }
 
@@ -204,6 +225,6 @@ export class MemberRepositoryImpl implements MemberRepository {
   }
 
   async delete(id: MemberId): Promise<void> {
-    await memberDriver.deleteById(this.db, id);
+    await memberDriver.deleteById(this.db, id.value);
   }
 }

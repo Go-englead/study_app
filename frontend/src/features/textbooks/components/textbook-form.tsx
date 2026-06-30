@@ -56,7 +56,7 @@ export function TextbookForm({
       <section className="form-section">
         <h3>教材情報</h3>
         <div className="form-grid">
-          <label>教材コード*<input {...field('textbookCode')} readOnly={lockCode} />{err('textbookCode')}</label>
+          <label>教材コード*<input {...field('textbookCode')} readOnly={lockCode} aria-disabled={lockCode} className={lockCode ? 'input-locked' : undefined} />{err('textbookCode')}</label>
           <label>教材名*<input {...field('name')} />{err('name')}</label>
           <label>カテゴリ<input {...field('category')} placeholder="例：単語/フレーズ" />{err('category')}</label>
           <label>

@@ -1,8 +1,7 @@
 import { TextbookRepository } from '../../domain/textbook/textbook-repository';
 import {
-  createTextbook,
-  updateTextbook,
-  createTextbookId,
+  Textbook,
+  TextbookId,
   CreateTextbookInput,
   UpdateTextbookInput,
 } from '../../domain/textbook/textbook';
@@ -17,7 +16,7 @@ export class TextbookUseCase {
 
   /** 1件取得 */
   async get(id: string): Promise<TextbookDto | undefined> {
-    const textbook = await this.textbooks.findById(createTextbookId(id));
+    const textbook = await this.textbooks.findById(TextbookId.create(id));
     return textbook ? toTextbookDto(textbook) : undefined;
   }
 
@@ -32,22 +31,22 @@ export class TextbookUseCase {
 
   /** 新規登録（ドメインのバリデーションは DomainError を throw） */
   async register(input: CreateTextbookInput): Promise<TextbookDto> {
-    const textbook = createTextbook(input);
+    const textbook = Textbook.create(input);
     await this.textbooks.save(textbook);
     return toTextbookDto(textbook);
   }
 
   /** 更新（存在しなければ undefined） */
   async update(id: string, patch: UpdateTextbookInput): Promise<TextbookDto | undefined> {
-    const existing = await this.textbooks.findById(createTextbookId(id));
+    const existing = await this.textbooks.findById(TextbookId.create(id));
     if (!existing) return undefined;
-    const updated = updateTextbook(existing, patch);
+    const updated = existing.update(patch);
     await this.textbooks.save(updated);
     return toTextbookDto(updated);
   }
 
   /** 削除 */
   async remove(id: string): Promise<void> {
-    await this.textbooks.delete(createTextbookId(id));
+    await this.textbooks.delete(TextbookId.create(id));
   }
 }

@@ -8,22 +8,22 @@ import { LearningLog, LearningLogId } from '../domain/learning-log/learning-log'
 import { LearningLogRepository } from '../domain/learning-log/learning-log-repository';
 
 function toDomain(r: LearningLogRow): LearningLog {
-  return {
-    id: r.id as LearningLogId,
-    memberId: r.memberId as MemberId,
-    textbookId: r.textbookId as TextbookId,
-    date: r.studiedOn as DateOnly,
+  return LearningLog.fromRecord({
+    id: r.id,
+    memberId: r.memberId,
+    textbookId: r.textbookId,
+    date: r.studiedOn,
     durationMinutes: r.durationMinutes,
     comment: r.comment,
-  };
+  });
 }
 
 function toRow(l: LearningLog): driver.NewLearningLogRow {
   return {
-    id: l.id as string,
-    memberId: l.memberId as string,
-    textbookId: l.textbookId as string,
-    studiedOn: l.date as string,
+    id: l.id.value,
+    memberId: l.memberId.value,
+    textbookId: l.textbookId.value,
+    studiedOn: l.date.value,
     durationMinutes: l.durationMinutes,
     comment: l.comment,
   };
@@ -34,17 +34,17 @@ export class LearningLogRepositoryImpl implements LearningLogRepository {
   constructor(private readonly db: Database) {}
 
   async findById(id: LearningLogId): Promise<LearningLog | undefined> {
-    const row = await driver.findById(this.db, id as string);
+    const row = await driver.findById(this.db, id.value);
     return row ? toDomain(row) : undefined;
   }
 
   async findByMember(memberId: MemberId): Promise<LearningLog[]> {
-    const rows = await driver.findByMember(this.db, memberId as string);
+    const rows = await driver.findByMember(this.db, memberId.value);
     return rows.map(toDomain);
   }
 
   async findByMemberAndDate(memberId: MemberId, date: DateOnly): Promise<LearningLog[]> {
-    const rows = await driver.findByMemberAndDate(this.db, memberId as string, date as string);
+    const rows = await driver.findByMemberAndDate(this.db, memberId.value, date.value);
     return rows.map(toDomain);
   }
 
@@ -58,6 +58,6 @@ export class LearningLogRepositoryImpl implements LearningLogRepository {
   }
 
   async delete(id: LearningLogId): Promise<void> {
-    await driver.deleteById(this.db, id as string);
+    await driver.deleteById(this.db, id.value);
   }
 }

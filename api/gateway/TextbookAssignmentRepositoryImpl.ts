@@ -8,22 +8,22 @@ import { TextbookAssignment } from '../domain/textbook-assignment/textbook-assig
 import { TextbookAssignmentRepository } from '../domain/textbook-assignment/textbook-assignment-repository';
 
 function toDomain(r: TextbookAssignmentRow): TextbookAssignment {
-  return {
-    memberId: r.memberId as MemberId,
-    textbookId: r.textbookId as TextbookId,
+  return TextbookAssignment.fromRecord({
+    memberId: r.memberId,
+    textbookId: r.textbookId,
     dailyGoalMinutes: r.dailyGoalMinutes ?? null,
     note: r.note,
-    graduatedOn: (r.graduatedOn ?? null) as DateOnly | null,
-  };
+    graduatedOn: r.graduatedOn ?? null,
+  });
 }
 
 function toRow(a: TextbookAssignment): driver.NewTextbookAssignmentRow {
   return {
-    memberId: a.memberId,
-    textbookId: a.textbookId,
+    memberId: a.memberId.value,
+    textbookId: a.textbookId.value,
     dailyGoalMinutes: a.dailyGoalMinutes,
     note: a.note,
-    graduatedOn: a.graduatedOn,
+    graduatedOn: a.graduatedOn?.value ?? null,
   };
 }
 
@@ -32,17 +32,17 @@ export class TextbookAssignmentRepositoryImpl implements TextbookAssignmentRepos
   constructor(private readonly db: Database) {}
 
   async findByMember(memberId: MemberId): Promise<TextbookAssignment[]> {
-    const rows = await driver.findByMember(this.db, memberId);
+    const rows = await driver.findByMember(this.db, memberId.value);
     return rows.map(toDomain);
   }
 
   async find(memberId: MemberId, textbookId: TextbookId): Promise<TextbookAssignment | undefined> {
-    const row = await driver.find(this.db, memberId, textbookId);
+    const row = await driver.find(this.db, memberId.value, textbookId.value);
     return row ? toDomain(row) : undefined;
   }
 
   async findByTextbook(textbookId: TextbookId): Promise<TextbookAssignment[]> {
-    const rows = await driver.findByTextbook(this.db, textbookId);
+    const rows = await driver.findByTextbook(this.db, textbookId.value);
     return rows.map(toDomain);
   }
 
@@ -51,6 +51,6 @@ export class TextbookAssignmentRepositoryImpl implements TextbookAssignmentRepos
   }
 
   async delete(memberId: MemberId, textbookId: TextbookId): Promise<void> {
-    await driver.deleteOne(this.db, memberId, textbookId);
+    await driver.deleteOne(this.db, memberId.value, textbookId.value);
   }
 }

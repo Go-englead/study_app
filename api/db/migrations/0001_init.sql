@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS staff (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   staff_code    text NOT NULL UNIQUE,           -- 社員ID（例 'MW001'）
   name          text NOT NULL,
-  role          text NOT NULL CHECK (role IN ('Coach', 'Teacher', 'Consultant', 'CS')),
+  role          text NOT NULL CHECK (role IN ('Coach', 'Teacher', 'Consultant', 'CS', 'Staff')),
   icon_url      text,
   meet_url      text,
   group_content text

@@ -21,11 +21,26 @@
 
 > **ドメイン設計の正典は [`api/domain/README.md`](api/domain/README.md)**（集約マップ・集約ルート・値オブジェクト・不変条件）。**ドメインを新規/変更する前に必ず参照**し、整合させること。
 
+### ★ 最重要原則：ビジネスロジックはドメインにカプセル化する（関数型DDD）
+- **ビジネスロジック（不変条件・権限・状態遷移・整合性）は必ずドメイン層に置く**。usecase には**アプリケーションロジック（取得→ドメイン呼び出し→保存→DTO化）だけ**を書く。
+- **usecase に「ビジネスルールによる if／パターン分岐／場合分けのコード」を極力書かない**。それらは**ドメインの interface / 判別共用体 / smart constructor / 純関数**で表現する。usecase はそれを **呼ぶだけ**。
+- **能力は boolean（`canXxx()`）で持たず“型”で表す**：できない役割・状態には**そもそもその操作（型）を渡せない**ようにする。
+  - 例（コーチング）：種別ごとの判別共用体＋`createXxxRecord(input, existing)` が不変条件を検証し `effects` を返す／`assertCoachingSetConsistent` が集合整合を保証。
+  - 例（スタッフ）：`StaffBase` を継承する role 別 class（`CoachStaff`/`TeacherStaff`/…）。`AdminStaff = Coach|Teacher`。`canAccessAdmin()` のような boolean は作らない。
+- 迷ったら **スタッフドメイン（`domain/staff/staff.ts`）を参照**して同じ流儀で書く（クラス化の手本）。
+
+### ★★ ドメインは「クラス」で表現する（このルールは全ドメインに適用）
+- **ドメインファイルのトップレベルに `function` を書かない**。トップレベルは **`type` / `interface` / `class` / `abstract class` のみ**。ロジックは必ずクラスのメソッド（インスタンス or static）に入れる。
+- **値オブジェクトはクラス化**し、生成・検証は **その VO クラスの `static create()`** に閉じる（例 `StaffId.create()`・`Role.create()`・`StaffPassword.create()`）。`Brand<string,'Xxx'>` ＋ トップレベル `createXxx()` 関数は **新規/リファクタ対象では使わない**。
+- **集約ルートも class**（必要なら `abstract class XxxBase` ＋ 派生 class）。**static にしてよいのは生成系の `create` / `fromRecord` だけ**。`update` などの振る舞いは**インスタンスメソッド**。
+- **能力は capable な class だけが持つ（throw しない・「できないこと」はそもそも書かない）**。例：`authenticateAsAdmin()` は管理職員 class のみ。実行時に「その型に確定できなければエラー」を出す“ゲート”は、**そのルールを所有するドメイン**の確定メソッド（例 `staff.requireAdmin()`）か、**型に合わせるアプリ都合の検証として UseCase** に書く。
+- **ドメイン横断のルールは越境させない**。例：「PROGOSはコーチのみ記録可」は **PROGOS ドメイン**が `createProgosScore(input, recordedBy: CoachStaff)` のように **`CoachStaff` を引数で要求**してルールを“型で物語る”。staff ドメインに `requireCoach` を置かない。「actor が Coach でなければエラー」は **記録の UseCase** が `createProgosScore` の前に書く（型に合わせるアプリ都合の検証）。
+
 ### ドメイン層の規約（DDD）
-- **集約ごとに `domain/<aggregate>/` を切る**：`xxx.ts`（集約＋`createXxx`/`updateXxx`）と `xxx-repository.ts`（**Repository interface はドメイン層に置く**。実装は `gateway/`）。
-- **識別子は branded type**（`Brand<string, 'XxxId'>`）。`createXxxId()` で生成。
+- **集約ごとに `domain/<aggregate>/` を切る**：`xxx.ts`（集約 class ＋ VO class）と `xxx-repository.ts`（**Repository interface はドメイン層に置く**。実装は `gateway/`）。
+- **識別子も VO クラス**（例 `StaffId`、`value: string` を保持し `static create()` で生成・検証）。`gateway`/`usecase` 境界では `.value` で素の文字列に戻す。※ 未リファクタの既存ドメインは旧 `Brand<string,'XxxId'>`＋`createXxxId()` のまま残る場合あり（順次クラス化）。
 - **id=UUID（サロゲート）＋ 業務コード（自然キー・ユーザー入力・UNIQUE）の二本立て**。例：`Member.id`(UUID)/`Member.code`、`Textbook.id`(UUID)/`Textbook.code`(T01)。画面・CSV の "ID" は業務コードを指すことが多い（DBの真のPKは別UUID）。
-- **値オブジェクトは smart constructor**（`createXxx`）で生成時に検証。readonly interface。不正は `throw DomainError`（→ controller で 400）。タイプ違いは判別共用体。
+- **値オブジェクトはクラスの `static create()`** で生成時に検証。readonly。不正は `throw DomainError`（→ controller で 400）。タイプ違いは role 別 class の判別共用体。
 - 計算値は **compute-on-read**（保存しない。例：会員ステータス）。
 
 ### その他
@@ -59,6 +74,13 @@
 - **E2E 用に `data-testid` を付与**（フォームは `member-field-<name>` 等）。
 - 認証は `config/env.ts` の開発用トークン。
 
+### ★ バリデーション方針（全ての登録・編集フォーム共通）
+- **必ず zod ＋ react-hook-form（`zodResolver`）** で実装する。フォームごとに `features/<name>/schemas.ts` にスキーマを置く。
+- **フィールド単位のバリデーション**（必須・形式・範囲）＝ クライアント側 zod で検証し、**そのフィールドの直下に赤文字**（`<span className="form-error" data-testid="<feature>-error-<field>">`）で表示する。
+- **データそのものに対する整合性ルール違反**（例：初回オリエンが無いのに通常オリエンを記録／通常があると初回は削除不可／コード・メールの重複）＝ サーバーが `DomainError` 等で返す。これは特定フィールドに紐づかないので **`alert()` で通知**する（`lib/form-error.ts` の `alertServerError(error)` を mutation の `onError` で呼ぶ）。
+- **編集不可フィールド**（社員ID・会員ID・教材コードなど）は `readOnly` ＋ `className="input-locked"` で**無効に見せる**。
+- E2E は **各フォーム spec にバリデーションエラーのケースを1つ**持ち、フィードバック表示を assert する（フィールドエラーは `フォームエラー "<testid>" が表示される`、整合性違反 alert は `コーチング記録のエラーに …` のように `lastDialogMessage` を検証）。
+
 ---
 
 ## 🧪 テスト規約
@@ -76,7 +98,8 @@
 - **パッケージマネージャは pnpm 統一**（npm 禁止）。ビルドスクリプト許可は `pnpm-workspace.yaml` の `onlyBuiltDependencies`、または `pnpm approve-builds`。
 - **docker ポート**：frontend `8080` / 旧client `8081` / api `3000` / db `5432`。
 - **API は起動時にマイグレーションしない**。docker DB が空なら `docker compose exec -T db psql -U studyapp -d studyapp < api/db/migrations/0001_init.sql` を手動実行（※起動時自動化は未対応）。
-- **Docker レジストリ egress が時々切れる**（`registry-1.docker.io` タイムアウト）。コンテナ再ビルド不可のときは **`cd frontend && pnpm dev`（:5173・`/api`→:3000 プロキシ）** で最新ソースを確認／E2E も :5173 で実行可。
+- **🚫 ローカルで直接起動しない（docker 必須）**：api / frontend は**必ず docker（`docker compose up -d`）で動かす**。`pnpm dev` 等でホスト直接起動は**禁止**（ポート競合・二重化で `gauge run specs/` が docker 構成と食い違い事故になる）。`gauge run specs/` は既定の **:8080（docker フロント）→ :3000（docker api）** で通る状態を保つ。
+- **Docker レジストリ egress が時々切れる**（`registry-1.docker.io` タイムアウト）。`docker compose up` の `pnpm install` が固まる。**ローカルへ逃がさず**、egress 回復を待って docker を起動し直す（`docker compose up -d`／必要なら再試行）。
 - **gauge はシステムバイナリ**（`npx gauge` 不可、`gauge run` を使う）。`e2e/node_modules` 破損（`tsconfig-paths/register`・`gauge-ts/dist` 欠落）時は `rm -rf node_modules package-lock.json && npm install` でクリーン再インストール。
 
 ---

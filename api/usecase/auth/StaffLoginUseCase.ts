@@ -1,6 +1,7 @@
 import { StaffAuthRepository } from '../../domain/staff/staff-auth-repository';
 import { PasswordHasher } from '../../domain/shared/password-hasher';
 import { AuthError } from '../../domain/shared/auth-error';
+import { StaffBase } from '../../domain/staff/staff';
 import { issueStaffToken } from './token';
 
 export interface StaffLoginResult {
@@ -22,10 +23,14 @@ export class StaffLoginUseCase {
     const ok = await this.hasher.verify(rec.passwordHash, password ?? '');
     if (!ok) throw new AuthError('IDまたはパスワードが違います');
 
-    const token = await issueStaffToken(rec.staffId as string);
+    // 認証済みの職員を組み立て、管理画面に入れる職員（AdminStaff）として確定する。
+    // Coach / Teacher 以外はここで弾かれる（ForbiddenError → 403）＝そもそもトークンを発行しない。
+    const admin = StaffBase.fromRecord(rec).requireAdmin();
+
+    const token = await issueStaffToken(admin.id.value, admin.role.name);
     return {
       token,
-      staff: { id: rec.staffId as string, email: rec.loginId, name: rec.name, role: rec.role },
+      staff: { id: admin.id.value, email: admin.email.value, name: admin.name, role: admin.role.name },
     };
   }
 }

@@ -1,15 +1,15 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import {
   MemberRepository,
   MemberSearchCriteria,
 } from '../../domain/member/member-repository';
 import {
-  createMember,
-  updateMember,
-  createMemberId,
+  Member,
+  MemberId,
   CreateMemberInput,
   UpdateMemberInput,
 } from '../../domain/member/member';
+import { ContinuationPlan, ContinuationPlanId } from '../../domain/continuation-plan/continuation-plan';
 import { MemberDto, toMemberDto } from './MemberDto';
 
 /** 会員一覧/検索のクエリ（UIのトークンそのまま。__unset__ や within3m を含む）。 */
@@ -110,7 +110,7 @@ export class MemberUseCase {
 
   /** 1件取得 */
   async get(id: string): Promise<MemberDto | undefined> {
-    const member = await this.members.findById(createMemberId(id));
+    const member = await this.members.findById(MemberId.create(id));
     return member ? toMemberDto(member) : undefined;
   }
 
@@ -133,7 +133,7 @@ export class MemberUseCase {
    */
   async register(input: CreateMemberInput): Promise<RegisterResult> {
     const tempPassword = generateTempPassword();
-    const member = createMember({
+    const member = Member.create({
       ...input,
       password: tempPassword,
       requirePasswordChange: true,
@@ -144,15 +144,71 @@ export class MemberUseCase {
 
   /** 更新（存在しなければ undefined） */
   async update(id: string, patch: UpdateMemberInput): Promise<MemberDto | undefined> {
-    const existing = await this.members.findById(createMemberId(id));
+    const existing = await this.members.findById(MemberId.create(id));
     if (!existing) return undefined;
-    const updated = updateMember(existing, patch);
+    const updated = existing.update(patch);
+    await this.members.save(updated);
+    return toMemberDto(updated);
+  }
+
+  /** 継続プランを追加（applyGraduateDate=true で卒業予定日を終了日に反映）。会員保存トランザクションで永続化。 */
+  async addContinuationPlan(
+    memberId: string,
+    input: { planType: string; months: number; startDate: string; note?: string },
+    applyGraduateDate = false,
+  ): Promise<MemberDto | undefined> {
+    const member = await this.members.findById(MemberId.create(memberId));
+    if (!member) return undefined;
+    const plan = ContinuationPlan.create({ id: randomUUID(), ...input });
+    const updated = member.addContinuationPlan(plan, applyGraduateDate);
+    await this.members.save(updated);
+    return toMemberDto(updated);
+  }
+
+  /** 継続プランを更新。 */
+  async updateContinuationPlan(
+    memberId: string,
+    planId: string,
+    input: { planType: string; months: number; startDate: string; note?: string },
+    applyGraduateDate = false,
+  ): Promise<MemberDto | undefined> {
+    const member = await this.members.findById(MemberId.create(memberId));
+    if (!member) return undefined;
+    const plan = ContinuationPlan.create({ id: planId, ...input });
+    const updated = member.updateContinuationPlan(plan, applyGraduateDate);
+    await this.members.save(updated);
+    return toMemberDto(updated);
+  }
+
+  /** 継続プランを削除。 */
+  async removeContinuationPlan(memberId: string, planId: string): Promise<MemberDto | undefined> {
+    const member = await this.members.findById(MemberId.create(memberId));
+    if (!member) return undefined;
+    const updated = member.removeContinuationPlan(ContinuationPlanId.create(planId));
+    await this.members.save(updated);
+    return toMemberDto(updated);
+  }
+
+  /** 途中退会にする（手動ステータス。存在しなければ undefined）。 */
+  async withdraw(id: string): Promise<MemberDto | undefined> {
+    const existing = await this.members.findById(MemberId.create(id));
+    if (!existing) return undefined;
+    const updated = existing.withdraw();
+    await this.members.save(updated);
+    return toMemberDto(updated);
+  }
+
+  /** 途中退会を取り消す（ステータスを日付からの自動算出へ戻す。存在しなければ undefined）。 */
+  async reinstate(id: string): Promise<MemberDto | undefined> {
+    const existing = await this.members.findById(MemberId.create(id));
+    if (!existing) return undefined;
+    const updated = existing.reinstate();
     await this.members.save(updated);
     return toMemberDto(updated);
   }
 
   /** 削除 */
   async remove(id: string): Promise<void> {
-    await this.members.delete(createMemberId(id));
+    await this.members.delete(MemberId.create(id));
   }
 }

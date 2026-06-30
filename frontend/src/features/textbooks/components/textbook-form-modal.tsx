@@ -4,6 +4,7 @@ import { useUpdateTextbook } from '../api/update-textbook'
 import { useDeleteTextbook } from '../api/delete-textbook'
 import { useTextbook } from '../api/get-textbook'
 import { textbookToFormValues } from '../schemas'
+import { alertServerError } from '../../../lib/form-error'
 
 interface Props {
   /** 'new' = 新規登録 / textbookId = 編集 */
@@ -41,17 +42,14 @@ export function TextbookFormModal({ mode, onClose }: Props) {
 function NewTextbookBody({ onClose }: { onClose: () => void }) {
   const create = useCreateTextbook()
   return (
-    <>
-      {create.isError && (
-        <p className="form-error">{(create.error as { message?: string })?.message ?? '登録に失敗しました'}</p>
-      )}
-      <TextbookForm
-        submitLabel="登録する"
-        submitting={create.isPending}
-        onCancel={onClose}
-        onSubmit={(input) => create.mutate(input, { onSuccess: onClose })}
-      />
-    </>
+    <TextbookForm
+      submitLabel="登録する"
+      submitting={create.isPending}
+      onCancel={onClose}
+      onSubmit={(input) =>
+        create.mutate(input, { onSuccess: onClose, onError: (e) => alertServerError(e, '登録に失敗しました') })
+      }
+    />
   )
 }
 
@@ -70,16 +68,15 @@ function EditTextbookBody({ textbookId, onClose }: { textbookId: string; onClose
 
   return (
     <>
-      {update.isError && (
-        <p className="form-error">{(update.error as { message?: string })?.message ?? '更新に失敗しました'}</p>
-      )}
       <TextbookForm
         lockCode
         submitLabel="変更を保存"
         submitting={update.isPending}
         defaultValues={textbookToFormValues(textbook)}
         onCancel={onClose}
-        onSubmit={(input) => update.mutate(input, { onSuccess: onClose })}
+        onSubmit={(input) =>
+          update.mutate(input, { onSuccess: onClose, onError: (e) => alertServerError(e, '更新に失敗しました') })
+        }
         footerLeft={
           <button
             type="button"

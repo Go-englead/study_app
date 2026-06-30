@@ -4,7 +4,6 @@ import {
   memberFormSchema,
   toMemberInput,
   PLANS,
-  STATUSES,
   CLASSES,
   NATIVECAMPS,
   GENDERS,
@@ -73,7 +72,7 @@ export function MemberForm({
       <section className="form-section">
         <h3>1. 基本情報</h3>
         <div className="form-grid">
-          <label>会員ID*<input {...field('code')} readOnly={lockCode} />{err('code')}</label>
+          <label>会員ID*<input {...field('code')} readOnly={lockCode} aria-disabled={lockCode} className={lockCode ? 'input-locked' : undefined} />{err('code')}</label>
           <label>姓（漢字）*<input {...field('lastNameKanji')} />{err('lastNameKanji')}</label>
           <label>名（漢字）*<input {...field('firstNameKanji')} />{err('firstNameKanji')}</label>
           <label>姓（カナ）<input {...field('lastNameKana')} /></label>
@@ -118,13 +117,6 @@ export function MemberForm({
               {PLANS.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
             {err('plan')}
-          </label>
-          <label>
-            ステータス
-            <select {...field('status')}>
-              <option value="">選択</option>
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
           </label>
           <label>オリエン実施日<input type="date" {...field('enrollmentDate')} /></label>
           <label>受講開始日<input type="date" {...field('startDate')} /></label>

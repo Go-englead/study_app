@@ -1,8 +1,12 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useTextbooks } from '../../textbooks/api/get-textbooks'
 import { useLearningLogs } from '../api/get-learning-logs'
 import { useAddLearningLog } from '../api/add-learning-log'
 import { useDeleteLearningLog } from '../api/delete-learning-log'
+import { learningLogFormSchema, type LearningLogFormValues } from '../schemas'
+import { alertServerError } from '../../../lib/form-error'
 
 interface Props {
   memberId: string
@@ -105,19 +109,27 @@ function AddLearningLogModal({
   onClose: () => void
 }) {
   const add = useAddLearningLog(memberId)
-  const [textbookId, setTextbookId] = useState('')
-  const [date, setDate] = useState(today())
-  const [minutes, setMinutes] = useState('')
-  const [comment, setComment] = useState('')
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LearningLogFormValues>({
+    resolver: zodResolver(learningLogFormSchema),
+    defaultValues: { textbookId: '', date: today(), durationMinutes: '' as unknown as number, comment: '' },
+  })
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!textbookId || !minutes) return
+  const field = (name: keyof LearningLogFormValues) => ({ ...register(name), 'data-testid': `log-field-${name}` })
+  const err = (k: keyof LearningLogFormValues) =>
+    errors[k] ? (
+      <span className="form-error" data-testid={`log-error-${k}`}>{errors[k]?.message as string}</span>
+    ) : null
+
+  const submit = handleSubmit((v) => {
     add.mutate(
-      { textbookId, date, durationMinutes: Number(minutes), comment: comment || undefined },
-      { onSuccess: onClose },
+      { textbookId: v.textbookId, date: v.date, durationMinutes: Number(v.durationMinutes), comment: v.comment || undefined },
+      { onSuccess: onClose, onError: (e) => alertServerError(e, '追加に失敗しました') },
     )
-  }
+  })
 
   return (
     <div className="center-modal-overlay show" onClick={onClose}>
@@ -128,36 +140,36 @@ function AddLearningLogModal({
         </div>
         <form onSubmit={submit}>
           <div className="center-modal-body">
-            {add.isError && (
-              <p className="form-error" data-testid="log-error">{(add.error as { message?: string })?.message ?? '追加に失敗しました'}</p>
-            )}
             <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
               <label className="form-group">
                 教材 *
-                <select data-testid="log-textbook" value={textbookId} onChange={(e) => setTextbookId(e.target.value)}>
+                <select {...field('textbookId')} data-testid="log-textbook">
                   <option value="">選択してください</option>
                   {textbooks.map((t) => (
                     <option key={t.id} value={t.id}>{t.label}</option>
                   ))}
                 </select>
+                {err('textbookId')}
               </label>
               <label className="form-group">
                 日付 *
-                <input type="date" data-testid="log-date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
+                <input type="date" {...field('date')} data-testid="log-date" max={today()} />
+                {err('date')}
               </label>
               <label className="form-group">
                 学習時間（分）*
-                <input type="number" data-testid="log-minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} placeholder="例：45" />
+                <input type="number" {...field('durationMinutes')} data-testid="log-minutes" placeholder="例：45" />
+                {err('durationMinutes')}
               </label>
               <label className="form-group">
                 コメント
-                <input data-testid="log-comment" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="学習メモ" />
+                <input {...field('comment')} data-testid="log-comment" placeholder="学習メモ" />
               </label>
             </div>
           </div>
           <div className="center-modal-footer" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" className="secondary-btn" onClick={onClose}>キャンセル</button>
-            <button type="submit" className="primary-btn" data-testid="log-submit" disabled={!textbookId || !minutes || add.isPending}>
+            <button type="submit" className="primary-btn" data-testid="log-submit" disabled={add.isPending}>
               {add.isPending ? '保存中…' : '追加'}
             </button>
           </div>

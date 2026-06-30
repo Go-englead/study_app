@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { createStaff } from '../../domain/staff/staff';
+import { StaffBase, StaffPassword } from '../../domain/staff/staff';
 import { StaffAuthRepository } from '../../domain/staff/staff-auth-repository';
 import { PasswordHasher } from '../../domain/shared/password-hasher';
 import { DomainError } from '../../domain/shared/domain-error';
@@ -31,36 +31,43 @@ export class RegisterStaffUseCase {
   ) {}
 
   async register(input: RegisterStaffInput): Promise<StaffDto> {
-    if (!input.staffCode?.trim()) throw new DomainError('社員コードは必須です');
-    // 氏名/役割/メール/パスワード長を検証（パスワードは生のまま受け取り、保存前にハッシュ化）。
-    const staff = createStaff({
+    // プロフィールの検証（氏名/役割/メール/社員ID）＋パスワード強度。パスワードは保存前にハッシュ化。
+    const password = StaffPassword.create(input.password);
+    // 一意性（社員ID・メール）はアプリ層で事前検証（DB一意制約違反を400で返す）。
+    if (await this.staffAuth.findByStaffCode(input.staffCode.trim())) {
+      throw new DomainError(`社員ID「${input.staffCode.trim()}」は既に登録されています`);
+    }
+    if (await this.staffAuth.findByEmail((input.email ?? '').trim().toLowerCase())) {
+      throw new DomainError(`メールアドレス「${input.email}」は既に使用されています`);
+    }
+    const staff = StaffBase.create({
       id: randomUUID(),
+      staffCode: input.staffCode,
       name: input.name,
       role: input.role,
       email: input.email,
-      password: input.password,
       iconUrl: input.iconUrl,
       meetUrl: input.meetUrl,
       groupContent: input.groupContent,
     });
-    const passwordHash = await this.hasher.hash(input.password);
+    const passwordHash = await this.hasher.hash(password.value);
     await this.staffAuth.register({
-      staffId: staff.id,
-      staffCode: input.staffCode.trim(),
+      staffId: staff.id.value,
+      staffCode: staff.staffCode,
       name: staff.name,
-      role: staff.role,
-      loginId: staff.email as string,
+      role: staff.role.name,
+      loginId: staff.email.value,
       passwordHash,
       iconUrl: staff.iconUrl,
       meetUrl: staff.meetUrl,
       groupContent: staff.groupContent,
     });
     return {
-      id: staff.id as string,
-      staffCode: input.staffCode.trim(),
+      id: staff.id.value,
+      staffCode: staff.staffCode,
       name: staff.name,
-      role: staff.role,
-      email: staff.email as string,
+      role: staff.role.name,
+      email: staff.email.value,
     };
   }
 }

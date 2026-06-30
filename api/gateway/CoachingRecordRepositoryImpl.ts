@@ -24,13 +24,13 @@ function freeTextOf(src: { monthlyReview: string; coachAdvice: string; otherNote
 
 function toDomain(f: CoachingRecordFullRow): CoachingRecord {
   const base = {
-    id: f.record.id as CoachingRecordId,
-    memberId: f.record.memberId as MemberId,
-    date: f.record.heldOn as DateOnly,
+    id: CoachingRecordId.create(f.record.id),
+    memberId: MemberId.create(f.record.memberId),
+    date: DateOnly.create(f.record.heldOn),
     coachName: f.record.coachName,
   };
   const tests = f.sessionTests.map((t) => ({
-    textbookId: t.textbookId as TextbookId,
+    textbookId: TextbookId.create(t.textbookId),
     testStatus: t.testStatus as TestStatus,
     range: t.testRange ?? '',
     format: t.format ?? '',
@@ -45,7 +45,7 @@ function toDomain(f: CoachingRecordFullRow): CoachingRecord {
         ...base,
         type: '教材選定',
         selectedTextbooks: f.selectionItems.map((i) => ({
-          textbookId: i.textbookId as TextbookId,
+          textbookId: TextbookId.create(i.textbookId),
           dailyGoalMinutes: i.dailyGoalMinutes ?? null,
           note: i.note,
         })),
@@ -80,10 +80,10 @@ function toDomain(f: CoachingRecordFullRow): CoachingRecord {
 
 function toWriteBundle(r: CoachingRecord): CoachingRecordWriteBundle {
   const record = {
-    id: r.id as string,
-    memberId: r.memberId as string,
+    id: r.id.value,
+    memberId: r.memberId.value,
     type: r.type,
-    heldOn: r.date as string,
+    heldOn: r.date.value,
     coachName: r.coachName,
   };
   const empty: CoachingRecordWriteBundle = { record, selectionItems: [], sessionTests: [] };
@@ -95,7 +95,7 @@ function toWriteBundle(r: CoachingRecord): CoachingRecordWriteBundle {
         selection: { coachingRecordId: record.id, sharedNote: r.sharedNote },
         selectionItems: r.selectedTextbooks.map((s) => ({
           coachingRecordId: record.id,
-          textbookId: s.textbookId as string,
+          textbookId: s.textbookId.value,
           dailyGoalMinutes: s.dailyGoalMinutes,
           note: s.note,
         })),
@@ -124,7 +124,7 @@ function toWriteBundle(r: CoachingRecord): CoachingRecordWriteBundle {
         sessionTests: r.textbookTests.map((t) => ({
           coachingRecordId: record.id,
           coachingNumber: r.coachingNumber,
-          textbookId: t.textbookId as string,
+          textbookId: t.textbookId.value,
           testStatus: t.testStatus,
           testRange: t.range,
           format: t.format,
@@ -151,12 +151,12 @@ export class CoachingRecordRepositoryImpl implements CoachingRecordRepository {
   constructor(private readonly db: Database) {}
 
   async findById(id: CoachingRecordId): Promise<CoachingRecord | undefined> {
-    const full = await driver.findById(this.db, id as string);
+    const full = await driver.findById(this.db, id.value);
     return full ? toDomain(full) : undefined;
   }
 
   async findByMember(memberId: MemberId): Promise<CoachingRecord[]> {
-    const fulls = await driver.findByMember(this.db, memberId as string);
+    const fulls = await driver.findByMember(this.db, memberId.value);
     return fulls.map(toDomain);
   }
 
@@ -165,6 +165,6 @@ export class CoachingRecordRepositoryImpl implements CoachingRecordRepository {
   }
 
   async delete(id: CoachingRecordId): Promise<void> {
-    await driver.deleteById(this.db, id as string);
+    await driver.deleteById(this.db, id.value);
   }
 }

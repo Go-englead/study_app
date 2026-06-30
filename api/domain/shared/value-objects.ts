@@ -1,73 +1,82 @@
-import { Brand } from './brand';
 import { DomainError } from './domain-error';
 
 // ───────────────────────── Email ─────────────────────────
 /** メールアドレス。比較・保持ともに小文字化する。 */
-export type Email = Brand<string, 'Email'>;
-
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
-export function createEmail(raw: string): Email {
-  const value = (raw ?? '').trim().toLowerCase();
-  if (!EMAIL_RE.test(value)) {
-    throw new DomainError(`メールアドレスの形式が不正です: ${raw}`);
+export class Email {
+  private static readonly RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  private constructor(readonly value: string) {}
+  static create(raw: string): Email {
+    const value = (raw ?? '').trim().toLowerCase();
+    if (!Email.RE.test(value)) {
+      throw new DomainError(`メールアドレスの形式が不正です: ${raw}`);
+    }
+    return new Email(value);
   }
-  return value as Email;
 }
 
 // ───────────────────────── DateOnly ─────────────────────────
 /** 日付（YYYY-MM-DD）。文字列の辞書順がそのまま日付順になる。 */
-export type DateOnly = Brand<string, 'DateOnly'>;
+export class DateOnly {
+  private static readonly RE = /^\d{4}-\d{2}-\d{2}$/;
+  private constructor(readonly value: string) {}
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-export function createDateOnly(raw: string): DateOnly {
-  const value = (raw ?? '').trim();
-  if (!DATE_RE.test(value) || Number.isNaN(Date.parse(value))) {
-    throw new DomainError(`日付の形式が不正です (YYYY-MM-DD): ${raw}`);
+  static create(raw: string): DateOnly {
+    const value = (raw ?? '').trim();
+    if (!DateOnly.RE.test(value) || Number.isNaN(Date.parse(value))) {
+      throw new DomainError(`日付の形式が不正です (YYYY-MM-DD): ${raw}`);
+    }
+    return new DateOnly(value);
   }
-  return value as DateOnly;
-}
 
-export function todayDateOnly(now: Date = new Date()): DateOnly {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}` as DateOnly;
-}
+  static today(now: Date = new Date()): DateOnly {
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return new DateOnly(`${y}-${m}-${d}`);
+  }
 
-/** a <= b か */
-export function dateLte(a: DateOnly, b: DateOnly): boolean {
-  return a <= b;
-}
+  /** this <= other か。 */
+  lte(other: DateOnly): boolean {
+    return this.value <= other.value;
+  }
 
-/** 未来日か（today より後か） */
-export function isFuture(date: DateOnly, today: DateOnly = todayDateOnly()): boolean {
-  return date > today;
-}
+  /** this < other か。 */
+  lt(other: DateOnly): boolean {
+    return this.value < other.value;
+  }
 
-/** 開始日に月数を加算し1日戻した終了日（例: 4/1 + 2ヶ月 → 5/31） */
-export function addMonthsMinusOneDay(start: DateOnly, months: number): DateOnly {
-  const [y, m, d] = start.split('-').map(Number);
-  const base = new Date(y, m - 1, d);
-  base.setMonth(base.getMonth() + months);
-  base.setDate(base.getDate() - 1);
-  return todayDateOnly(base);
+  /** 未来日か（today より後か）。 */
+  isFuture(today: DateOnly = DateOnly.today()): boolean {
+    return this.value > today.value;
+  }
+
+  /** 開始日に月数を加算し1日戻した終了日（例: 4/1 + 2ヶ月 → 5/31）。 */
+  addMonthsMinusOneDay(months: number): DateOnly {
+    const [y, m, d] = this.value.split('-').map(Number);
+    const base = new Date(y, m - 1, d);
+    base.setMonth(base.getMonth() + months);
+    base.setDate(base.getDate() - 1);
+    return DateOnly.today(base);
+  }
 }
 
 // ───────────────────────── CefrLevel ─────────────────────────
+export type CefrLevelName = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
 /** CEFRレベル（順序付き）。 */
-export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
-export type CefrLevel = (typeof CEFR_LEVELS)[number];
+export class CefrLevel {
+  static readonly LEVELS: readonly CefrLevelName[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  private constructor(readonly value: CefrLevelName) {}
 
-export function createCefrLevel(raw: string): CefrLevel {
-  if (!(CEFR_LEVELS as readonly string[]).includes(raw)) {
-    throw new DomainError(`CEFRレベルが不正です: ${raw}`);
+  static create(raw: string): CefrLevel {
+    if (!(CefrLevel.LEVELS as readonly string[]).includes(raw)) {
+      throw new DomainError(`CEFRレベルが不正です: ${raw}`);
+    }
+    return new CefrLevel(raw as CefrLevelName);
   }
-  return raw as CefrLevel;
-}
 
-/** a と b の大小（A1 < … < C2）。負: a<b / 0: a==b / 正: a>b */
-export function compareCefr(a: CefrLevel, b: CefrLevel): number {
-  return CEFR_LEVELS.indexOf(a) - CEFR_LEVELS.indexOf(b);
+  /** this と other の大小（A1 < … < C2）。負: this<other / 0: == / 正: this>other */
+  compareTo(other: CefrLevel): number {
+    return CefrLevel.LEVELS.indexOf(this.value) - CefrLevel.LEVELS.indexOf(other.value);
+  }
 }

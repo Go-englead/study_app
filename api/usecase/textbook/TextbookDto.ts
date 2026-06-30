@@ -18,11 +18,11 @@ export interface TextbookDto {
 
 export function toTextbookDto(t: Textbook): TextbookDto {
   return {
-    id: t.id,
+    id: t.id.value,
     textbookCode: t.code,
     name: t.name,
     category: t.category,
-    unit: t.unit,
+    unit: t.unit.value,
     color: t.color,
     iconUrl: t.iconUrl,
     manualUrl: t.manualUrl,

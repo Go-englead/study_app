@@ -23,14 +23,19 @@ import { StaffAuthRepositoryImpl } from './gateway/StaffAuthRepositoryImpl';
 import { Argon2PasswordHasher } from './gateway/Argon2PasswordHasher';
 import { StaffLoginUseCase } from './usecase/auth/StaffLoginUseCase';
 import { RegisterStaffUseCase } from './usecase/staff/RegisterStaffUseCase';
+import { StaffUseCase } from './usecase/staff/StaffUseCase';
 import { registerAuthRoutes } from './controller/AuthController';
 import { registerStaffRoutes } from './controller/StaffController';
 import { memberAuth, adminAuth, MemberAuthVariables, AdminAuthVariables } from './middleware/auth';
 import { DomainError } from './domain/shared/domain-error';
+import { ForbiddenError } from './domain/shared/forbidden-error';
 
-/** DomainError → 400、その他 → 500 のエラーハンドラを登録する。 */
+/** DomainError → 400、ForbiddenError → 403、その他 → 500 のエラーハンドラを登録する。 */
 function applyErrorHandler(target: Hono<any>): void {
   target.onError((err, c) => {
+    if (err instanceof ForbiddenError) {
+      return c.json({ message: err.message }, 403);
+    }
     if (err instanceof DomainError) {
       return c.json({ message: err.message }, 400);
     }
@@ -69,11 +74,16 @@ export function createApp(databaseUrl: string) {
     memberRepository,
     textbookRepository,
   );
-  const progosUseCase = new ProgosScoreUseCase(new ProgosScoreRepositoryImpl(db), memberRepository);
   const passwordHasher = new Argon2PasswordHasher();
   const staffAuthRepository = new StaffAuthRepositoryImpl(db);
+  const progosUseCase = new ProgosScoreUseCase(
+    new ProgosScoreRepositoryImpl(db),
+    memberRepository,
+    staffAuthRepository,
+  );
   const staffLoginUseCase = new StaffLoginUseCase(staffAuthRepository, passwordHasher);
   const registerStaffUseCase = new RegisterStaffUseCase(staffAuthRepository, passwordHasher);
+  const staffUseCase = new StaffUseCase(staffAuthRepository, passwordHasher);
 
   const app = new Hono();
 
@@ -99,7 +109,7 @@ export function createApp(databaseUrl: string) {
   registerCoachingRecordRoutes(admin, coachingUseCase);
   registerLearningLogRoutes(admin, learningLogUseCase);
   registerProgosScoreRoutes(admin, progosUseCase);
-  registerStaffRoutes(admin, registerStaffUseCase);
+  registerStaffRoutes(admin, registerStaffUseCase, staffUseCase);
   applyErrorHandler(admin);
   app.route('/v1/admin', admin);
 

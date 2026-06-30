@@ -40,7 +40,6 @@ export const memberFormSchema = z.object({
   phone: optStr,
   // 3. 受講情報
   plan: z.enum(PLANS, { message: '入会プランを選択してください' }),
-  status: optStr,
   enrollmentDate: optStr,
   orientStaffId: optStr,
   startDate: optStr,
@@ -93,7 +92,6 @@ export function toMemberInput(v: z.output<typeof memberFormSchema>): MemberInput
     email: v.email,
     phone: clean(v.phone),
     plan: v.plan,
-    status: clean(v.status) as MemberInput['status'],
     enrollmentDate: clean(v.enrollmentDate),
     orientStaffId: clean(v.orientStaffId),
     startDate: clean(v.startDate),
@@ -139,7 +137,6 @@ export function memberToFormValues(m: {
   email?: string
   phone?: string
   plan?: string
-  status?: string
   enrollmentDate?: string
   orientStaffId?: string
   startDate?: string
@@ -177,7 +174,6 @@ export function memberToFormValues(m: {
     email: m.email ?? '',
     phone: m.phone ?? '',
     plan: m.plan as MemberFormValues['plan'],
-    status: m.status ?? '',
     enrollmentDate: m.enrollmentDate ?? '',
     orientStaffId: m.orientStaffId ?? '',
     startDate: m.startDate ?? '',

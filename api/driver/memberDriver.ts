@@ -11,6 +11,7 @@ import {
   memberStaffAssignments,
   memberCredentials,
   textbookAssignments,
+  continuationPlans,
   NewMemberRow,
   NewMemberContactRow,
   NewMemberEnrollmentRow,
@@ -30,6 +31,17 @@ import {
 
 /** 担当者ジャンクション1行 */
 export type AssignmentRow = { role: string; staffId: string };
+
+/** 継続プラン1行（gateway がドメインへ変換）。 */
+export type ContinuationPlanRow = {
+  id: string;
+  planType: string;
+  months: number;
+  startDate: string;
+  endDate: string;
+  note: string | null;
+};
+export type NewContinuationPlanRow = typeof continuationPlans.$inferInsert;
 
 // 1:1 サテライトを平坦に取得する select 定義（キー名は gateway が参照する名前に揃える）
 const joinedSelection = {
@@ -73,7 +85,10 @@ const joinedSelection = {
 
 /** joinedSelection の結果行（平坦）。assignments を後付けして MemberFullRow にする。 */
 export type MemberJoinedRow = Awaited<ReturnType<typeof selectJoined>>[number];
-export type MemberFullRow = MemberJoinedRow & { assignments: AssignmentRow[] };
+export type MemberFullRow = MemberJoinedRow & {
+  assignments: AssignmentRow[];
+  continuationPlans: ContinuationPlanRow[];
+};
 
 function selectJoined(db: Database) {
   return db
@@ -101,7 +116,32 @@ async function attachAssignments(db: Database, rows: MemberJoinedRow[]): Promise
     list.push({ role: a.role, staffId: a.staffId });
     byMember.set(a.memberId, list);
   }
-  return rows.map((r) => ({ ...r, assignments: byMember.get(r.id) ?? [] }));
+  // 継続プラン（開始日昇順）も添える。
+  const plans = await db
+    .select({
+      memberId: continuationPlans.memberId,
+      id: continuationPlans.id,
+      planType: continuationPlans.planType,
+      months: continuationPlans.months,
+      startDate: continuationPlans.startDate,
+      endDate: continuationPlans.endDate,
+      note: continuationPlans.note,
+    })
+    .from(continuationPlans);
+  const plansByMember = new Map<string, ContinuationPlanRow[]>();
+  for (const p of plans) {
+    const list = plansByMember.get(p.memberId) ?? [];
+    list.push({ id: p.id, planType: p.planType, months: p.months, startDate: p.startDate, endDate: p.endDate, note: p.note });
+    plansByMember.set(p.memberId, list);
+  }
+  for (const list of plansByMember.values()) {
+    list.sort((a, b) => (a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : 0));
+  }
+  return rows.map((r) => ({
+    ...r,
+    assignments: byMember.get(r.id) ?? [],
+    continuationPlans: plansByMember.get(r.id) ?? [],
+  }));
 }
 
 export async function findById(db: Database, id: string): Promise<MemberFullRow | undefined> {
@@ -201,6 +241,8 @@ export interface MemberRowBundle {
   credential: NewMemberCredentialRow;
   /** 0〜3行（Consultant/CS/Orient）。「その他」は含めない。 */
   assignments: NewMemberStaffAssignmentRow[];
+  /** 継続プラン履歴（全置換）。 */
+  continuationPlans: NewContinuationPlanRow[];
 }
 
 /** 会員1人分を1トランザクションで upsert する。担当者は一旦消してから入れ直す。 */
@@ -241,6 +283,12 @@ export async function upsert(db: Database, b: MemberRowBundle): Promise<void> {
       .where(eq(memberStaffAssignments.memberId, b.member.id!));
     if (b.assignments.length > 0) {
       await tx.insert(memberStaffAssignments).values(b.assignments);
+    }
+
+    // 継続プラン：履歴を全消し→入れ直す（会員保存と同一トランザクション）。
+    await tx.delete(continuationPlans).where(eq(continuationPlans.memberId, b.member.id!));
+    if (b.continuationPlans.length > 0) {
+      await tx.insert(continuationPlans).values(b.continuationPlans);
     }
   });
 }

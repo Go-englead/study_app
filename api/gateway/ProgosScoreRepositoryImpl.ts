@@ -2,40 +2,39 @@ import { Database } from '../db/client';
 import * as driver from '../driver/progosScoreDriver';
 import { ProgosScoreRow } from '../driver/progosScoreDriver';
 import { MemberId } from '../domain/member/member';
-import { DateOnly, CefrLevel } from '../domain/shared/value-objects';
 import { ProgosScore, ProgosScoreId } from '../domain/progos-score/progos-score';
 import { ProgosScoreRepository } from '../domain/progos-score/progos-score-repository';
 
 function toDomain(r: ProgosScoreRow): ProgosScore {
-  return {
-    id: r.id as ProgosScoreId,
-    memberId: r.memberId as MemberId,
-    examDate: r.examDate as DateOnly,
-    overall: r.overall as CefrLevel,
+  return ProgosScore.fromRecord({
+    id: r.id,
+    memberId: r.memberId,
+    examDate: r.examDate,
+    overall: r.overall,
     skills: {
-      range: r.rangeLevel as CefrLevel,
-      accuracy: r.accuracy as CefrLevel,
-      fluency: r.fluency as CefrLevel,
-      interaction: r.interaction as CefrLevel,
-      coherence: r.coherence as CefrLevel,
-      phonology: r.phonology as CefrLevel,
+      range: r.rangeLevel,
+      accuracy: r.accuracy,
+      fluency: r.fluency,
+      interaction: r.interaction,
+      coherence: r.coherence,
+      phonology: r.phonology,
     },
     comment: r.comment ?? undefined,
-  };
+  });
 }
 
 function toRow(s: ProgosScore): driver.NewProgosScoreRow {
   return {
-    id: s.id as string,
-    memberId: s.memberId as string,
-    examDate: s.examDate as string,
-    overall: s.overall as string,
-    rangeLevel: s.skills.range as string,
-    accuracy: s.skills.accuracy as string,
-    fluency: s.skills.fluency as string,
-    interaction: s.skills.interaction as string,
-    coherence: s.skills.coherence as string,
-    phonology: s.skills.phonology as string,
+    id: s.id.value,
+    memberId: s.memberId.value,
+    examDate: s.examDate.value,
+    overall: s.overall.value,
+    rangeLevel: s.skills.range.value,
+    accuracy: s.skills.accuracy.value,
+    fluency: s.skills.fluency.value,
+    interaction: s.skills.interaction.value,
+    coherence: s.skills.coherence.value,
+    phonology: s.skills.phonology.value,
     comment: s.comment ?? null,
   };
 }
@@ -45,12 +44,12 @@ export class ProgosScoreRepositoryImpl implements ProgosScoreRepository {
   constructor(private readonly db: Database) {}
 
   async findById(id: ProgosScoreId): Promise<ProgosScore | undefined> {
-    const row = await driver.findById(this.db, id as string);
+    const row = await driver.findById(this.db, id.value);
     return row ? toDomain(row) : undefined;
   }
 
   async findByMember(memberId: MemberId): Promise<ProgosScore[]> {
-    const rows = await driver.findByMember(this.db, memberId as string);
+    const rows = await driver.findByMember(this.db, memberId.value);
     return rows.map(toDomain);
   }
 
@@ -64,6 +63,6 @@ export class ProgosScoreRepositoryImpl implements ProgosScoreRepository {
   }
 
   async delete(id: ProgosScoreId): Promise<void> {
-    await driver.deleteById(this.db, id as string);
+    await driver.deleteById(this.db, id.value);
   }
 }

@@ -25,10 +25,11 @@ export function registerProgosScoreRoutes(app: Hono<any>, usecase: ProgosScoreUs
     return c.json(dtos.map(toResponse));
   });
 
-  // POST /members/{memberId}/progos
+  // POST /members/{memberId}/progos（権限判定は usecase→domain。controllerは操作職員IDを渡すだけ）
   app.post('/members/:memberId/progos', async (c) => {
     const body = (await c.req.json()) as ProgosScoreInputBody;
-    const dto = await usecase.add(c.req.param('memberId'), body as unknown as ProgosScoreWriteInput);
+    const staffId = c.get('staffId') as string;
+    const dto = await usecase.add(c.req.param('memberId'), body as unknown as ProgosScoreWriteInput, staffId);
     return c.json(toResponse(dto), 201);
   });
 }

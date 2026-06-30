@@ -204,13 +204,14 @@ describe('POST /v1/admin/members - member_enrollments（受講情報）', () => 
     expect(rows[0].manual_status_override).toBeNull();
   });
 
-  it('status が「途中退会」のときだけ manual_status_override に保存される', async () => {
+  it('登録時はステータスを手動設定できない（途中退会も含め manual_status_override は NULL）', async () => {
+    // ステータスは日付から自動算出。途中退会は専用エンドポイント（POST .../withdraw）でのみ設定する。
     const { id } = await register({ status: '途中退会' });
     const { rows } = await db.query(
       'SELECT manual_status_override FROM member_enrollments WHERE member_id = $1',
       [id],
     );
-    expect(rows[0].manual_status_override).toBe('途中退会');
+    expect(rows[0].manual_status_override).toBeNull();
   });
 });
 

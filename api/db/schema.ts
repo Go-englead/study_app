@@ -37,7 +37,7 @@ export const staff = pgTable(
     meetUrl: text('meet_url'),
     groupContent: text('group_content'),
   },
-  (t) => [check('staff_role_check', sql`${t.role} IN ('Coach','Teacher','Consultant','CS')`)],
+  (t) => [check('staff_role_check', sql`${t.role} IN ('Coach','Teacher','Consultant','CS','Staff')`)],
 );
 
 // 集約ルート（1. 基本情報）。受講情報・連絡先などはセクション単位でサテライト分割（下記、全て PK=member_id・1:1）。

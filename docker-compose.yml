@@ -26,6 +26,9 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://studyapp:studyapp@db:5432/studyapp
+      # 日本のコーチング前提アプリ。サーバーの「本日」(DateOnly.today) をフロント(JST)と揃える。
+      # 未設定だとコンテナUTCのため JST 深夜に「本日の日付」が未来日扱いになる。
+      TZ: Asia/Tokyo
       # pnpm ストアを node_modules ボリューム内（bind mount 外＝ホスト/git を汚さない）に
       npm_config_store_dir: /app/node_modules/.pnpm-store
     volumes:

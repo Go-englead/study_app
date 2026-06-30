@@ -2,7 +2,10 @@ import { MemberForm } from './member-form'
 import { useMember } from '../api/get-member'
 import { useUpdateMember } from '../api/update-member'
 import { useDeleteMember } from '../api/delete-member'
+import { useSetMemberWithdrawn } from '../api/withdraw-member'
+import { ContinuationPlanSection } from './continuation-plan-section'
 import { memberToFormValues } from '../schemas'
+import { alertServerError } from '../../../lib/form-error'
 
 const FORM_ID = 'member-edit-form'
 
@@ -14,10 +17,18 @@ export function EditMemberPanel({ memberId, onClose }: { memberId: string; onClo
   const { data: member, isLoading, isError } = useMember(memberId)
   const update = useUpdateMember(memberId)
   const del = useDeleteMember()
+  const withdraw = useSetMemberWithdrawn(memberId)
 
   const onDelete = () => {
     if (!confirm(`会員「${member?.name ?? ''}」を削除します。よろしいですか？`)) return
-    del.mutate(memberId, { onSuccess: onClose })
+    del.mutate(memberId, { onSuccess: onClose, onError: (e) => alertServerError(e, '削除に失敗しました') })
+  }
+
+  const isWithdrawn = member?.status === '途中退会'
+  const onToggleWithdrawn = () => {
+    const msg = isWithdrawn ? '途中退会を取り消しますか？' : 'この会員を途中退会にしますか？'
+    if (!confirm(msg)) return
+    withdraw.mutate(!isWithdrawn, { onError: (e) => alertServerError(e, '操作に失敗しました') })
   }
 
   return (
@@ -32,8 +43,27 @@ export function EditMemberPanel({ memberId, onClose }: { memberId: string; onClo
         <div className="panel-body">
           {isLoading && <p>読み込み中…</p>}
           {isError && <p className="form-error">会員が見つかりません</p>}
-          {update.isError && (
-            <p className="form-error">{(update.error as { message?: string })?.message ?? '更新に失敗しました'}</p>
+          {member && (
+            <div
+              className="card"
+              style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12 }}
+            >
+              <div>
+                ステータス：
+                <span data-testid="member-status" style={{ fontWeight: 700 }}>{member.status}</span>
+                <div style={{ fontSize: 11, color: '#888' }}>※ 日付から自動判定（編集不可）。途中退会のみ手動。</div>
+              </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                data-testid="member-withdraw-toggle"
+                onClick={onToggleWithdrawn}
+                disabled={withdraw.isPending}
+                style={{ color: isWithdrawn ? undefined : '#C0392B', whiteSpace: 'nowrap' }}
+              >
+                {isWithdrawn ? '途中退会を取り消す' : '途中退会にする'}
+              </button>
+            </div>
           )}
           {member && (
             <MemberForm
@@ -41,9 +71,12 @@ export function EditMemberPanel({ memberId, onClose }: { memberId: string; onClo
               hideActions
               formId={FORM_ID}
               defaultValues={memberToFormValues(member)}
-              onSubmit={(input) => update.mutate(input, { onSuccess: onClose })}
+              onSubmit={(input) =>
+                update.mutate(input, { onSuccess: onClose, onError: (e) => alertServerError(e, '更新に失敗しました') })
+              }
             />
           )}
+          {member && <ContinuationPlanSection memberId={memberId} plans={member.continuationPlans ?? []} />}
         </div>
 
         <div className="panel-footer">
