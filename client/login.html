@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン｜学習管理アプリ</title>
+  <style>
+    /* ===== デザイントークン（index.htmlと統一） ===== */
+    :root {
+      /* === Primary === */
+      --color-primary:        #1A5276;
+      --color-primary-light:  #2E86C1;
+      --color-primary-dark:   #0E3860;
+
+      /* === Accent === */
+      --color-accent:         #27AE60;
+
+      /* === Neutral === */
+      --color-bg:             #FFFFFF;
+      --color-bg-soft:        #F4F6F8;
+      --color-border:         #D5D8DC;
+
+      /* === Text === */
+      --color-text-primary:   #1C2833;
+      --color-text-secondary: #566573;
+      --color-text-muted:     #ABB2B9;
+      --color-text-inverse:   #FFFFFF;
+
+      /* === Semantic === */
+      --color-error:          #E74C3C;
+
+      /* === Font === */
+      --font-primary: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+
+      /* === Font Sizes === */
+      --text-xs:   0.75rem;
+      --text-sm:   0.875rem;
+      --text-base: 1rem;
+      --text-lg:   1.125rem;
+      --text-xl:   1.25rem;
+      --text-2xl:  1.5rem;
+
+      /* === Font Weights === */
+      --font-medium:    500;
+      --font-semibold:  600;
+      --font-bold:      700;
+      --font-extrabold: 800;
+
+      /* === Line heights === */
+      --leading-tight:  1.25;
+      --leading-normal: 1.6;
+
+      /* === Spacing === */
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+
+      /* === Transitions === */
+      --transition-fast: 0.15s ease;
+      --transition-base: 0.2s ease;
+    }
+
+    /* ===== 基本スタイル ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-primary);
+      background: linear-gradient(135deg, var(--color-bg-soft) 0%, #E8EEF3 100%);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      font-size: var(--text-base);
+      line-height: var(--leading-normal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* フォーカスリング */
+    :focus-visible {
+      outline: 3px solid var(--color-primary-light);
+      outline-offset: 2px;
+    }
+
+    /* ===== ログインカード ===== */
+    .login-card {
+      background: var(--color-bg);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      padding: var(--space-8) var(--space-6);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* ===== ロゴ・ヘッダー ===== */
+    .login-header {
+      text-align: center;
+      margin-bottom: var(--space-6);
+    }
+    .login-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-3);
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      color: var(--color-text-inverse);
+      box-shadow: 0 4px 12px rgba(26, 82, 118, 0.25);
+    }
+    .login-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-bold);
+      color: var(--color-primary-dark);
+      margin-bottom: 4px;
+    }
+    .login-sub {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+    }
+
+    /* ===== フォーム ===== */
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+    .form-label {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      color: var(--color-text-secondary);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%;
+      padding: var(--space-3);
+      font-size: var(--text-base);
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      font-family: inherit;
+    }
+    .form-input:focus {
+      border-color: var(--color-primary-light);
+      box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
+    }
+
+    /* ===== ログインボタン ===== */
+    .login-btn {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      border: 2px solid transparent;
+      border-radius: 4px;
+      padding: var(--space-3) var(--space-8);
+      font-size: var(--text-base);
+      font-weight: var(--font-semibold);
+      width: 100%;
+      min-height: 48px;
+      margin-top: var(--space-2);
+      transition: all var(--transition-base);
+    }
+    .login-btn:hover {
+      background: var(--color-primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 82, 118, 0.3);
+    }
+    .login-btn:active { transform: translateY(0); }
+
+    /* ===== エラーメッセージ ===== */
+    .error-msg {
+      display: none;
+      background: #FDEDEC;
+      border: 1px solid #F5B7B1;
+      border-radius: 6px;
+      padding: var(--space-3);
+      font-size: 13px;
+      color: var(--color-error);
+      margin-bottom: var(--space-4);
+      text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <!-- ヘッダー -->
+    <div class="login-header">
+      <div class="login-logo">学</div>
+      <div class="login-title" id="card-title">学習管理アプリ</div>
+      <div class="login-sub" id="card-sub">アカウント情報を入力してください</div>
+    </div>
+
+    <!-- エラーメッセージ -->
+    <div class="error-msg" id="error-msg">
+      IDまたはパスワードが正しくありません
+    </div>
+
+    <!-- ===== ログインフォーム（通常時に表示） ===== -->
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="user-id">メールアドレス</label>
+        <input type="text" id="user-id" class="form-input" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">パスワード</label>
+        <input type="password" id="password" class="form-input" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="login-btn">ログイン</button>
+    </form>
+
+    <!-- ===== デモアカウント自動ログイン（GitHub公開デモ用） ===== -->
+    <div id="demo-login-section" style="margin-top:20px; padding-top:20px; border-top:1px dashed #D5D8DC;">
+      <div style="font-size:11px; color:#888; text-align:center; margin-bottom:10px;">🚀 デモアカウントですぐ試す</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button type="button" onclick="loginAsDemoCoach()" style="background:#1A5276; color:#fff; border:none; border-radius:6px; padding:10px; font-size:13px; font-weight:700; cursor:pointer;">👨‍🏫 コーチでログイン</button>
+        <button type="button" onclick="loginAsDemoMember()" style="background:#27AE60; color:#fff; border:none; border-radius:6px; padding:10px; font-size:13px; font-weight:700; cursor:pointer;">👤 会員でログイン</button>
+      </div>
+      <div style="font-size:10px; color:#999; text-align:center; margin-top:8px; line-height:1.5;">※ クリックで自動ログインします<br>※ 本番運用ではなくデモ環境です</div>
+    </div>
+
+    <!-- ===== 初回パスワード変更フォーム（初回ログイン会員のみ表示） ===== -->
+    <form id="change-pw-form" onsubmit="handleChangePassword(event)" style="display:none;">
+      <div style="background:#FFF8E1; border-left:4px solid #F39C12; padding:12px 14px; border-radius:6px; font-size:13px; color:#7E5109; margin-bottom:16px; line-height:1.6;">
+        <strong>🔑 初回ログインです</strong><br>
+        セキュリティのため、新しいパスワードに変更してください。
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="new-password">新しいパスワード</label>
+        <input type="password" id="new-password" class="form-input" autocomplete="new-password" required minlength="8" placeholder="8文字以上">
+        <div style="font-size:11px; color:var(--color-text-muted); margin-top:4px;">8文字以上で入力してください。</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="new-password-confirm">新しいパスワード（確認）</label>
+        <input type="password" id="new-password-confirm" class="form-input" autocomplete="new-password" required minlength="8" placeholder="もう一度入力">
+      </div>
+      <button type="submit" class="login-btn">パスワードを変更してログイン</button>
+    </form>
+  </div>
+
+  <script>
+    // ===== スタッフマスター（CSVから読み込み） =====
+    // 注：file:// で開いた場合は fetch が失敗するため、フォールバック用のインラインデータを使用
+    let staffList = [];
+
+    // CSVテキストを配列にパース
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h] = (values[i] || '').replace(/[​-‏﻿]/g, '').trim();
+        });
+        return obj;
+      });
+    }
+
+    // フォールバック用インラインCSV（file:// でfetch失敗時に使用）
+    // ※ デモ環境用：実在の個人情報は含めない
+    const fallbackStaffCSV = `id,name,role,iconUrl,meetUrl,groupContent,email,password
+MW001,コーチA,Coach,,,,coach_001@example.jp,coach001
+MW002,コーチB,Coach,,,,coach_002@example.jp,coach002
+MW003,コーチC,Coach,,,,coach_003@example.jp,coach003
+MW004,コーチD,Coach,,,,coach_004@example.jp,coach004
+MW005,コンサルA,Consultant,,,,consultant_001@example.jp,consultant001
+MW006,コンサルB,Consultant,,,,consultant_002@example.jp,consultant002
+MW007,コンサルC,Consultant,,,,consultant_003@example.jp,consultant003
+MW008,CS担当A,CS,,,,cs_001@example.jp,cs001
+MW009,CS担当B,CS,,,,cs_002@example.jp,cs002
+MW010,CS担当C,CS,,,,cs_003@example.jp,cs003`;
+
+    // staff.csv ロード処理
+    async function loadStaff() {
+      try {
+        const res = await fetch('./data/staff.csv');
+        if (!res.ok) throw new Error('CSV fetch failed: ' + res.status);
+        const text = await res.text();
+        staffList = parseCSV(text);
+        console.log('👥 スタッフマスター：CSVから読み込み完了', staffList.length, '件');
+      } catch (e) {
+        staffList = parseCSV(fallbackStaffCSV);
+        console.warn('⚠️ スタッフマスター：CSV読み込み失敗、フォールバックを使用', e.message);
+      }
+    }
+
+    // ページ読み込み時に staff.csv を読み込んでおく
+    loadStaff();
+
+    // ===== 会員データの読み込み（admin.html と同じ localStorage キーを参照） =====
+    const MEMBERS_STORAGE_KEY = 'addedMembers_v2';
+
+    function loadMembers() {
+      try {
+        const stored = localStorage.getItem(MEMBERS_STORAGE_KEY);
+        if (!stored) return [];
+        const arr = JSON.parse(stored);
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        console.warn('会員データ読み込み失敗', e);
+        return [];
+      }
+    }
+
+    function saveMembers(members) {
+      localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
+    }
+
+    // 初回パスワード変更画面に渡す会員ID（一時保持）
+    let pendingMemberId = null;
+
+    // ========================================
+    // ===== デモアカウント自動ログイン（GitHub公開用） =====
+    // ========================================
+
+    // ===== デモ会員データを localStorage に自動投入（初回アクセス時のみ） =====
+    function setupDemoMemberIfNeeded() {
+      let members = [];
+      try {
+        members = JSON.parse(localStorage.getItem('addedMembers_v2') || '[]');
+      } catch (e) {}
+
+      // 共通ヘルパー：YYYY-MM-DD 形式に整形
+      const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const today = new Date();
+      const addDays = (base, days) => { const d = new Date(base); d.setDate(d.getDate() + days); return d; };
+
+      // ===== 4名のデモ会員（見本一郎〜四郎） =====
+      const demoStudents = [
+        {
+          id: '10001', name: '見本一郎', initial: '一', nickname: 'ichiro',
+          firstNameKanji: '一郎', firstNameKana: 'イチロウ', firstNameAlpha: 'Ichiro',
+          email: 'student_10001@example.jp', password: 'student10001',
+          gender: '男性', birthDate: '1998-04-15', occupation: '会社員',
+          plan: '6ヶ月プラン',
+          travelCountry: 'オーストラリア', travelCity: 'シドニー', travelReason: '語学学校',
+          coachLearningGoal: 'IELTS 6.5 を取得し、シドニーでの語学留学を成功させる。',
+          startOffset: -45, gradOffset: 135, travelOffset: 165,
+          englishScores: { toeicLR: 650, ielts: '5.5' },
+          textbookSet: [
+            { textbookId: 'T01', note: 'シャドーイング中心', dailyGoalMinutes: 30 },
+            { textbookId: 'T02', note: '通勤時間に取り組む', dailyGoalMinutes: 20 },
+            { textbookId: 'T03', note: 'Chapter 1から順番に', dailyGoalMinutes: 40 }
+          ]
+        },
+        {
+          id: '10002', name: '見本二郎', initial: '二', nickname: 'jiro',
+          firstNameKanji: '二郎', firstNameKana: 'ジロウ', firstNameAlpha: 'Jiro',
+          email: 'student_10002@example.jp', password: 'student10002',
+          gender: '男性', birthDate: '1995-08-22', occupation: '経営者・役員',
+          plan: '給付金9ヶ月プラン',
+          travelCountry: 'カナダ', travelCity: 'トロント', travelReason: 'ワーキングホリデー',
+          coachLearningGoal: 'カナダでのワーキングホリデーに向けて、ビジネス英語を強化。',
+          startOffset: -90, gradOffset: 180, travelOffset: 210,
+          englishScores: { toeicLR: 720, toeicSW: 280, eiken: '準1級' },
+          textbookSet: [
+            { textbookId: 'T01', note: '語彙力強化', dailyGoalMinutes: 25 },
+            { textbookId: 'T02', note: 'リスニング毎日30分', dailyGoalMinutes: 30 }
+          ]
+        },
+        {
+          id: '10003', name: '見本三郎', initial: '三', nickname: 'saburo',
+          firstNameKanji: '三郎', firstNameKana: 'サブロウ', firstNameAlpha: 'Saburo',
+          email: 'student_10003@example.jp', password: 'student10003',
+          gender: '男性', birthDate: '2003-01-10', occupation: '大学・大学院生',
+          plan: '給付金12ヶ月プラン',
+          travelCountry: 'イギリス', travelCity: 'ロンドン', travelReason: '進学（大学・大学院）',
+          coachLearningGoal: 'イギリス大学院進学に向けてIELTS 7.0以上を取得。',
+          startOffset: -120, gradOffset: 240, travelOffset: 280,
+          englishScores: { toefl: 85, ielts: '6.0' },
+          textbookSet: [
+            { textbookId: 'T01', note: 'アカデミック語彙', dailyGoalMinutes: 40 },
+            { textbookId: 'T03', note: '文法書1周完走', dailyGoalMinutes: 30 }
+          ]
+        },
+        {
+          id: '10004', name: '見本四郎', initial: '四', nickname: 'shiro',
+          firstNameKanji: '四郎', firstNameKana: 'シロウ', firstNameAlpha: 'Shiro',
+          email: 'student_10004@example.jp', password: 'student10004',
+          gender: '女性', birthDate: '2001-06-30', occupation: '会社員',
+          plan: '給付金6ヶ月プラン',
+          travelCountry: 'フィリピン', travelCity: 'セブ', travelReason: '語学学校',
+          coachLearningGoal: 'フィリピン留学までに日常会話を流暢に。',
+          startOffset: -20, gradOffset: 160, travelOffset: 200,
+          englishScores: { toeicLR: 500 },
+          textbookSet: [
+            { textbookId: 'T02', note: '基礎から積み上げ', dailyGoalMinutes: 30 },
+            { textbookId: 'T03', note: '中学英語から復習', dailyGoalMinutes: 30 }
+          ]
+        }
+      ];
+
+      demoStudents.forEach((s, idx) => {
+        if (members.some(m => m.id === s.id)) return;  // 既に存在ならスキップ
+        const startDate = addDays(today, s.startOffset);
+        const graduateDate = addDays(today, s.gradOffset);
+        const travelDate = addDays(today, s.travelOffset);
+        const dailyTotal = s.textbookSet.reduce((sum, t) => sum + (t.dailyGoalMinutes || 0), 0);
+        members.push({
+          id: s.id, name: s.name, initial: s.initial, nickname: s.nickname,
+          lastNameKanji: '見本', firstNameKanji: s.firstNameKanji,
+          lastNameKana: 'ミホン', firstNameKana: s.firstNameKana,
+          lastNameAlpha: 'Mihon', firstNameAlpha: s.firstNameAlpha,
+          gender: s.gender, birthDate: s.birthDate, occupation: s.occupation,
+          email: s.email, phone: `090-0000-${1000 + idx}`,
+          plan: s.plan, status: '受講中',
+          enrollmentDate: fmt(startDate), orientStaff: 'コーチA',
+          startDate: fmt(startDate), graduateDate: fmt(graduateDate),
+          currentClass: 'Lower-Intermediate', initialClass: 'Beginner',
+          nativecamp: '導入済み',
+          consultant: ['コンサルA', 'コンサルB', 'コンサルC'][idx % 3],
+          cs: ['CS担当A', 'CS担当B', 'CS担当C'][idx % 3],
+          dailyTargetMinutes: dailyTotal,
+          residence: '日本',
+          travelCountry: s.travelCountry, travelCity: s.travelCity,
+          travelDate: fmt(travelDate), travelReason: s.travelReason,
+          englishScores: s.englishScores,
+          coachLearningGoal: s.coachLearningGoal,
+          note: '',
+          password: s.password, requirePasswordChange: false,
+          weeklyGoalHours: 10, course: 'Lower-Intermediate',
+          rate: 0, lastLoginDaysAgo: 999, lastCoachingDaysAgo: 999,
+          goalEnglish: '', departureDate: fmt(travelDate),
+          monthlyHours: 0, monthlyHoursCompare: 0,
+          streak: 0, streakCompare: 0,
+          weeklyRates: [0, 0, 0, 0],
+          textbookProgress: [], recentLogs: [], progos: [],
+          coachingRecords: [
+            {
+              id: `CR_${s.id}_1`, date: fmt(startDate), coachName: 'コーチA',
+              type: '教材選定',
+              selectedTextbooks: s.textbookSet,
+              sharedNote: '初期教材選定。受講スタート時に登録。',
+              createdAt: Date.now()
+            }
+          ]
+        });
+      });
+
+      localStorage.setItem('addedMembers_v2', JSON.stringify(members));
+    }
+
+    // ===== コーチでログイン（デモアカウント：MW001 コーチAで自動ログイン） =====
+    function loginAsDemoCoach() {
+      // staff.csv の MW001 コーチA でログイン
+      sessionStorage.setItem('currentStaff', JSON.stringify({
+        id: 'MW001',
+        name: 'コーチA',
+        role: 'Coach',
+        email: 'coach_001@example.jp'
+      }));
+      // デモ会員を自動投入
+      setupDemoMemberIfNeeded();
+      window.location.href = 'admin.html';
+    }
+
+    // ===== 会員でログイン（デモアカウント：見本一郎） =====
+    function loginAsDemoMember() {
+      // デモ会員（見本一郎〜四郎）を自動投入
+      setupDemoMemberIfNeeded();
+      // sessionStorage に会員情報をセット（見本一郎 = 10001）
+      sessionStorage.setItem('currentMember', JSON.stringify({
+        id: '10001',
+        name: '見本一郎',
+        email: 'student_10001@example.jp',
+        nickname: 'ichiro'
+      }));
+      window.location.href = 'index.html';
+    }
+
+    // ===== ログイン処理（会員 → スタッフの順で照合） =====
+    function handleLogin(event) {
+      event.preventDefault();
+      const id = document.getElementById('user-id').value.trim();
+      // パスワードも前後空白を除去（コピペ時の改行混入対策）
+      const pw = document.getElementById('password').value.trim();
+      const errorMsg = document.getElementById('error-msg');
+      errorMsg.classList.remove('show');
+
+      // --- 1. 会員ログイン（addedMembers_v2 と照合）----
+      // メールアドレスの大文字小文字は区別しない
+      const members = loadMembers();
+      const member = members.find(m =>
+        (m.email || '').toLowerCase() === id.toLowerCase() && m.password === pw
+      );
+      if (member) {
+        // 初回ログインフラグが立っていればパスワード変更画面へ
+        if (member.requirePasswordChange === true) {
+          pendingMemberId = member.id;
+          showChangePasswordForm();
+          return;
+        }
+        // 通常ログイン：会員情報を sessionStorage に保存して index.html へ
+        sessionStorage.setItem('currentMember', JSON.stringify({
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          nickname: member.nickname || ''
+        }));
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // --- 2. スタッフログイン（staff.csv のメールアドレス＋パスワード）----
+      const staff = staffList.find(s =>
+        s.email.toLowerCase() === id.toLowerCase() && s.password === pw
+      );
+      if (staff) {
+        const roleLower = (staff.role || '').toLowerCase();
+        // coach / teacher のみ admin.html へ遷移
+        if (roleLower === 'coach' || roleLower === 'teacher') {
+          sessionStorage.setItem('currentStaff', JSON.stringify({
+            id: staff.id,
+            name: staff.name,
+            role: staff.role,
+            email: staff.email
+          }));
+          window.location.href = 'admin.html';
+          return;
+        } else {
+          errorMsg.textContent = 'このアカウントはまだ対応していません（役割：' + staff.role + '）';
+          errorMsg.classList.add('show');
+          return;
+        }
+      }
+
+      // --- 3. ログイン失敗 ----
+      errorMsg.textContent = 'メールアドレスまたはパスワードが正しくありません';
+      errorMsg.classList.add('show');
+    }
+
+    // ===== 初回パスワード変更フォームへ切替 =====
+    function showChangePasswordForm() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('change-pw-form').style.display = 'block';
+      document.getElementById('error-msg').classList.remove('show');
+      document.getElementById('card-title').textContent = '初回ログイン';
+      document.getElementById('card-sub').textContent = 'パスワードを設定してください';
+      // 新パスワード欄にフォーカス
+      setTimeout(() => document.getElementById('new-password').focus(), 50);
+    }
+
+    // ===== 初回パスワード変更処理 =====
+    function handleChangePassword(event) {
+      event.preventDefault();
+      const newPw = document.getElementById('new-password').value;
+      const confirmPw = document.getElementById('new-password-confirm').value;
+      const errorMsg = document.getElementById('error-msg');
+      errorMsg.classList.remove('show');
+
+      // バリデーション：8文字以上
+      if (newPw.length < 8) {
+        errorMsg.textContent = 'パスワードは8文字以上で入力してください。';
+        errorMsg.classList.add('show');
+        return;
+      }
+      // バリデーション：確認用と一致
+      if (newPw !== confirmPw) {
+        errorMsg.textContent = '新しいパスワードと確認用パスワードが一致しません。';
+        errorMsg.classList.add('show');
+        return;
+      }
+      // バリデーション：旧パスワードと同じはNG
+      const members = loadMembers();
+      const idx = members.findIndex(m => m.id === pendingMemberId);
+      if (idx === -1) {
+        errorMsg.textContent = '会員情報が見つかりません。最初からやり直してください。';
+        errorMsg.classList.add('show');
+        return;
+      }
+      if (members[idx].password === newPw) {
+        errorMsg.textContent = '仮パスワードと同じものは使用できません。別のパスワードを入力してください。';
+        errorMsg.classList.add('show');
+        return;
+      }
+
+      // 会員データ更新（パスワード上書き＋初回フラグOFF）
+      members[idx].password = newPw;
+      members[idx].requirePasswordChange = false;
+      saveMembers(members);
+
+      // sessionStorage に会員情報を保存して index.html へ
+      const m = members[idx];
+      sessionStorage.setItem('currentMember', JSON.stringify({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        nickname: m.nickname || ''
+      }));
+      alert('パスワードを変更しました。学習管理アプリへログインします。');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

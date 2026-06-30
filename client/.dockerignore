@@ -1,0 +1,7 @@
+node_modules
+dist
+package.json
+vite.config.ts
+*.log
+# 機密ファイルはイメージに含めない（login.html のインラインフォールバックを利用）
+data/staff.csv

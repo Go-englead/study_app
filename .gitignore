@@ -34,6 +34,21 @@ Thumbs.db
 /*.gif
 /*.webp
 
+# ===== Node.js =====
+node_modules/
+dist/
+# pnpm のストア（数千ファイル・巨大。bind mount 配下に作られるとリポジトリが肥大化する）
+.pnpm-store/
+
+# ===== Vite のビルドキャッシュ =====
+.vite/
+frontend/.vite/
+
+# ===== E2E（gauge）の生成物：スクショ・HTMLレポート・ログ（リポジトリ肥大化の原因） =====
+e2e/reports/
+e2e/.gauge/
+e2e/logs/
+
 # ===== Claude Code の個人設定ファイル =====
 .claude/
 

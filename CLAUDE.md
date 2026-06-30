@@ -11,6 +11,96 @@
 - **公開URL**：https://go-englead.github.io/study_app/
 - **ログイン画面URL**：https://go-englead.github.io/study_app/login.html
 - **運用方式**：GitHub 管理、GitHub Pages で公開
+- **現在の移行**：localStorage ベースの旧 client（`admin.html` 等）から、バックエンドAPI＋React フロントへ段階移行中。
+
+---
+
+## 🏛 アーキテクチャ規約（バックエンド `api/`）
+
+本プロジェクトは **関数型 DDD（ドメイン駆動設計）** で実装する。レイヤリング：**driver → gateway → usecase → controller**＋**ドメイン**（`domain/`）。
+
+> **ドメイン設計の正典は [`api/domain/README.md`](api/domain/README.md)**（集約マップ・集約ルート・値オブジェクト・不変条件）。**ドメインを新規/変更する前に必ず参照**し、整合させること。
+
+### ★ 最重要原則：ビジネスロジックはドメインにカプセル化する（関数型DDD）
+- **ビジネスロジック（不変条件・権限・状態遷移・整合性）は必ずドメイン層に置く**。usecase には**アプリケーションロジック（取得→ドメイン呼び出し→保存→DTO化）だけ**を書く。
+- **usecase に「ビジネスルールによる if／パターン分岐／場合分けのコード」を極力書かない**。それらは**ドメインの interface / 判別共用体 / smart constructor / 純関数**で表現する。usecase はそれを **呼ぶだけ**。
+- **能力は boolean（`canXxx()`）で持たず“型”で表す**：できない役割・状態には**そもそもその操作（型）を渡せない**ようにする。
+  - 例（コーチング）：種別ごとの判別共用体＋`createXxxRecord(input, existing)` が不変条件を検証し `effects` を返す／`assertCoachingSetConsistent` が集合整合を保証。
+  - 例（スタッフ）：`StaffBase` を継承する role 別 class（`CoachStaff`/`TeacherStaff`/…）。`AdminStaff = Coach|Teacher`。`canAccessAdmin()` のような boolean は作らない。
+- 迷ったら **スタッフドメイン（`domain/staff/staff.ts`）を参照**して同じ流儀で書く（クラス化の手本）。
+
+### ★★ ドメインは「クラス」で表現する（このルールは全ドメインに適用）
+- **ドメインファイルのトップレベルに `function` を書かない**。トップレベルは **`type` / `interface` / `class` / `abstract class` のみ**。ロジックは必ずクラスのメソッド（インスタンス or static）に入れる。
+- **値オブジェクトはクラス化**し、生成・検証は **その VO クラスの `static create()`** に閉じる（例 `StaffId.create()`・`Role.create()`・`StaffPassword.create()`）。`Brand<string,'Xxx'>` ＋ トップレベル `createXxx()` 関数は **新規/リファクタ対象では使わない**。
+- **集約ルートも class**（必要なら `abstract class XxxBase` ＋ 派生 class）。**static にしてよいのは生成系の `create` / `fromRecord` だけ**。`update` などの振る舞いは**インスタンスメソッド**。
+- **能力は capable な class だけが持つ（throw しない・「できないこと」はそもそも書かない）**。例：`authenticateAsAdmin()` は管理職員 class のみ。実行時に「その型に確定できなければエラー」を出す“ゲート”は、**そのルールを所有するドメイン**の確定メソッド（例 `staff.requireAdmin()`）か、**型に合わせるアプリ都合の検証として UseCase** に書く。
+- **ドメイン横断のルールは越境させない**。例：「PROGOSはコーチのみ記録可」は **PROGOS ドメイン**が `createProgosScore(input, recordedBy: CoachStaff)` のように **`CoachStaff` を引数で要求**してルールを“型で物語る”。staff ドメインに `requireCoach` を置かない。「actor が Coach でなければエラー」は **記録の UseCase** が `createProgosScore` の前に書く（型に合わせるアプリ都合の検証）。
+
+### ドメイン層の規約（DDD）
+- **集約ごとに `domain/<aggregate>/` を切る**：`xxx.ts`（集約 class ＋ VO class）と `xxx-repository.ts`（**Repository interface はドメイン層に置く**。実装は `gateway/`）。
+- **識別子も VO クラス**（例 `StaffId`、`value: string` を保持し `static create()` で生成・検証）。`gateway`/`usecase` 境界では `.value` で素の文字列に戻す。※ 未リファクタの既存ドメインは旧 `Brand<string,'XxxId'>`＋`createXxxId()` のまま残る場合あり（順次クラス化）。
+- **id=UUID（サロゲート）＋ 業務コード（自然キー・ユーザー入力・UNIQUE）の二本立て**。例：`Member.id`(UUID)/`Member.code`、`Textbook.id`(UUID)/`Textbook.code`(T01)。画面・CSV の "ID" は業務コードを指すことが多い（DBの真のPKは別UUID）。
+- **値オブジェクトはクラスの `static create()`** で生成時に検証。readonly。不正は `throw DomainError`（→ controller で 400）。タイプ違いは role 別 class の判別共用体。
+- 計算値は **compute-on-read**（保存しない。例：会員ステータス）。
+
+### その他
+- **契約は `api/openapi.yaml`**。変更したら `pnpm openapi:gen` で型再生成（フロントも `frontend` 側で再生成）。
+- **usecase**：Repository からドメイン取得 → 操作 → **UseCase専用DTO** を返す。
+- **driver**：Drizzle で Row 取得／upsert。**gateway** が Row⇔ドメイン変換。
+
+### DB 設計ルール（`api/db/`）
+- **PK は全て UUID**。加えて業務コード（`member_code` 等）を自然キーとして UNIQUE 保持。
+- **サロゲートキーを無闇に使わない**。ジャンクションは複合PK（例 `member_staff_assignments (member_id, role)`、`textbook_assignments (member_id, textbook_id)`）。
+- **画面のセクション単位でサテライト分割**。members は本体（基本情報）＋ `member_contacts`／`member_enrollments`／`member_residence_travels`／`member_english_scores`／`member_coach_inputs`／`member_staff_assignments`（担当ジャンクション）／`member_credentials`（認証）に分割。**全サテライトは PK=member_id・1:1・FK CASCADE**。
+- **認証情報は別テーブル**（`member_credentials`／`staff_credentials`、PK=FK）。
+- enum は CHECK 制約。FK は CASCADE（子）/ RESTRICT（マスタ参照）。
+
+### ドメインの重要な決定
+- **ステータスは compute-on-read**（保存しない）。日付（受講開始・卒業・休会）から算出。例外＝「途中退会」のみ `manual_status_override` に保存。**休会の時限ステータス更新・卒業日延長は後回し（未実装）**。
+- **担当者は staff への FK ジャンクション**（role＝`Consultant`/`CS`/`Orient`）。フォームの「その他」＝`"OTHER"` は**行を作らない**（NULL行も作らない）。
+- **仮パスワードはサーバー生成**し、登録レスポンスで一度だけ平文返却（`tempPassword`）。リクエストには含めない。
+
+### 認証
+- JWT ミドルウェアで `/v1/member/*`（会員）と `/v1/admin/*`（職員）を分離。claim は `memberId` / `adminId`。
+- **当面は開発用固定トークン**（secret `test-key`・期限ほぼ無限）。ログインAPIは未実装。
+
+---
+
+## 🖥 フロントエンド規約（`frontend/`）
+
+- **bulletproof-react 構成**：`app/`（provider・router・routes）／`lib/`（api-client・react-query）／`config/`（env）／`features/<name>/`（api・components・schemas・types）／`types/`（生成型）。
+- **スタック**：Vite + React + TS / TanStack Query / **TanStack Router（file-based・`app/routes`）** / react-hook-form + zod / **openapi-fetch**（型は `openapi.yaml` から `openapi-typescript` 生成）。
+- **UIは必ず既存 client に合わせる**（→ Skill `reproduce-client-screen`）。単一ページ＋左サイドバー6タブ（タブ=ルート）、**新規=中央モーダル／編集=スライドパネル**。
+- **E2E 用に `data-testid` を付与**（フォームは `member-field-<name>` 等）。
+- 認証は `config/env.ts` の開発用トークン。
+
+### ★ バリデーション方針（全ての登録・編集フォーム共通）
+- **必ず zod ＋ react-hook-form（`zodResolver`）** で実装する。フォームごとに `features/<name>/schemas.ts` にスキーマを置く。
+- **フィールド単位のバリデーション**（必須・形式・範囲）＝ クライアント側 zod で検証し、**そのフィールドの直下に赤文字**（`<span className="form-error" data-testid="<feature>-error-<field>">`）で表示する。
+- **データそのものに対する整合性ルール違反**（例：初回オリエンが無いのに通常オリエンを記録／通常があると初回は削除不可／コード・メールの重複）＝ サーバーが `DomainError` 等で返す。これは特定フィールドに紐づかないので **`alert()` で通知**する（`lib/form-error.ts` の `alertServerError(error)` を mutation の `onError` で呼ぶ）。
+- **編集不可フィールド**（社員ID・会員ID・教材コードなど）は `readOnly` ＋ `className="input-locked"` で**無効に見せる**。
+- E2E は **各フォーム spec にバリデーションエラーのケースを1つ**持ち、フィードバック表示を assert する（フィールドエラーは `フォームエラー "<testid>" が表示される`、整合性違反 alert は `コーチング記録のエラーに …` のように `lastDialogMessage` を検証）。
+
+---
+
+## 🧪 テスト規約
+
+- **API 結合テスト**：Testcontainers + Vitest。実行は `pnpm test`（`TESTCONTAINERS_RYUK_DISABLED=true` 済み）。**テストデータは Drizzle で投入**（生SQL書かない）、**分割テーブルそれぞれを検証**。
+- **E2E**：`e2e/specs/` の **Gauge spec＝仕様書**（1ファイル＝1ユーザーストーリー、「誰は〜できる」）。ステップ実装は React 向け（`tests/StepImplementation.ts`、要素は **data-testid**、`@BeforeScenario` で API 経由 clean&seed）。`BASE_URL` は :8080（or dev :5173）。
+- **E2E は必ずログイン起点（無敵JWTは廃止）**：**1 spec（シナリオ）につき専用の職員を1人作成し、UI のログイン操作から各シナリオを開始する**。
+  - `@BeforeScenario` で「①ブートストラップ職員（`coach_001@example.jp`／seed）でAPIログイン → トークンを `apiHeaders` に → ②データ clean&seed → ③このシナリオ専用の職員を作成（`createScenarioStaff`）」。各 spec の冒頭は `* ログインページを開く` → `* 職員アカウントでログインする`（`scenarioStaff` でUIログイン）で始める。
+  - ブートストラップ職員（`S001`/coach_001）は DB に常設シード。テスト用トークンは `JWT_SECRET` 未設定＝`test-key`。
+
+---
+
+## ⚙️ 環境の地雷（必読）
+
+- **パッケージマネージャは pnpm 統一**（npm 禁止）。ビルドスクリプト許可は `pnpm-workspace.yaml` の `onlyBuiltDependencies`、または `pnpm approve-builds`。
+- **docker ポート**：frontend `8080` / 旧client `8081` / api `3000` / db `5432`。
+- **API は起動時にマイグレーションしない**。docker DB が空なら `docker compose exec -T db psql -U studyapp -d studyapp < api/db/migrations/0001_init.sql` を手動実行（※起動時自動化は未対応）。
+- **🚫 ローカルで直接起動しない（docker 必須）**：api / frontend は**必ず docker（`docker compose up -d`）で動かす**。`pnpm dev` 等でホスト直接起動は**禁止**（ポート競合・二重化で `gauge run specs/` が docker 構成と食い違い事故になる）。`gauge run specs/` は既定の **:8080（docker フロント）→ :3000（docker api）** で通る状態を保つ。
+- **Docker レジストリ egress が時々切れる**（`registry-1.docker.io` タイムアウト）。`docker compose up` の `pnpm install` が固まる。**ローカルへ逃がさず**、egress 回復を待って docker を起動し直す（`docker compose up -d`／必要なら再試行）。
+- **gauge はシステムバイナリ**（`npx gauge` 不可、`gauge run` を使う）。`e2e/node_modules` 破損（`tsconfig-paths/register`・`gauge-ts/dist` 欠落）時は `rm -rf node_modules package-lock.json && npm install` でクリーン再インストール。
 
 ---
 

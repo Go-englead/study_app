@@ -1,0 +1,39 @@
+name: API Integration Tests
+
+on:
+  push:
+    paths:
+      - 'api/**'
+      - '.github/workflows/api-integration.yml'
+  pull_request:
+    paths:
+      - 'api/**'
+      - '.github/workflows/api-integration.yml'
+
+jobs:
+  integration:
+    # ubuntu ランナーは Docker がプリインストール＆稼働済みのため Testcontainers が動く
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm 本体をセットアップ（setup-node の pnpm キャッシュより前に必要）
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        # onlyBuiltDependencies（pnpm-workspace.yaml）に従い esbuild 等のビルドは許可される
+        run: pnpm install --frozen-lockfile
+
+      - name: Run integration tests (Vitest + Testcontainers)
+        run: pnpm test

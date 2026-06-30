@@ -1,0 +1,9 @@
+# ───────── サプライチェーン対策（pnpm） ─────────
+# ① インストール時スクリプトの管理：allowBuilds で明示 true にした依存だけ実行可。
+onlyBuiltDependencies:
+  - esbuild
+allowBuilds:
+  esbuild: true        # vite のビルド
+
+# ② 新しすぎるバージョンの隔離：公開から14日(=20160分)未満の版は採用しない。
+minimumReleaseAge: 20160
